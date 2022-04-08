@@ -301,6 +301,5 @@ class RegisterController extends BaseController
         else {
             return $this->sendError('Please login to get profile data.', []);
         }
-        
     }
 }

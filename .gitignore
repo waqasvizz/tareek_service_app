@@ -1,22 +1,13 @@
-/bootstrap
-/config
+# Ignore everything
 /node_modules
-/public
-/storage
-/tests
+/public/storage
+/storage/app/public
 /vendor
-/.git
-artisan
-composer.json
-composer.lock
-package.json
-package-lock.json
-phpunit.xml
-README.md
-server.php
-webpack.mix.js 
-.editorconfig
 .env
-.env.example
-.gitattributes
-.styleci.yml
+
+
+
+# But not these files...
+!vendor
+!vendor/rahulhaque
+!vendor/rahulhaque/**

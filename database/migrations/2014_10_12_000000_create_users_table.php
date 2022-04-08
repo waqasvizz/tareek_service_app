@@ -31,7 +31,7 @@ class CreateUsersTable extends Migration
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('account_status')->nullable()->comment('yes, no');
+            $table->string('account_status', 100)->nullable()->comment('yes, no');
             $table->rememberToken();
             $table->timestamps();
         });
