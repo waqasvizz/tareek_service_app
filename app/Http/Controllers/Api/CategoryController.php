@@ -35,12 +35,6 @@ class CategoryController extends BaseController
         $message = count($services) > 0 ? 'Categories retrieved successfully.' : 'Categories not found against your query.';
 
         return $this->sendResponse($services, $message);
-        
-        // $posted_data['count'] = true;
-        // $count = Category::getCategories($posted_data);
-    
-        // return $this->sendResponse($services, 'Categories retrieved successfully.', $count);
-        // return $this->sendResponse(CategoryResource::collection($services), 'Categories retrieved successfully.', $count);
     }
     /**
      * Store a newly created resource in storage.
@@ -58,15 +52,14 @@ class CategoryController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
         if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
-            $error_message['category_type'] = 'You entered the invalid category type.';
-            return $this->sendError('Validation Error.', $error_message);
+            $error_message['error'] = 'You entered the invalid category type.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
 
-        $img_data = array();
         if (isset($request->category_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -75,31 +68,29 @@ class CategoryController extends BaseController
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
                 $response = upload_files_to_storage($request, $request->category_image, 'other_assets');
-
+                $request_data['category_image'] = $response['file_path'];
                 if( isset($response['action']) && $response['action'] == true ) {
-                    
                     $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
                     $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
                 }
             }
             else {
-                return response()->json(['invalid_file_format'], 422);
+                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                return $this->sendError($error_message['error'], $error_message);
             }
-        }
-        else {
-            return $this->sendError('Error.', ['error'=>'Category Image is not found']);
+        }else {
+            $error_message['error'] = 'Please Upload Category Image.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
 
-        $category = Category::saveUpdateCategory([
-            'category_title'    => $request_data['category_title'],
-            'category_type'     => $request_data['category_type'],
-            'category_image'    => $img_data['file_path']
-        ]);
+        $category = Category::saveUpdateCategory($request_data);
 
-        if ( isset($category->id) )
+        if ( isset($category->id) ){
             return $this->sendResponse($category, 'Category is successfully added.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        }else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
     } 
    
     /**
@@ -113,7 +104,8 @@ class CategoryController extends BaseController
         $service = Category::find($id);
   
         if (is_null($service)) {
-            return $this->sendError('Category not found.');
+            $error_message['error'] = 'Category not found.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
    
         return $this->sendResponse($service, 'Category retrieved successfully.');
@@ -137,15 +129,15 @@ class CategoryController extends BaseController
         $post_data['id'] = isset($id) ? $id : 0;
         $category_record = Category::getCategories($post_data);
         if(!$category_record){
-            return $this->sendError('This Category cannot found in database');
+            $error_message['error'] = 'This Category cannot found in database.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
         
         if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
-            $error_message['category_type'] = 'You entered the invalid category type.';
-            return $this->sendError('Validation Error.', $error_message);
+            $error_message['error'] = 'You entered the invalid category type.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
-
-        $img_data = array();
+        
         if (isset($request->category_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -154,36 +146,38 @@ class CategoryController extends BaseController
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
                 
+                $res['action'] = true;
                 if (isset($category_record->category_image) && $category_record->category_image != '')
                     $res = delete_files_from_storage($category_record->category_image);
 
                 if ($res['action']) {
                     $response = upload_files_to_storage($request, $request->category_image, 'other_assets');
+                    $request_data['category_image'] = $response['file_path'];
                     if( isset($response['action']) && $response['action'] == true ) {
                         $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
                         $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
                     }
                 }
                 else {
-                    return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during image replacement.']);
+                    $error_message['error'] = 'Somthing went wrong during image replacement.';
+                    return $this->sendError($error_message['error'], $error_message);  
                 }
             }
             else {
-                return response()->json(['invalid_file_format'], 422);
+                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                return $this->sendError($error_message['error'], $error_message);
             }
         }
 
-        $category = Category::saveUpdateCategory([
-            'update_id'         => $id,
-            'category_title'    => $request_data['category_title'],
-            'category_type'     => $request_data['category_type'],
-            'category_image'    => $img_data['file_path']
-        ]);
+        $request_data['update_id'] = $id;
+        $category = Category::saveUpdateCategory($request_data);
 
-        if ( isset($category->id) )
+        if ( isset($category->id) ){
             return $this->sendResponse($category, 'Category is successfully updated.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        }else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
     }
    
     /**
@@ -195,12 +189,16 @@ class CategoryController extends BaseController
     // public function destroy(Category $service)
     public function destroy($id)
     {
-        if(Category::find($id)) {
+        $category_rec = Category::find($id);
+        if($category_rec) {
+            $filepath = $category_rec->category_image;
+            delete_files_from_storage($filepath);
             $response = Category::deleteCategory($id);
-            return $this->sendResponse($response, 'Category deleted successfully.');
+            return $this->sendResponse([], 'Category deleted successfully.');
         }
         else {
-            return $this->sendError('Category already deleted / Not found in database.');
+            $error_message['error'] = 'Category already deleted / Not found in database.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
     }
 }

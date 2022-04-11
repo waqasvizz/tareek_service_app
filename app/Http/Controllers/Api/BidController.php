@@ -43,7 +43,7 @@ class BidController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         }
         
         $bid = Bid::saveUpdateBid($request_data);
@@ -86,7 +86,7 @@ class BidController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);  
         }
 
         $posted_data = array();

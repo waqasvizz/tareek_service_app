@@ -28,7 +28,7 @@ class RegisterController extends BaseController
         $rules = array(
             'role'              => 'required',
             'full_name'         => 'nullable|max:50',
-            'date_of_birth'     => 'nullable|numeric',
+            'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
             'email'             => 'required|email|unique:users',
             'phone_number'      => 'nullable|max:15',
@@ -45,7 +45,7 @@ class RegisterController extends BaseController
         $validator = \Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());  
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
         else {
 
@@ -53,43 +53,43 @@ class RegisterController extends BaseController
             $documents_arr = array();
 
             if( $posted_data['role'] != 2 && $posted_data['role'] != 3 ){
-                $error_message['role'] = 'You entered the invalid role.';
-                return $this->sendError('Validation Error.', $error_message);  
+                $error_message['error'] = 'You entered the invalid role.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
 
             if($posted_data['role'] == 2 && (!isset($posted_data['full_name']) || empty($posted_data['full_name']))){
-                $error_message['full_name'] = 'Please enter the full name for the customer.';
-                return $this->sendError('Validation Error.', $error_message);  
+                $error_message['error'] = 'Please enter the full name for the customer.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
 
             if($posted_data['role'] == 2 && (!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
-                $error_message['phone_number'] = 'Please enter the phone number for the customer.';
-                return $this->sendError('Validation Error.', $error_message);  
+                $error_message['error'] = 'Please enter the phone number for the customer.';
+                return $this->sendError($error_message['error'], $error_message);   
             }
 
             if($posted_data['role'] == 2 && (!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
-                $error_message['date_of_birth'] = 'Please enter the date of birth for the customer.';
-                return $this->sendError('Validation Error.', $error_message);
+                $error_message['error'] = 'Please enter the date of birth for the customer.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
 
             if(!isset($posted_data['email']) || empty($posted_data['email'])){
-                $error_message['email'] = 'Please enter the email address.';
-                return $this->sendError('Validation Error.', $error_message);  
+                $error_message['error'] = 'Please enter the email address.';
+                return $this->sendError($error_message['error'], $error_message); 
             }
 
             if($posted_data['role'] == 3 && (!isset($posted_data['company_name']) || empty($posted_data['company_name']))){
-                $error_message['company_name'] = 'Please enter the company name for the Supplier.';
-                return $this->sendError('Validation Error.', $error_message);
+                $error_message['error'] = 'Please enter the company name for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
 
             if($posted_data['role'] == 3 && (!isset($posted_data['company_number']) || empty($posted_data['company_number']))){
-                $error_message['company_number'] = 'Please enter the company contact number for the Supplier.';
-                return $this->sendError('Validation Error.', $error_message);
+                $error_message['error'] = 'Please enter the company contact number for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
             
             if($posted_data['role'] == 3 && (!isset($posted_data['company_documents']) || empty($posted_data['company_documents']))){
-                $error_message['company_documents'] = 'Please enter the company documents for the Supplier.';
-                return $this->sendError('Validation Error.', $error_message);
+                $error_message['error'] = 'Please enter the company documents for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);  
             }
 
             $posted_data['account_status'] = $posted_data['role'] == 3 ? 'no' : 'yes';
@@ -139,7 +139,8 @@ class RegisterController extends BaseController
                 return $this->sendResponse([], $message);
             }
             else
-                return $this->sendError($message);
+                $error_message['error'] = $message;
+                return $this->sendError($error_message['error'], $error_message);
         }
     }
    
@@ -165,10 +166,13 @@ class RegisterController extends BaseController
                     'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
                 ]);
 
-                if ($response)
+                if ($response){
                     return $this->sendResponse($response, 'User login successfully.');
-                else
-                    return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+                }
+                else{
+                    $error_message['error'] = 'Unauthorised';
+                    return $this->sendError($error_message['error'], $error_message);
+                }
             }
             else {
 
@@ -191,10 +195,13 @@ class RegisterController extends BaseController
                         'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
                     ]);
     
-                    if ($response)
+                    if ($response){
                         return $this->sendResponse($response, 'User login successfully.');
-                    else
-                        return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+                    }
+                    else{
+                        $error_message['error'] = 'Unauthorised';
+                        return $this->sendError($error_message['error'], $error_message);
+                    }
                 }
             }
         }
@@ -205,16 +212,19 @@ class RegisterController extends BaseController
                 'email' => isset($posted_data['email']) ? $posted_data['email'] : 'xyz@admin.com',
                 'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
             ]);
-
-            if ($response)
+    
+            if ($response){
                 return $this->sendResponse($response, 'User login successfully.');
-            else
-                return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+            }
+            else{
+                $error_message['error'] = 'Unauthorised';
+                return $this->sendError($error_message['error'], $error_message);
+            }
 
         }
         else {
-            $error_message['email'] = 'Please post the valid credentials for login.';
-            return $this->sendError('Validation Error.', $error_message);
+            $error_message['error'] = 'Please post the valid credentials for login.';
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
 
@@ -250,14 +260,14 @@ class RegisterController extends BaseController
         $validator = \Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());  
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         } else {
 
             $users = User::where('email', '=', $request->input('email'))->first();
             if ($users === null) {
 
-                $error_message['email'] = 'We do not recognize this email address. Please try again.';
-                return $this->sendError('Validation Error.', $error_message); 
+                $error_message['error'] = 'We do not recognize this email address. Please try again.';
+                return $this->sendError($error_message['error'], $error_message);
             } else {
                 $random_hash = substr(md5(uniqid(rand(), true)), 10, 10); 
                 $email = $request->get('email');
@@ -285,10 +295,10 @@ class RegisterController extends BaseController
 
     public function logoutUser(Request $request)
     {
-        exit('ceeeee');
-        exit($request->user()->token());
-        // $request->user()->token()->revoke();
-        // Auth::logout();
+        if (!empty(Auth::user()) ) {
+            $user = Auth::user()->token();
+            $user->revoke();
+        }
         return $this->sendResponse([], 'User is successfully logout.');
     }
 
@@ -299,7 +309,8 @@ class RegisterController extends BaseController
             return $this->sendResponse($user, 'User profile is successfully loaded.');
         }
         else {
-            return $this->sendError('Please login to get profile data.', []);
+            $error_message['error'] = 'Please login to get profile data.';
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
 }

@@ -119,7 +119,7 @@ class PostController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]); 
         }
 
         $post_id = $this->PostObj->saveUpdatePost($posted_data);
@@ -266,7 +266,7 @@ class PostController extends BaseController
             ]);
        
             if($validator->fails()){
-                return $this->sendError('Validation Error.', $validator->errors());
+                return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]); 
             }
 
             $post_data = array();

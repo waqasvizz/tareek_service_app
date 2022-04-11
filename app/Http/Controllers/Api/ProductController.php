@@ -63,7 +63,7 @@ class ProductController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
         }
         
         $img_data = array();
@@ -87,7 +87,8 @@ class ProductController extends BaseController
             }
         }
         else {
-            return $this->sendError('Error.', ['error'=>'Product Image is not found']);
+            $error_message['error'] = 'Product Image is not found.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
 
         $category = Product::saveUpdateProduct([
@@ -102,10 +103,13 @@ class ProductController extends BaseController
             'product_img'         => $img_data['file_path'],
         ]);
 
-        if ( isset($category->id) )
+        if ( isset($category->id) ){
             return $this->sendResponse($category, 'Product is successfully added.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        }
+        else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
     } 
    
     /**
@@ -119,7 +123,8 @@ class ProductController extends BaseController
         $product = Product::find($id);
   
         if (is_null($product)) {
-            return $this->sendError('Product not found.');
+            $error_message['error'] = 'Product not found.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
    
         return $this->sendResponse($product, 'Product retrieved successfully.');
@@ -143,7 +148,8 @@ class ProductController extends BaseController
         $post_data['id'] = isset($id) ? $id : 0;
         $product_record = Product::getProducts($post_data);
         if(!$product_record){
-            return $this->sendError('This Product cannot found in database');
+            $error_message['error'] = 'This Product cannot found in database.';
+            return $this->sendError($error_message['error'], $error_message);  
         }
 
         // if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
@@ -171,7 +177,8 @@ class ProductController extends BaseController
                     }
                 }
                 else {
-                    return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during image replacement.']);
+                    $error_message['error'] = 'Somthing went wrong during image replacement.';
+                    return $this->sendError($error_message['error'], $error_message);  
                 }
             }
             else {
@@ -192,10 +199,13 @@ class ProductController extends BaseController
             'product_img'         => $img_data['file_path'],
         ]);
 
-        if ( isset($category->id) )
+        if ( isset($category->id) ){
             return $this->sendResponse($category, 'Product is successfully added.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        }
+        else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
     }
    
     /**
@@ -213,7 +223,8 @@ class ProductController extends BaseController
             Product::deleteProduct($id);
             return $this->sendResponse([], 'Product deleted successfully.');
         }else{
-            return $this->sendError('Product already deleted.');
+            $error_message['error'] = 'Product already deleted.';
+            return $this->sendError($error_message['error'], $error_message);  
         } 
     }
 }

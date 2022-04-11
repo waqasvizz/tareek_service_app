@@ -17,7 +17,7 @@ class CreateCategoryTable extends Migration
             $table->id();
             $table->string('category_title', 100);
             $table->tinyInteger('category_type')->default('0')->comment('1=Products, 2=Service');
-            $table->string('category_image')->nullable();
+            $table->text('category_image')->nullable();
             $table->timestamps();
         });
     }

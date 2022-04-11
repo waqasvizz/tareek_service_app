@@ -73,46 +73,46 @@ Route::get('/migration-refresh', function() {
     return '<h1>Migration refresh successfully</h1>';
 });
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', function () {
+    return view('welcome');
+});
 
 // Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Auth::routes();
-Route::get('/test-now', [UserController::class, 'testing']);
-Route::get('/', [UserController::class, 'welcome']);
-Route::get('/login', [UserController::class, 'login'])->name('login');
-Route::get('/logout', [UserController::class, 'logout']);
-// ->name('logout');
+// Auth::routes();
+// Route::get('/test-now', [UserController::class, 'testing']);
+// Route::get('/', [UserController::class, 'welcome']);
+// Route::get('/login', [UserController::class, 'login'])->name('login');
+// Route::get('/logout', [UserController::class, 'logout']);
+// // ->name('logout');
 
-Route::get('/register', [UserController::class, 'register'])->name('register');
-Route::get('/forgot-password', [UserController::class, 'forgotPassword'])->name('forgotPassword');
-Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('resetPassword');
+// Route::get('/register', [UserController::class, 'register'])->name('register');
+// Route::get('/forgot-password', [UserController::class, 'forgotPassword'])->name('forgotPassword');
+// Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('resetPassword');
 
-Route::post('/accountRegister', [UserController::class, 'accountRegister'])->name('accountRegister');
-Route::post('/accountLogin', [UserController::class, 'accountLogin'])->name('accountLogin');
-Route::post('/resetPassword', [UserController::class, 'accountResetPassword'])->name('accountResetPassword');
+// Route::post('/accountRegister', [UserController::class, 'accountRegister'])->name('accountRegister');
+// Route::post('/accountLogin', [UserController::class, 'accountLogin'])->name('accountLogin');
+// Route::post('/resetPassword', [UserController::class, 'accountResetPassword'])->name('accountResetPassword');
 
-// Route::post('/save_payment_response', [PaymentController::class, 'savePaymentResponse'])->name('save_payment');
-// Route::get('/items', [PaymentController::class, 'cart']);
-// Route::get('/items-stripe', [PaymentController::class, 'cartStripe'])->name('stripe_payment');
-// Route::post('/payment', [PaymentController::class, 'payment'])->name('payment');
-// Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('success.pay');
+// // Route::post('/save_payment_response', [PaymentController::class, 'savePaymentResponse'])->name('save_payment');
+// // Route::get('/items', [PaymentController::class, 'cart']);
+// // Route::get('/items-stripe', [PaymentController::class, 'cartStripe'])->name('stripe_payment');
+// // Route::post('/payment', [PaymentController::class, 'payment'])->name('payment');
+// // Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('success.pay');
 
-Route::middleware(['auth'])->group(function () {
+// Route::middleware(['auth'])->group(function () {
 
-//     Route::get('/filepond_record_get', [FilepondController::class, 'get_records']);
-//     Route::get('/filepond_record_destroy', [FilepondController::class, 'destroy_records']);
+// //     Route::get('/filepond_record_get', [FilepondController::class, 'get_records']);
+// //     Route::get('/filepond_record_destroy', [FilepondController::class, 'destroy_records']);
     
-    Route::get('/admin', [UserController::class, 'dashboard']);
-    Route::get('/live_chat', [UserController::class, 'liveChatSample']);
-//     Route::resource('service', ServiceController::class);
-//     Route::resource('category', CategoryController::class);
-//     Route::resource('role', RoleController::class);
-//     Route::resource('user', UserController::class);
-//     Route::resource('post', PostController::class);
-//     Route::resource('storage_asset', StorageAssetsController::class);
-});
+//     Route::get('/admin', [UserController::class, 'dashboard']);
+//     Route::get('/live_chat', [UserController::class, 'liveChatSample']);
+// //     Route::resource('service', ServiceController::class);
+// //     Route::resource('category', CategoryController::class);
+// //     Route::resource('role', RoleController::class);
+// //     Route::resource('user', UserController::class);
+// //     Route::resource('post', PostController::class);
+// //     Route::resource('storage_asset', StorageAssetsController::class);
+// });

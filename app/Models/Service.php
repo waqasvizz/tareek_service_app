@@ -59,6 +59,9 @@ class Service extends Model
             $data = new Service;
         }
 
+        if (isset($posted_data['user_id'])) {
+            $data->user_id = $posted_data['user_id'];
+        }
         if (isset($posted_data['service_title'])) {
             $data->title = $posted_data['service_title'];
         }

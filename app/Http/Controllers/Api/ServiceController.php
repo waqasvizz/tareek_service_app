@@ -63,10 +63,9 @@ class ServiceController extends BaseController
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());       
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         }
         
-        $img_data = array();
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -75,6 +74,7 @@ class ServiceController extends BaseController
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
                 $response = upload_files_to_storage($request, $request->service_image, 'service_image');
+                $request_data['service_img'] = $response['file_path'];
 
                 if( isset($response['action']) && $response['action'] == true ) {
                     
@@ -83,29 +83,25 @@ class ServiceController extends BaseController
                 }
             }
             else {
-                return response()->json(['invalid_file_format'], 422);
+                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                return $this->sendError($error_message['error'], $error_message);
             }
         }
         else {
-            return $this->sendError('Error.', ['error'=>'Service Image is not found']);
+            $error_message['error'] = 'Service Image is not found.';
+            return $this->sendError($error_message['error'], $error_message);
         }
 
-        $category = Service::saveUpdateService([
-            'service_title'       => $request_data['service_title'],
-            'service_price'       => $request_data['service_price'],
-            'service_category'    => $request_data['service_category'],
-            'service_location'    => $request_data['service_location'],
-            'service_lat'         => $request_data['service_lat'],
-            'service_long'        => $request_data['service_long'],
-            'service_description' => $request_data['service_description'],
-            'service_contact'     => $request_data['service_contact'],
-            'service_img'         => $img_data['file_path'],
-        ]);
+        $request_data['user_id'] = auth()->user()->id;
+        $service = Service::saveUpdateService($request_data);
 
-        if ( isset($category->id) )
-            return $this->sendResponse($category, 'Service is successfully added.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        if ( isset($service->id) ){
+            return $this->sendResponse($service, 'Service is successfully added.');
+        }
+        else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
     } 
    
     /**
@@ -119,7 +115,8 @@ class ServiceController extends BaseController
         $service = Service::find($id);
   
         if (is_null($service)) {
-            return $this->sendError('Service not found.');
+            $error_message['error'] = 'Service not found.';
+            return $this->sendError($error_message['error'], $error_message);
         }
    
         return $this->sendResponse($service, 'Service retrieved successfully.');
@@ -143,15 +140,14 @@ class ServiceController extends BaseController
         $post_data['id'] = isset($id) ? $id : 0;
         $service_record = Service::getServices($post_data);
         if(!$service_record){
-            return $this->sendError('This Service cannot found in database');
+            $error_message['error'] = 'This Service cannot found in database.';
+            return $this->sendError($error_message['error'], $error_message);
         }
         
-        // if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
-        //     $error_message['category_type'] = 'You entered the invalid category type.';
+        // if( isset($request_data['service_type']) && $request_data['service_type'] != 1 && $request_data['service_type'] != 2 ){
+        //     $error_message['service_type'] = 'You entered the invalid service type.';
         //     return $this->sendError('Validation Error.', $error_message);
         // }
-
-        $img_data = array();
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -159,43 +155,39 @@ class ServiceController extends BaseController
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
-                
+                $res['action'] = true;
                 if (isset($service_record->service_img) && $service_record->service_img != '')
                     $res = delete_files_from_storage($service_record->service_img);
 
                 if ($res['action']) {
                     $response = upload_files_to_storage($request, $request->service_image, 'service_image');
+                    $request_data['service_img'] = $response['file_path'];
                     if( isset($response['action']) && $response['action'] == true ) {
                         $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
                         $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
                     }
                 }
                 else {
-                    return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during image replacement.']);
+                    $error_message['error'] = 'Somthing went wrong during image replacement.';
+                    return $this->sendError($error_message['error'], $error_message);
                 }
             }
             else {
-                return response()->json(['invalid_file_format'], 422);
+                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                return $this->sendError($error_message['error'], $error_message);
             }
         }
 
-        $service = Service::saveUpdateService([
-            'update_id'           => $id,
-            'service_title'       => $request_data['service_title'],
-            'service_price'       => $request_data['service_price'],
-            'service_category'    => $request_data['service_category'],
-            'service_location'    => $request_data['service_location'],
-            'service_lat'         => $request_data['service_lat'],
-            'service_long'        => $request_data['service_long'],
-            'service_description' => $request_data['service_description'],
-            'service_contact'     => $request_data['service_contact'],
-            'service_img'         => $img_data['file_path'],
-        ]);
+        $request_data['update_id'] = $id;
+        $service = Service::saveUpdateService($request_data);
 
-        if ( isset($service->id) )
+        if ( isset($service->id) ){
             return $this->sendResponse($service, 'Service is successfully added.');
-        else
-            return $this->sendError('Not Found.', ['error'=>'Somthing went wrong during query']);
+        }
+        else{
+            $error_message['error'] = 'Somthing went wrong during query.';
+            return $this->sendError($error_message['error'], $error_message);   
+        }
     }
    
     /**
@@ -213,7 +205,8 @@ class ServiceController extends BaseController
             Service::deleteService($id);
             return $this->sendResponse([], 'Service deleted successfully.');
         }else{
-            return $this->sendError('Service already deleted.');
+            $error_message['error'] = 'Service already deleted.';
+            return $this->sendError($error_message['error'], $error_message);   
         } 
     }
 }
