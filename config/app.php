@@ -59,9 +59,9 @@ return [
     // 'asset_url' => env('ASSET_URL', null),
 
 
-    'url' => env('APP_ENV')=='local'? 'http://localhost:8000':'https://3bidsapp.com/backup/public/',
+    'url' => env('APP_ENV')=='local'? 'http://localhost:8000':'http://3bidsapp.com/backup/public/',
     
-    'asset_url' => env('APP_ENV')=='local'? '':'https://3bidsapp.com/backup/public/',
+    'asset_url' => env('APP_ENV')=='local'? '':'http://3bidsapp.com/backup/public/',
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

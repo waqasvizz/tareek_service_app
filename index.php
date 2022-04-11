@@ -44,6 +44,7 @@ require __DIR__.'/vendor/autoload.php';
 |
 */
 
+set_time_limit(5000);
 $app = require_once __DIR__.'/bootstrap/app.php';
 
 $kernel = $app->make(Kernel::class);
