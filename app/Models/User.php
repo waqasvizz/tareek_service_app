@@ -52,6 +52,12 @@ class User extends Authenticatable
         return $this->belongsTo('App\Models\Role');
     }
 
+
+    public function userAssets()
+    {
+        return $this->hasMany(UserAssets::class);
+    }
+
     public function AssignService()
     {
         return $this->hasMany(AssignService::class);
@@ -65,7 +71,7 @@ class User extends Authenticatable
 
     public function getUser($posted_data = array())
     {
-        $query = User::latest()->with('role');
+        $query = User::latest()->with('role')->with('userAssets');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);

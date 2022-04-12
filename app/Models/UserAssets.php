@@ -84,8 +84,17 @@ class UserAssets extends Model
         if(isset($posted_data['user_id'])){
             $data->user_id = $posted_data['user_id'];
         }
-        if(isset($posted_data['storage_id'])){
-            $data->storage_id = $posted_data['storage_id'];
+        if(isset($posted_data['field_name'])){
+            $data->field_name = $posted_data['field_name'];
+        }
+        if(isset($posted_data['filename'])){
+            $data->filename = $posted_data['filename'];
+        }
+        if(isset($posted_data['filepath'])){
+            $data->filepath = $posted_data['filepath'];
+        }
+        if(isset($posted_data['mimetypes'])){
+            $data->mimetypes = $posted_data['mimetypes'];
         }
         $data->save();
         return $data->id;

@@ -29,7 +29,7 @@ class RegisterController extends BaseController
         $rules = array(
             'role'              => 'required',
             'full_name'         => 'nullable|max:50',
-            'date_of_birth'     => 'nullable',
+            'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'address'           => 'nullable|max:100',
             'email'             => 'required|email|unique:users',
             'phone_number'      => 'nullable|max:15',
@@ -49,7 +49,6 @@ class RegisterController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
         else {
-
             $register_data = array();
             $documents_arr = array();
 
@@ -96,7 +95,7 @@ class RegisterController extends BaseController
             $posted_data['account_status'] = $posted_data['role'] == 3 ? 0 : 1;
             $posted_data['user_type'] = 'app';
             $user_id = $this->UserObj->saveUpdateUser($posted_data);
-        
+            
             $message = ($user_id) > 0 ? 'User is successfully registered.' : 'Something went wrong during registration.';
             if ($user_id) {
 
@@ -116,28 +115,34 @@ class RegisterController extends BaseController
                                 $arr['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
                             }
 
-                            $asset_id = StorageAssets::saveUpdateStorageAssets([
+                            $asset_id = UserAssets::saveUpdateUserAssets([
+                                'user_id' => $user_id,
+                                'field_name' => 'company_documents',
                                 'filepath' => $arr['file_path'],
                                 'filename' => $arr['file_name'],
                                 'mimetypes' => $mediaFiles->getClientMimeType(),
                             ]);
 
-                            $arr['asset_id'] = $asset_id;
-                            $documents_arr[] = $arr;
+                            // $arr['asset_id'] = $asset_id;
+                            // $documents_arr[] = $arr;
                         }
                         else {
-                            return response()->json(['invalid_file_format'], 422);
+                            $error_message['error'] = 'Invalid file format you can only add jpg,jpeg, png and pdf file format.';
+                            return $this->sendError($error_message['error'], $error_message);
                         }
                     }
 
-                    foreach ($documents_arr as $key => $item) {
-                        UserAssets::saveUpdateUserAssets([
-                            'user_id' => $user_id,
-                            'storage_id' => $item['asset_id'],
-                        ]);
-                    }
+                    // foreach ($documents_arr as $key => $item) {
+                    //     UserAssets::saveUpdateUserAssets([
+                    //         'user_id' => $user_id,
+                    //         'storage_id' => $item['asset_id'],
+                    //     ]);
+                    // }
                 }
-                return $this->sendResponse([], $message);
+                $user_detail = $this->UserObj->getUser([
+                    'id'       => $user_id
+                ]);
+                return $this->sendResponse($user_detail, $message);
             }
             else
                 $error_message['error'] = $message;

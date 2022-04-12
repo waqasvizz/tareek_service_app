@@ -112,23 +112,10 @@ Route::get('/', function () {
 // Route::post('/accountLogin', [UserController::class, 'accountLogin'])->name('accountLogin');
 // Route::post('/resetPassword', [UserController::class, 'accountResetPassword'])->name('accountResetPassword');
 
-// // Route::post('/save_payment_response', [PaymentController::class, 'savePaymentResponse'])->name('save_payment');
-// // Route::get('/items', [PaymentController::class, 'cart']);
-// // Route::get('/items-stripe', [PaymentController::class, 'cartStripe'])->name('stripe_payment');
-// // Route::post('/payment', [PaymentController::class, 'payment'])->name('payment');
-// // Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('success.pay');
-
-// Route::middleware(['auth'])->group(function () {
-
-// //     Route::get('/filepond_record_get', [FilepondController::class, 'get_records']);
-// //     Route::get('/filepond_record_destroy', [FilepondController::class, 'destroy_records']);
-    
+// Route::middleware(['auth'])->group(function () {    
 //     Route::get('/admin', [UserController::class, 'dashboard']);
 //     Route::get('/live_chat', [UserController::class, 'liveChatSample']);
 // //     Route::resource('service', ServiceController::class);
-// //     Route::resource('category', CategoryController::class);
 // //     Route::resource('role', RoleController::class);
 // //     Route::resource('user', UserController::class);
-// //     Route::resource('post', PostController::class);
-// //     Route::resource('storage_asset', StorageAssetsController::class);
 // });
