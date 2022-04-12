@@ -73,6 +73,12 @@ Route::get('/queue-work', function() {
 //     return '<h1>Migration refresh successfully</h1>';
 // });
     
+Route::get('/migration-refresh', function() {
+    Artisan::call('migrate:refresh');
+    return '<h1>Migration refresh successfully</h1>';
+});
+
+
 Route::get('/migration-fresh', function() {
     Artisan::call("migrate:fresh");
     return '<h1>Migration fresh successfully</h1>';
