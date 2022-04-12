@@ -29,7 +29,8 @@ class RegisterController extends BaseController
         $rules = array(
             'role'              => 'required',
             'full_name'         => 'nullable|max:50',
-            'date_of_birth'     => 'nullable|date_format:Y-m-d',
+            // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
+            'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
             'email'             => 'required|email|unique:users',
             'phone_number'      => 'nullable|max:15',
