@@ -47,6 +47,11 @@ class User extends Authenticatable
     ];
 
 
+    public function role()
+    {
+        return $this->belongsTo('App\Models\Role');
+    }
+
     public function AssignService()
     {
         return $this->hasMany(AssignService::class);
@@ -60,7 +65,7 @@ class User extends Authenticatable
 
     public function getUser($posted_data = array())
     {
-        $query = User::latest();
+        $query = User::latest()->with('role');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);
@@ -72,31 +77,31 @@ class User extends Authenticatable
             $query = $query->where('users.name', 'like', '%' . $posted_data['name'] . '%');
         }
         if (isset($posted_data['role'])) {
-            $query = $query->where('users.role', $posted_data['role']);
+            $query = $query->where('users.role_id', $posted_data['role']);
         }
 	    if (isset($posted_data['phone_number'])) {
             $query = $query->where('users.phone_number', $posted_data['phone_number']);
         }
 
-        $query->join('roles', 'roles.id', '=', 'users.role');
+        // $query->join('roles', 'roles.id', '=', 'users.role');
 
         // $query->leftJoin('payments', function ($join) {
         //     $join->on('payments.user_id', '=', 'users.id');
         //     $join->on('payments.id', DB::raw('(SELECT MAX(payments.id) FROM payments WHERE `payments`.`user_id` = `users`.`id`)'));
         // });
         
-        if ( isset($posted_data['latitude']) && isset($posted_data['longitude']) ) {
-            $query = $query->select('users.*', 'users.id as user_id', 'roles.name as role_name', DB::raw("(6373 * acos( 
-                cos( radians(users.latitude) ) 
-              * cos( radians( ".$posted_data['latitude']." ) ) 
-              * cos( radians( ".$posted_data['longitude']." ) - radians(users.longitude) ) 
-              + sin( radians(users.latitude) ) 
-              * sin( radians( ".$posted_data['latitude']." ) )
-                ) ) as distance"));
-        }else{
-            $query->select('users.*', 'users.id as user_id', 'roles.name as role_name');
-        }
-        // $query->select('users.*', 'users.id as user_id', 'payments.*', 'payments.id as payment_id', 'roles.name as role_name');
+        // if ( isset($posted_data['latitude']) && isset($posted_data['longitude']) ) {
+        //     $query = $query->select('users.*', 'users.id as user_id', 'roles.name as role_name', DB::raw("(6373 * acos( 
+        //         cos( radians(users.latitude) ) 
+        //       * cos( radians( ".$posted_data['latitude']." ) ) 
+        //       * cos( radians( ".$posted_data['longitude']." ) - radians(users.longitude) ) 
+        //       + sin( radians(users.latitude) ) 
+        //       * sin( radians( ".$posted_data['latitude']." ) )
+        //         ) ) as distance"));
+        // }else{
+        //     $query->select('users.*', 'users.id as user_id', 'roles.name as role_name');
+        // }
+        $query->select('*');
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
@@ -133,7 +138,7 @@ class User extends Authenticatable
             unset($posted_data['company_documents']);
         }
         if (isset($posted_data['role'])) {
-            $data->role = $posted_data['role'];
+            $data->role_id = $posted_data['role'];
         }
         if (isset($posted_data['name'])) {
             $data->name = $posted_data['name'];

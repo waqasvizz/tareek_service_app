@@ -15,23 +15,23 @@ class CreateUsersTable extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('role');
-            $table->foreign('role')->references('id')->on('roles')->onUpdate('cascade')->onDelete('cascade');
-            $table->string('name')->nullable();
-            $table->string('date_of_birth')->nullable();
-            $table->string('email')->unique();
-            $table->string('profile_image')->nullable();
-            $table->string('phone_number')->nullable();
-            $table->string('company_name')->nullable();
-            $table->string('company_number')->nullable();
-            $table->string('company_documents')->nullable();
-            $table->string('password');
-            $table->text('user_type')->comment('app, facebook, google');
+            $table->unsignedBigInteger('role_id');
+            $table->foreign('role_id')->references('id')->on('roles')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('name', 255)->nullable();
+            $table->string('email', 255)->unique();
+            $table->string('password', 255);
+            $table->date('date_of_birth')->nullable();
+            $table->string('profile_image', 255)->nullable();
+            $table->string('phone_number', 255)->nullable();
+            $table->string('company_name', 255)->nullable();
+            $table->string('company_number', 255)->nullable();
+            $table->string('company_documents', 255)->nullable();
+            $table->text('user_type')->comment('app, facebook, google')->default('app');
             $table->text('address')->nullable();
-            $table->string('latitude')->nullable();
-            $table->string('longitude')->nullable();
+            $table->string('latitude', 255)->nullable();
+            $table->string('longitude', 255)->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('account_status', 100)->nullable()->comment('yes, no');
+            $table->tinyInteger('account_status')->comment('1=active, 0=block')->default(1);
             $table->rememberToken();
             $table->timestamps();
         });

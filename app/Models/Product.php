@@ -15,10 +15,20 @@ class Product extends Model
         // return url('/')."/".$value;
         // return public_path()."/".$value;
     }
+    
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User')->with('role');
+    }
+    
+    public function category()
+    {
+        return $this->belongsTo('App\Models\Category','category_id');
+    }
 
     public function getProducts($posted_data = array())
     {
-        $query = Product::latest();
+        $query = Product::latest()->with('user')->with('category');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('products.id', $posted_data['id']);
@@ -58,7 +68,10 @@ class Product extends Model
         } else {
             $data = new Product;
         }
-
+        
+        if (isset($posted_data['user_id'])) {
+            $data->user_id = $posted_data['user_id'];
+        }
         if (isset($posted_data['product_title'])) {
             $data->title = $posted_data['product_title'];
         }
@@ -66,7 +79,7 @@ class Product extends Model
             $data->price = $posted_data['product_price'];
         }
         if (isset($posted_data['product_category'])) {
-            $data->category = $posted_data['product_category'];
+            $data->category_id = $posted_data['product_category'];
         }
         if (isset($posted_data['product_location'])) {
             $data->location = $posted_data['product_location'];

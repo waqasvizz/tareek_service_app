@@ -14,6 +14,7 @@ use App\Models\Service;
 use App\Models\AssignService;
 use App\Models\StorageAssets;
 use App\Models\UserAssets;
+use Illuminate\Support\Arr;
 
 class RegisterController extends BaseController
 {
@@ -92,7 +93,7 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
-            $posted_data['account_status'] = $posted_data['role'] == 3 ? 'no' : 'yes';
+            $posted_data['account_status'] = $posted_data['role'] == 3 ? 0 : 1;
             $posted_data['user_type'] = 'app';
             $user_id = $this->UserObj->saveUpdateUser($posted_data);
         
@@ -179,7 +180,7 @@ class RegisterController extends BaseController
                 $user_data = array();
                 $user_data['email'] = $posted_data['email'];
                 $user_data['role'] = 2;
-                $user_data['account_status'] = $user_data['role'] == 3 ? 'no' : 'yes';
+                $user_data['account_status'] = $user_data['role'] == 3 ? 0 : 1;
                 $user_data['password'] = '12345678@d';
                 
                 if ( isset($posted_data['facebook_id']) && !isset($posted_data['gmail_id']) )
@@ -305,7 +306,10 @@ class RegisterController extends BaseController
     public function getProfile(Request $request)
     {
         if (!empty(Auth::user()) ) {
-            $user = Auth::user();
+             
+            $posted_data = array();
+            $posted_data['id'] = Auth::user()->id; 
+            $user = User::getUser($posted_data);
             return $this->sendResponse($user, 'User profile is successfully loaded.');
         }
         else {

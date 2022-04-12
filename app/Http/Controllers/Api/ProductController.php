@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Validator;
 use App\Models\Product;
+use Auth;
 // use App\Http\Resources\Product as ProductResource;
 
 class ProductController extends BaseController
@@ -92,6 +93,7 @@ class ProductController extends BaseController
         }
 
         $category = Product::saveUpdateProduct([
+            'user_id'       => Auth::user()->id,
             'product_title'       => $request_data['product_title'],
             'product_price'       => $request_data['product_price'],
             'product_category'    => $request_data['product_category'],

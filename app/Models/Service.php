@@ -15,10 +15,20 @@ class Service extends Model
         // return url('/')."/".$value;
         // return public_path()."/".$value;
     }
+    
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User')->with('role');
+    }
+    
+    public function category()
+    {
+        return $this->belongsTo('App\Models\Category','category_id');
+    }
 
     public function getServices($posted_data = array())
     {
-        $query = Service::latest();
+        $query = Service::latest()->with('user')->with('category');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('services.id', $posted_data['id']);
@@ -69,7 +79,7 @@ class Service extends Model
             $data->price = $posted_data['service_price'];
         }
         if (isset($posted_data['service_category'])) {
-            $data->category = $posted_data['service_category'];
+            $data->category_id = $posted_data['service_category'];
         }
         if (isset($posted_data['service_location'])) {
             $data->location = $posted_data['service_location'];
