@@ -64,13 +64,23 @@ Route::get('/queue-work', function() {
     return '<h1>queue work activated</h1>';
 });
     
-Route::get('/migration-refresh', function() {
-    // Artisan::call("migrate:fresh");
-    Artisan::call('migrate:refresh');    
-    // Artisan::call('passport:install --force');    
-    Artisan::call('passport:install');
+// Route::get('/migration-refresh', function() {
+//     // Artisan::call("migrate:fresh");
+//     Artisan::call('migrate:refresh');    
+//     // Artisan::call('passport:install --force');    
+//     Artisan::call('passport:install');
 
-    return '<h1>Migration refresh successfully</h1>';
+//     return '<h1>Migration refresh successfully</h1>';
+// });
+    
+Route::get('/migration-fresh', function() {
+    Artisan::call("migrate:fresh");
+    return '<h1>Migration fresh successfully</h1>';
+});
+    
+Route::get('/passport-install', function() {   
+    Artisan::call('passport:install');
+    return '<h1>Passport install successfully</h1>';
 });
 
 Route::get('/', function () {
