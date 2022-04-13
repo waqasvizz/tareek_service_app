@@ -9,7 +9,10 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\StorageAssetsController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
-
+use App\Http\Controllers\Api\SupportController;
+use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\FCM_TokenController;
+use App\Http\Controllers\Api\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -38,16 +41,22 @@ Route::middleware('auth:api')->group( function () {
 
     // Route::post('bids/{id}', [BidController::class, 'update']);
     // Route::post('posts/{id}', [PostController::class, 'update']);
+    Route::post('supports/{id}', [SupportController::class, 'update']);
     Route::post('services/{id}', [ServiceController::class, 'update']);
     Route::post('categories/{id}', [CategoryController::class, 'update']);
     Route::post('products/{id}', [ProductController::class, 'update']);
 
     //resouce routes
+    Route::resource('supports', SupportController::class);
     Route::resource('services', ServiceController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
     // Route::resource('bids', BidController::class);
     // Route::resource('posts', PostController::class);
     // Route::resource('storage_assets', StorageAssetsController::class);
+
+    Route::resource('chats', ChatController::class);
+    Route::resource('fcm_tokens', FCM_TokenController::class);
+    Route::resource('notifications', NotificationController::class);
 });
 // Route::resource('services', ServiceController::class);

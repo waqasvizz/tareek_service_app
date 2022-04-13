@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MosqueController;
 use App\Http\Controllers\ServiceController;
@@ -92,6 +93,8 @@ Route::get('/passport-install', function() {
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/fcm', [Controller::class, 'firebase']);
+Route::get('/send_notification', [Controller::class, 'sendNotification']);
 
 // Auth::routes();
 

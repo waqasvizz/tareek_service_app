@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Validator;
 use App\Models\Category;
-use App\Models\StorageAssets;
-// use App\Http\Resources\Service as ServiceResource;
 
 class CategoryController extends BaseController
 {
