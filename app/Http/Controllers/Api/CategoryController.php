@@ -47,6 +47,7 @@ class CategoryController extends BaseController
         $validator = Validator::make($request_data, [
             'category_title'    => 'required',
             'category_type'     => 'required',
+            'commission'     => 'required',
         ]);
    
         if($validator->fails()){

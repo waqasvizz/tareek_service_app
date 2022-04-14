@@ -25,10 +25,15 @@ class Service extends Model
     {
         return $this->belongsTo('App\Models\Category','category_id');
     }
+    
+    public function UserWeekDays()
+    {
+        return $this->hasMany('App\Models\UserWeekDay')->with('WeekDay');
+    }
 
     public function getServices($posted_data = array())
     {
-        $query = Service::latest()->with('user')->with('category');
+        $query = Service::latest()->with('user')->with('category')->with('UserWeekDays');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('services.id', $posted_data['id']);
@@ -99,8 +104,18 @@ class Service extends Model
         if (isset($posted_data['service_img'])) {
             $data->service_img = $posted_data['service_img'];
         }
+        if (isset($posted_data['start_time'])) {
+            $data->start_time = $posted_data['start_time'];
+        }
+        if (isset($posted_data['end_time'])) {
+            $data->end_time = $posted_data['end_time'];
+        }
 
         $data->save();
+        // $data = Service::getServices([
+        //     'id' => $data->id,
+        //     'detail' => true
+        // ]);
         return $data;
     }
 

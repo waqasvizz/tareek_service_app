@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Validator;
 use App\Models\Service;
+use App\Models\UserWeekDay;
+
 // use App\Http\Resources\Service as ServiceResource;
 
 class ServiceController extends BaseController
@@ -60,12 +62,15 @@ class ServiceController extends BaseController
             'service_long'        => 'required',
             'service_description' => 'required',
             'service_contact'     => 'required',
+            'week_days'     => 'required',
+            'start_time'     => 'required',
+            'end_time'     => 'required',
         ]);
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         }
-        
+
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -96,6 +101,18 @@ class ServiceController extends BaseController
         $service = Service::saveUpdateService($request_data);
 
         if ( isset($service->id) ){
+            
+            foreach ($request_data['week_days'] as $key => $value) {
+                UserWeekDay::saveUpdateUserWeekDay([
+                    'service_id' => $service->id,
+                    'week_day_id' => $value
+                ]);
+            }
+            $service = Service::getServices([
+                'id' => $service->id,
+                'detail' => true
+            ]);
+
             return $this->sendResponse($service, 'Service is successfully added.');
         }
         else{
@@ -182,7 +199,31 @@ class ServiceController extends BaseController
         $service = Service::saveUpdateService($request_data);
 
         if ( isset($service->id) ){
-            return $this->sendResponse($service, 'Service is successfully added.');
+            $res_service = $service;
+
+            $user_week_days_list = UserWeekDay::getUserWeekDay([
+                'service_id' => $service->id
+            ]);
+            if($user_week_days_list){
+                foreach ($user_week_days_list as $key => $value) {
+                    UserWeekDay::deleteUserWeekDay($value->id);
+                }
+            }
+
+            if($request_data['week_days']){
+                foreach ($request_data['week_days'] as $key => $value) {
+                    UserWeekDay::saveUpdateUserWeekDay([
+                        'service_id' => $service->id,
+                        'week_day_id' => $value
+                    ]);
+                }
+            }
+            $res_service = Service::getServices([
+                'id' => $service->id,
+                'detail' => true
+            ]);
+
+            return $this->sendResponse($res_service, 'Service is successfully updated.');
         }
         else{
             $error_message['error'] = 'Somthing went wrong during query.';

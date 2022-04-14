@@ -78,6 +78,9 @@ class Category extends Model
         if (isset($posted_data['category_image'])) {
             $data->category_image = $posted_data['category_image'];
         }
+        if (isset($posted_data['commission'])) {
+            $data->commission = $posted_data['commission'];
+        }
 
         $data->save();
         return $data;
