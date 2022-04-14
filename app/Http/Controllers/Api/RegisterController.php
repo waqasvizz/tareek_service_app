@@ -141,7 +141,8 @@ class RegisterController extends BaseController
                     // }
                 }
                 $user_detail = $this->UserObj->getUser([
-                    'id'       => $user_id
+                    'id'       => $user_id,
+                    'detail'       => true
                 ]);
                 return $this->sendResponse($user_detail, $message);
             }
