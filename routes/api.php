@@ -16,6 +16,9 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\WeekDayController;
 use App\Http\Controllers\Api\UserWeekDayController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserMultipleAddresseController;
+use App\Http\Controllers\Api\UserCardController;
+use App\Http\Controllers\Api\UserDeliveryOptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,8 +52,14 @@ Route::middleware('auth:api')->group( function () {
     Route::post('services/{id}', [ServiceController::class, 'update']);
     Route::post('categories/{id}', [CategoryController::class, 'update']);
     Route::post('products/{id}', [ProductController::class, 'update']);
+    Route::post('user_address/{id}', [UserMultipleAddresseController::class, 'update']);
+    Route::post('user_cards/{id}', [UserCardController::class, 'update']);
+    Route::post('user_delivery_option/{id}', [UserDeliveryOptionController::class, 'update']);
 
     //resouce routes
+    Route::resource('user_delivery_option', UserDeliveryOptionController::class);
+    Route::resource('user_cards', UserCardController::class);
+    Route::resource('user_address', UserMultipleAddresseController::class);
     Route::resource('users', UserController::class);
     Route::resource('user_week_days', UserWeekDayController::class);
     Route::resource('week_days', WeekDayController::class);

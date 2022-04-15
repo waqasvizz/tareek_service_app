@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WeekDay extends Model
+class UserCard extends Model
 {
     use HasFactory;
 
-    public function getWeekDay($posted_data = array())
+    public function getUserCard($posted_data = array())
     {
-        $query = WeekDay::latest();
+        $query = UserCard::latest();
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
         }
-        if (isset($posted_data['name'])) {
-            $query = $query->where('name', 'like', '%' . $posted_data['name'] . '%');
+        if (isset($posted_data['user_id'])) {
+            $query = $query->where('user_id', $posted_data['user_id']);
         }
 
         $query->select('*');
@@ -45,16 +45,31 @@ class WeekDay extends Model
 
 
 
-    public function saveUpdateWeekDay($posted_data = array())
+    public function saveUpdateUserCard($posted_data = array())
     {
         if (isset($posted_data['update_id'])) {
-            $data = WeekDay::find($posted_data['update_id']);
+            $data = UserCard::find($posted_data['update_id']);
         } else {
-            $data = new WeekDay;
+            $data = new UserCard;
         }
 
-        if (isset($posted_data['name'])) {
-            $data->name = $posted_data['name'];
+        if (isset($posted_data['user_id'])) {
+            $data->user_id = $posted_data['user_id'];
+        }
+        if (isset($posted_data['card_name'])) {
+            $data->card_name = $posted_data['card_name'];
+        }
+        if (isset($posted_data['card_number'])) {
+            $data->card_number = $posted_data['card_number'];
+        }
+        if (isset($posted_data['exp_month'])) {
+            $data->exp_month = $posted_data['exp_month'];
+        }
+        if (isset($posted_data['exp_year'])) {
+            $data->exp_year = $posted_data['exp_year'];
+        }
+        if (isset($posted_data['cvc_number'])) {
+            $data->cvc_number = $posted_data['cvc_number'];
         }
 
         $data->save();
@@ -62,8 +77,8 @@ class WeekDay extends Model
     }
 
 
-    public function deleteWeekDay($id) {
-        $data = WeekDay::find($id);
+    public function deleteUserCard($id) {
+        $data = UserCard::find($id);
         if (isset($data->id) )
             return $data->delete();
         else 
