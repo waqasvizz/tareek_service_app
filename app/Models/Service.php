@@ -104,12 +104,6 @@ class Service extends Model
         if (isset($posted_data['service_img'])) {
             $data->service_img = $posted_data['service_img'];
         }
-        if (isset($posted_data['start_time'])) {
-            $data->start_time = $posted_data['start_time'];
-        }
-        if (isset($posted_data['end_time'])) {
-            $data->end_time = $posted_data['end_time'];
-        }
 
         $data->save();
         // $data = Service::getServices([

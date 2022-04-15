@@ -19,6 +19,8 @@ class CreateUserWeekDaysTable extends Migration
             $table->unsignedBigInteger('week_day_id');
             $table->foreign('service_id')->references('id')->on('services')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('week_day_id')->references('id')->on('week_days')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('start_time', 100)->nullable();
+            $table->string('end_time', 100)->nullable();
             $table->timestamps();
         });
     }

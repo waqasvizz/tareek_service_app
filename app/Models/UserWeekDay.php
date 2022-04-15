@@ -75,6 +75,14 @@ class UserWeekDay extends Model
             $data->week_day_id = $posted_data['week_day_id'];
         }
 
+        if (isset($posted_data['start_time'])) {
+            $data->start_time = $posted_data['start_time'];
+        }
+
+        if (isset($posted_data['end_time'])) {
+            $data->end_time = $posted_data['end_time'];
+        }
+
         $data->save();
         return $data;
     }

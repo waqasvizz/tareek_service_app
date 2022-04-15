@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\FCM_TokenController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\WeekDayController;
 use App\Http\Controllers\Api\UserWeekDayController;
+use App\Http\Controllers\Api\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -49,6 +51,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('products/{id}', [ProductController::class, 'update']);
 
     //resouce routes
+    Route::resource('users', UserController::class);
     Route::resource('user_week_days', UserWeekDayController::class);
     Route::resource('week_days', WeekDayController::class);
     Route::resource('supports', SupportController::class);

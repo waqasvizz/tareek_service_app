@@ -42,7 +42,7 @@ class Category extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'ASC');
+            $query->orderBy('id', 'desc');
         }
 
         if (isset($posted_data['paginate'])) {
@@ -56,6 +56,10 @@ class Category extends Model
                 $result = $query->get();
             }
         }
+        // $result = $query->toSql();
+        // echo '<pre>';
+        // print_r($result);
+        // exit;
         return $result;
     }
 

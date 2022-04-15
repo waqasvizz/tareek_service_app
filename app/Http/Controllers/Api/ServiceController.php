@@ -105,7 +105,9 @@ class ServiceController extends BaseController
             foreach ($request_data['week_days'] as $key => $value) {
                 UserWeekDay::saveUpdateUserWeekDay([
                     'service_id' => $service->id,
-                    'week_day_id' => $value
+                    'week_day_id' => $value,
+                    'start_time' => $request_data['start_time'][$key],
+                    'end_time' => $request_data['end_time'][$key],
                 ]);
             }
             $service = Service::getServices([
@@ -214,7 +216,9 @@ class ServiceController extends BaseController
                 foreach ($request_data['week_days'] as $key => $value) {
                     UserWeekDay::saveUpdateUserWeekDay([
                         'service_id' => $service->id,
-                        'week_day_id' => $value
+                        'week_day_id' => $value,
+                        'start_time' => $request_data['start_time'][$key],
+                        'end_time' => $request_data['end_time'][$key],
                     ]);
                 }
             }
