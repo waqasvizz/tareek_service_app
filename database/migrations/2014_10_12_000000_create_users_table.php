@@ -26,7 +26,7 @@ class CreateUsersTable extends Migration
             $table->string('company_name', 255)->nullable();
             $table->string('company_number', 255)->nullable();
             $table->string('company_documents', 255)->nullable();
-            $table->text('user_type')->comment('app, facebook, google')->default('app');
+            $table->string('user_type', 50)->comment('app, facebook, google')->default('app');
             $table->text('address')->nullable();
             $table->string('latitude', 255)->nullable();
             $table->string('longitude', 255)->nullable();
