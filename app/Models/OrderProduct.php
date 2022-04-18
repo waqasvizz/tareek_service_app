@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class OrderProduct extends Model
+{
+    use HasFactory;
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function getOrderProduct($posted_data = array())
+    {
+        $query = OrderProduct::latest()->with('order')->with('product');
+
+        if (isset($posted_data['id'])) {
+            $query = $query->where('id', $posted_data['id']);
+        }
+        if (isset($posted_data['product_id'])) {
+            $query = $query->where('product_id', $posted_data['product_id']);
+        }
+        if (isset($posted_data['order_id'])) {
+            $query = $query->where('order_id', $posted_data['order_id']);
+        }
+
+        $query->select('*');
+        
+        $query->getQuery()->orders = null;
+        if (isset($posted_data['orderBy_name'])) {
+            $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
+        } else {
+            $query->orderBy('id', 'ASC');
+        }
+
+        if (isset($posted_data['paginate'])) {
+            $result = $query->paginate($posted_data['paginate']);
+        } else {
+            if (isset($posted_data['detail'])) {
+                $result = $query->first();
+            } else if (isset($posted_data['count'])) {
+                $result = $query->count();
+            } else {
+                $result = $query->get();
+            }
+        }
+        return $result;
+    }
+
+
+
+    public function saveUpdateOrderProduct($posted_data = array())
+    {
+        if (isset($posted_data['update_id'])) {
+            $data = OrderProduct::find($posted_data['update_id']);
+        } else {
+            $data = new OrderProduct;
+        }
+
+        if (isset($posted_data['order_id'])) {
+            $data->order_id = $posted_data['order_id'];
+        }
+        if (isset($posted_data['product_id'])) {
+            $data->product_id = $posted_data['product_id'];
+        }
+        if (isset($posted_data['quantity'])) {
+            $data->quantity = $posted_data['quantity'];
+        }
+        if (isset($posted_data['price'])) {
+            $data->price = $posted_data['price'];
+        }
+
+        $data->save();
+        return $data;
+    }
+
+
+    public function deleteOrderProduct($id) {
+        $data = OrderProduct::find($id);
+        if (isset($data->id) )
+            return $data->delete();
+        else 
+            return false;
+    }
+}   
