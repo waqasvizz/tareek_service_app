@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,7 +19,12 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
             WeekDaysSeeder::class,
-            // ServiceSeeder::class,
+
+            CategorySeeder::class,
+            ServiceSeeder::class,
+            UserMultipleAddressSeeder::class,
+            UserDeliveryOptionSeeder::class,
+            UserCardSeeder::class,
         ]);
     }
 }

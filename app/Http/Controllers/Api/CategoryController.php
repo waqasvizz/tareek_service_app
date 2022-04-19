@@ -19,7 +19,7 @@ class CategoryController extends BaseController
     {
         $params = $request->all();
 
-        $posted_data =  array();
+        $posted_data =  $params;
         $posted_data['paginate'] = 10;
 
         if (isset($params['category_id']))

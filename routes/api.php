@@ -13,12 +13,14 @@ use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FCM_TokenController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\WeekDayController;
 use App\Http\Controllers\Api\UserWeekDayController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMultipleAddresseController;
 use App\Http\Controllers\Api\UserCardController;
 use App\Http\Controllers\Api\UserDeliveryOptionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -55,8 +57,10 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user_address/{id}', [UserMultipleAddresseController::class, 'update']);
     Route::post('user_cards/{id}', [UserCardController::class, 'update']);
     Route::post('user_delivery_option/{id}', [UserDeliveryOptionController::class, 'update']);
+    Route::post('orders/{id}', [OrderController::class, 'update']);
 
     //resouce routes
+    Route::resource('orders', OrderController::class);
     Route::resource('user_delivery_option', UserDeliveryOptionController::class);
     Route::resource('user_cards', UserCardController::class);
     Route::resource('user_address', UserMultipleAddresseController::class);

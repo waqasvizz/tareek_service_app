@@ -31,12 +31,17 @@ class Order extends Model
 
     public function order_product()
     {
-        return $this->hasMany(OrderProduct::class);
+        return $this->hasMany(OrderProduct::class)->with('product');
+    }
+
+    public function order_service()
+    {
+        return $this->hasMany(OrderService::class)->with('service');
     }
 
     public function getOrder($posted_data = array())
     {
-        $query = Order::latest()->with('user')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product');
+        $query = Order::latest()->with('user')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
@@ -114,17 +119,17 @@ class Order extends Model
         if (isset($posted_data['user_card_id'])) {
             $data->user_card_id = $posted_data['user_card_id'];
         }
-        if (isset($posted_data['schedule_date'])) {
-            $data->schedule_date = $posted_data['schedule_date'];
-        }
-        if (isset($posted_data['schedule_time'])) {
-            $data->schedule_time = $posted_data['schedule_time'];
-        }
         if (isset($posted_data['grand_total'])) {
             $data->grand_total = $posted_data['grand_total'];
         }
 
         $data->save();
+
+        $data = Order::getOrder([
+            'detail' => true,
+            'id' => $data->id
+        ]);
+
         return $data;
     }
 

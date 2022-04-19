@@ -32,6 +32,9 @@ class Category extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('categories.id', $posted_data['id']);
         }
+        if (isset($posted_data['category_type'])) {
+            $query = $query->where('categories.category_type', $posted_data['category_type']);
+        }
         if (isset($posted_data['category_title'])) {
             $query = $query->where('categories.category_title', 'like', '%' . $posted_data['category_title'] . '%');
         }
@@ -58,6 +61,7 @@ class Category extends Model
         }
         // $result = $query->toSql();
         // echo '<pre>';
+        // print_r($posted_data);
         // print_r($result);
         // exit;
         return $result;

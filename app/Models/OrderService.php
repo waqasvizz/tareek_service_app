@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderProduct extends Model
+class OrderService extends Model
 {
     use HasFactory;
 
@@ -14,20 +14,20 @@ class OrderProduct extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function product()
+    public function service()
     {
-        return $this->belongsTo(Product::class)->with('category');
+        return $this->belongsTo(Service::class)->with('category');
     }
 
-    public function getOrderProduct($posted_data = array())
+    public function getOrderService($posted_data = array())
     {
-        $query = OrderProduct::latest()->with('order')->with('product');
+        $query = OrderService::latest()->with('order')->with('service');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
         }
-        if (isset($posted_data['product_id'])) {
-            $query = $query->where('product_id', $posted_data['product_id']);
+        if (isset($posted_data['service_id'])) {
+            $query = $query->where('service_id', $posted_data['service_id']);
         }
         if (isset($posted_data['order_id'])) {
             $query = $query->where('order_id', $posted_data['order_id']);
@@ -58,25 +58,28 @@ class OrderProduct extends Model
 
 
 
-    public function saveUpdateOrderProduct($posted_data = array())
+    public function saveUpdateOrderService($posted_data = array())
     {
         if (isset($posted_data['update_id'])) {
-            $data = OrderProduct::find($posted_data['update_id']);
+            $data = OrderService::find($posted_data['update_id']);
         } else {
-            $data = new OrderProduct;
+            $data = new OrderService;
         }
 
         if (isset($posted_data['order_id'])) {
             $data->order_id = $posted_data['order_id'];
         }
-        if (isset($posted_data['product_id'])) {
-            $data->product_id = $posted_data['product_id'];
+        if (isset($posted_data['service_id'])) {
+            $data->service_id = $posted_data['service_id'];
         }
-        if (isset($posted_data['quantity'])) {
-            $data->quantity = $posted_data['quantity'];
+        if (isset($posted_data['schedule_date'])) {
+            $data->schedule_date = $posted_data['schedule_date'];
         }
-        if (isset($posted_data['price'])) {
-            $data->price = $posted_data['price'];
+        if (isset($posted_data['schedule_time'])) {
+            $data->schedule_time = $posted_data['schedule_time'];
+        }
+        if (isset($posted_data['service_price'])) {
+            $data->service_price = $posted_data['service_price'];
         }
 
         $data->save();
@@ -84,8 +87,8 @@ class OrderProduct extends Model
     }
 
 
-    public function deleteOrderProduct($id) {
-        $data = OrderProduct::find($id);
+    public function deleteOrderService($id) {
+        $data = OrderService::find($id);
         if (isset($data->id) )
             return $data->delete();
         else 

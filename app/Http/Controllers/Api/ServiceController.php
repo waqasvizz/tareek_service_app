@@ -56,7 +56,8 @@ class ServiceController extends BaseController
         $validator = Validator::make($request_data, [
             'service_title'       => 'required',
             'service_price'       => 'required',
-            'service_category'    => 'required',
+            // 'service_category'    => 'required',
+            'service_category' => 'required|exists:categories,id',
             'service_location'    => 'required',
             'service_lat'         => 'required',
             'service_long'        => 'required',

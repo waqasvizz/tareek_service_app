@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Validator;
 use Auth;
 use App\Models\Order;
+use App\Models\OrderProduct;
+use App\Models\OrderService;
 
 class OrderController extends BaseController
 {
@@ -38,9 +40,18 @@ class OrderController extends BaseController
         $request_data = $request->all(); 
    
         $validator = Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'order_type'    => 'required',
+            'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
+            'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
+            'user_card_id' => 'required|exists:user_cards,id',
+            'grand_total'    => 'required',
+            'service_id' => $request->order_type == 1 ? 'required|exists:services,id': 'nullable',
+            'service_price' => $request->order_type == 1 ? 'required': 'nullable',
+            'schedule_date' => $request->order_type == 1 ? 'required': 'nullable',
+            'schedule_time' => $request->order_type == 1 ? 'required': 'nullable',
+            'product_id' => $request->order_type == 2 ? 'required|exists:products,id': 'nullable',
+            'product_quantity' => $request->order_type == 2 ? 'required': 'nullable',
+            'product_price' => $request->order_type == 2 ? 'required': 'nullable',
         ]);
    
         if($validator->fails()){
@@ -48,9 +59,32 @@ class OrderController extends BaseController
         }
 
         $request_data['user_id'] = Auth::user()->id;
+        $request_data['order_status'] = 1;
         $response = Order::saveUpdateOrder($request_data);
 
         if ( isset($response->id) ){
+
+            if(isset($request_data['product_id'])){
+                foreach ($request_data['product_id'] as $key => $item) {
+                    OrderProduct::saveUpdateOrderProduct([
+                        'order_id' => $response->id,
+                        'product_id' => $request_data['product_id'][$key],
+                        'quantity' => $request_data['product_quantity'][$key],
+                        'price' => $request_data['product_price'][$key],
+                    ]);
+                }
+            }
+
+            if(isset($request_data['service_id'])){
+                OrderService::saveUpdateOrderService([
+                    'order_id' => $response->id,
+                    'service_id' => $request_data['service_id'],
+                    'schedule_date' => $request_data['schedule_date'],
+                    'schedule_time' => $request_data['schedule_time'],
+                    'service_price' => $request_data['service_price'],
+                ]);
+            }
+
             return $this->sendResponse($response, 'Order is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
@@ -88,9 +122,7 @@ class OrderController extends BaseController
         $request_data = $request->all(); 
    
         $validator = Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'order_status'    => 'required',
         ]);
    
         if($validator->fails()){
