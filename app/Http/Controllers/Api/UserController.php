@@ -83,16 +83,19 @@ class UserController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = Validator::make($request_data, [
-            'name'    => 'required',
+            'update_id' => 'required|exists:users,id',
+            // 'full_name'    => 'required',
+        ],[
+            'update_id.exists' => 'Updated record not exists',
         ]);
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $user = User::saveUpdateUser($request_data);
 
         if ( isset($user->id) ){

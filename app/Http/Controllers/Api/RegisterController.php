@@ -33,9 +33,9 @@ class RegisterController extends BaseController
             'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
             'email'             => 'required|email|unique:users',
-            'phone_number'      => 'nullable|max:15',
+            'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
-            'company_number'    => 'nullable|max:15',
+            'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'password'          => 'required|min:8',
             'confirm_password'  => 'required|required_with:password|same:password'
             
@@ -93,9 +93,10 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
-            $posted_data['account_status'] = $posted_data['role'] == 3 ? 0 : 1;
-            $posted_data['user_type'] = 'app';
-            $user_id = $this->UserObj->saveUpdateUser($posted_data);
+            $posted_data['account_status'] = $posted_data['role'] == 3 ? 2 : 1;
+            $posted_data['user_type'] = 1; //app
+            $user_detail = $this->UserObj->saveUpdateUser($posted_data);
+            $user_id = $user_detail->id;
             
             $message = ($user_id) > 0 ? 'User is successfully registered.' : 'Something went wrong during registration.';
             if ($user_id) {
@@ -168,7 +169,7 @@ class RegisterController extends BaseController
             $user_data['detail'] = true;
             $user_data = $this->UserObj->getUser($user_data);
 
-            if ( isset($user_data->id) && isset($user_data->user_type) && $user_data->user_type != 'app' ) {
+            if ( isset($user_data->id) && isset($user_data->user_type) && $user_data->user_type != 1 ) {
                 $response = $this->authorizeUser([
                     'email' => $posted_data['email'],
                     'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
@@ -187,16 +188,16 @@ class RegisterController extends BaseController
                 $user_data = array();
                 $user_data['email'] = $posted_data['email'];
                 $user_data['role'] = 2;
-                $user_data['account_status'] = $user_data['role'] == 3 ? 0 : 1;
+                $user_data['account_status'] = $user_data['role'] == 3 ? 2 : 1;
                 $user_data['password'] = '12345678@d';
                 
                 if ( isset($posted_data['facebook_id']) && !isset($posted_data['gmail_id']) )
-                    $user_data['user_type'] = 'facebook';
+                    $user_data['user_type'] = 2; //facebook;
                 if ( !isset($posted_data['facebook_id']) && isset($posted_data['gmail_id']) )
-                    $user_data['user_type'] = 'gmail';
+                    $user_data['user_type'] = 3; //google;
     
-                $user_id = $this->UserObj->saveUpdateUser($user_data);
-                
+                $user_detail = $this->UserObj->saveUpdateUser($user_data);
+                $user_id = $user_detail->id;
                 if ($user_id) {
                     $response = $this->authorizeUser([
                         'email' => $posted_data['email'],

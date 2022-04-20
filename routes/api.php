@@ -58,6 +58,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user_cards/{id}', [UserCardController::class, 'update']);
     Route::post('user_delivery_option/{id}', [UserDeliveryOptionController::class, 'update']);
     Route::post('orders/{id}', [OrderController::class, 'update']);
+    Route::post('users/{id}', [UserController::class, 'update']);
 
     //resouce routes
     Route::resource('orders', OrderController::class);

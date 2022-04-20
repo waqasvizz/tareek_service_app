@@ -26,12 +26,14 @@ class CreateUsersTable extends Migration
             $table->string('company_name', 255)->nullable();
             $table->string('company_number', 255)->nullable();
             $table->string('company_documents', 255)->nullable();
-            $table->string('user_type', 50)->comment('app, facebook, google')->default('app');
+            // $table->string('user_type', 50)->comment('app, facebook, google')->default('app');
+            $table->enum('user_type', ['app', 'facebook', 'google'])->default('app');
             $table->text('address')->nullable();
             $table->string('latitude', 255)->nullable();
             $table->string('longitude', 255)->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->tinyInteger('account_status')->comment('1=active, 0=block')->default(1);
+            // $table->tinyInteger('account_status')->comment('1=active, 0=block')->default(1);
+            $table->enum('account_status', ['Active', 'Block'])->default('Active');
             $table->rememberToken();
             $table->timestamps();
         });

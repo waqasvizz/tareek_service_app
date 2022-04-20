@@ -197,7 +197,13 @@ class User extends Authenticatable
         }
 
         $data->save();
-        return $data->id;
+
+        $data = User::getUser([
+            'detail' => true,
+            'id' => $data->id,
+        ]);
+
+        return $data;
     }
 
     public function deleteUser($id=0)

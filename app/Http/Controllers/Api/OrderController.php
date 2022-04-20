@@ -9,6 +9,7 @@ use Auth;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderService;
+use Stripe;
 
 class OrderController extends BaseController
 {
@@ -37,6 +38,47 @@ class OrderController extends BaseController
      */
     public function store(Request $request)
     {
+        // $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';
+        // $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
+        // $res = '';
+        // $card_tok = '';
+        // try {
+        // //   $res = $stripe->tokens->create([
+        // //     'card' => [
+        // //       'number' => '4242424242424242',
+        // //       'exp_month' => 4,
+        // //       'exp_year' => 2023,
+        // //       'cvc' => '314',
+        // //     ],
+        // //   ]);
+        // //   $card_tok = $res->id;
+
+        // //   $res = $stripe->charges->create([
+        // //     'amount' => 1000,
+        // //     'currency' => 'usd',
+        // //     'source' => $card_tok,
+        // //     'description' => 'My First Test Charge (created for API docs)',
+        // //   ]);
+
+
+          
+        //   $res = $stripe->transfers->create([
+        //     'amount' => 1000,
+        //     'currency' => 'usd',
+        //     // 'destination' => 'acct_1KqDTlGLDz2RvoIA',
+        //     // 'destination' => 'acct_1KqBGECRyRnAcPDL', //me
+        //     'destination' => 'acct_1K2894K5viigToqx', //lms
+        //   ]);
+
+
+        // } catch (\Throwable $th) { 
+        //     echo $th->getMessage();
+        // }
+
+        // echo '<pre>';
+        // print_r($card_tok);
+        // print_r($res);
+        // exit;
         $request_data = $request->all(); 
    
         $validator = Validator::make($request_data, [
