@@ -38,37 +38,83 @@ class OrderController extends BaseController
      */
     public function store(Request $request)
     {
-        // $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';
+        // $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
         // $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
         // $res = '';
         // $card_tok = '';
         // try {
-        // //   $res = $stripe->tokens->create([
-        // //     'card' => [
-        // //       'number' => '4242424242424242',
-        // //       'exp_month' => 4,
-        // //       'exp_year' => 2023,
-        // //       'cvc' => '314',
-        // //     ],
-        // //   ]);
-        // //   $card_tok = $res->id;
 
-        // //   $res = $stripe->charges->create([
-        // //     'amount' => 1000,
+
+        //     // $res = $stripe->tokens->create([
+        //     //     'card' => [
+        //     //     'number' => '4242424242424242',
+        //     //     'exp_month' => 4,
+        //     //     'exp_year' => 2023,
+        //     //     'cvc' => '314',
+        //     //     ],
+        //     // ]);
+        //     // $card_tok = $res->id;
+
+
+        //     // // $cusRec = $stripe->customers->create([
+        //     // //     'email' => Auth::user()->email,
+        //     // //     'source'  => $card_tok,
+        //     // //     'description' => 'new customer added',
+        //     // // ]);
+        //     // // $stripe_cus_id = $cusRec->id;
+
+        //     // $res = $stripe->charges->create([
+        //     //     'amount' => 1000,
+        //     //     'currency' => 'usd',
+        //     //     'source' => $card_tok,
+        //     //     'description' => 'My First Test Charge (created for API docs)',
+        //     // ]);
+
+
+        // // $stripe->paymentIntents->create([
+        // //     'amount' => 10000,
         // //     'currency' => 'usd',
-        // //     'source' => $card_tok,
-        // //     'description' => 'My First Test Charge (created for API docs)',
-        // //   ]);
+        // //     'customer' => $stripe_cus_id,
+        // //     'transfer_group' => 'ORDER_95',
+        // // ]);
+
+
+        // // $res = $stripe->transfers->create([
+        // //     'amount' => 10000,
+        // //     'currency' => 'usd',
+        // //     'destination' => 'acct_1KqXpr2EuFwucR3a',
+        // //     'transfer_group' => 'ORDER_95',
+        // // ]);
+
+
+
+
 
 
           
-        //   $res = $stripe->transfers->create([
-        //     'amount' => 1000,
-        //     'currency' => 'usd',
-        //     // 'destination' => 'acct_1KqDTlGLDz2RvoIA',
-        //     // 'destination' => 'acct_1KqBGECRyRnAcPDL', //me
-        //     'destination' => 'acct_1K2894K5viigToqx', //lms
-        //   ]);
+        // //   $res = $stripe->transfers->create([
+        // //     'amount' => 1000,
+        // //     'currency' => 'usd',
+        // //     'destination' => 'acct_1KqXpr2EuFwucR3a',
+        // //   ]);
+        // //   $res = $stripe->balance->retrieve();
+
+
+        // // $res = $stripe->accounts->create([
+        // //     'type' => 'custom',
+        // //     'country' => 'US',
+        // //     'email' => 'testburhan.akhtar1221@gmail.com',
+        // //     'capabilities' => [
+        // //     'card_payments' => ['requested' => true],
+        // //     'transfers' => ['requested' => true],
+        // //     ],
+        // // ]);
+        // //   $res = $stripe->accounts->update(
+        // //         'acct_1KqXpr2EuFwucR3a',
+        // //         ['tos_acceptance' => ['date' => 1609798905, 'ip' => '8.8.8.8']]
+        // //   );
+
+        // //   $res = $stripe->accounts->all(['limit' => 3]);
 
 
         // } catch (\Throwable $th) { 

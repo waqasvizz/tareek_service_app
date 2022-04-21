@@ -96,6 +96,29 @@ class UserController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
+
+        if (isset($request->profile_image)) {
+            
+            $allowedfileExtension = ['jpg','jpeg','png'];
+            $extension = $request->profile_image->getClientOriginalExtension();
+
+            $check = in_array($extension, $allowedfileExtension);
+            if($check) {
+                $response = upload_files_to_storage($request, $request->profile_image, 'profile_image');
+                $request_data['profile_image'] = $response['file_path'];
+
+                if( isset($response['action']) && $response['action'] == true ) {
+                    
+                    $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
+                    $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
+                }
+            }
+            else {
+                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }
+
         $user = User::saveUpdateUser($request_data);
 
         if ( isset($user->id) ){
