@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Validator;
 use App\Models\Category;
 
 class CategoryController extends BaseController
@@ -44,7 +43,7 @@ class CategoryController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'category_title'    => 'required',
             'category_type'     => 'required',
             'commission'     => 'required',

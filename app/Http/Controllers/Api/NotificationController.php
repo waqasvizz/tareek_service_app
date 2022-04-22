@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Validator;
 use App\Models\Notification;
 use App\Models\User;
 
@@ -45,7 +44,7 @@ class NotificationController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'receiver_id' => 'required',
             'sender_id' => 'required',
             'text' => 'required',
@@ -94,7 +93,7 @@ class NotificationController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all();
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'receiver_id' => 'required',
             'sender_id' => 'required',
             'stars' => 'required',

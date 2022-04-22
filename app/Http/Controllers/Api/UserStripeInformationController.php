@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserDeliveryOption;
+use App\Models\UserStripeInformation;
 
-class UserDeliveryOptionController extends BaseController
+class UserStripeInformationController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -20,8 +20,13 @@ class UserDeliveryOptionController extends BaseController
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
         
-        $response = UserDeliveryOption::getUserDeliveryOption($request_data);
-        $message = count($response) > 0 ? 'User delivery option retrieved successfully.' : 'User delivery option not found against your query.';
+        $response = UserStripeInformation::getUserStripeInformation($request_data);
+
+        // echo '<pre>';
+        // print_r(\Crypt::decrypt($response[0]['pk_live']));
+        // exit;
+        
+        $message = count($response) > 0 ? 'User stripe information retrieved successfully.' : 'User stripe information not found against your query.';
 
         return $this->sendResponse($response, $message);
     }
@@ -36,9 +41,8 @@ class UserDeliveryOptionController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'publishable_key'    => 'required',
+            'secret_key'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -46,10 +50,20 @@ class UserDeliveryOptionController extends BaseController
         }
 
         $request_data['user_id'] = \Auth::user()->id;
-        $response = UserDeliveryOption::saveUpdateUserDeliveryOption($request_data);
+        try {
+            $stripe = new \Stripe\StripeClient($request_data['secret_key']);
+            $stripe->balance->retrieve();
+            
+        } catch (\Throwable $th) { 
+            // echo $th->getMessage();
+            $error_message['error'] = $th->getMessage();
+            return $this->sendError($error_message['error'], $error_message);  
+        }
+        
+        $response = UserStripeInformation::saveUpdateUserStripeInformation($request_data);
 
         if ( isset($response->id) ){
-            return $this->sendResponse($response, 'User delivery option is successfully added.');
+            return $this->sendResponse($response, 'User stripe information is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -64,14 +78,14 @@ class UserDeliveryOptionController extends BaseController
      */
     public function show($id)
     {
-        $response = UserDeliveryOption::find($id);
+        $response = UserStripeInformation::find($id);
   
         if (is_null($response)) {
-            $error_message['error'] = 'User delivery option not found.';
+            $error_message['error'] = 'User stripe information not found.';
             return $this->sendError($error_message['error'], $error_message);  
         }
    
-        return $this->sendResponse($response, 'User delivery option retrieved successfully.');
+        return $this->sendResponse($response, 'User stripe information retrieved successfully.');
     }
     
     /**
@@ -86,9 +100,8 @@ class UserDeliveryOptionController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'publishable_key'    => 'required',
+            'secret_key'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -96,10 +109,20 @@ class UserDeliveryOptionController extends BaseController
         }
 
         $request_data['update_id'] = $id;
-        $response = UserDeliveryOption::saveUpdateUserDeliveryOption($request_data);
+        try {
+            $stripe = new \Stripe\StripeClient($request_data['secret_key']);
+            $stripe->balance->retrieve();
+            
+        } catch (\Throwable $th) { 
+            // echo $th->getMessage();
+            $error_message['error'] = $th->getMessage();
+            return $this->sendError($error_message['error'], $error_message);  
+        }
+        $response = UserStripeInformation::saveUpdateUserStripeInformation($request_data);
+
 
         if ( isset($response->id) ){
-            return $this->sendResponse($response, 'User delivery option is successfully updated.');
+            return $this->sendResponse($response, 'User stripe information is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -114,12 +137,12 @@ class UserDeliveryOptionController extends BaseController
      */
     public function destroy($id)
     {
-        $response = UserDeliveryOption::deleteUserDeliveryOption($id);
+        $response = UserStripeInformation::deleteUserStripeInformation($id);
         if($response) {
-            return $this->sendResponse([], 'User delivery option deleted successfully.');
+            return $this->sendResponse([], 'User stripe information deleted successfully.');
         }
         else {
-            $error_message['error'] = 'User delivery option already deleted / Not found in database.';
+            $error_message['error'] = 'User stripe information already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
     }

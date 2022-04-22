@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Validator;
-use Auth;
 use App\Models\OrderProduct;
 
 class OrderProductController extends BaseController
@@ -37,7 +35,7 @@ class OrderProductController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'title'    => 'required',
             'status'    => 'required',
             'amount' => $request->status == 1 ? 'required': 'nullable',
@@ -47,7 +45,7 @@ class OrderProductController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['user_id'] = Auth::user()->id;
+        $request_data['user_id'] = \Auth::user()->id;
         $response = OrderProduct::saveUpdateOrderProduct($request_data);
 
         if ( isset($response->id) ){
@@ -87,7 +85,7 @@ class OrderProductController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'title'    => 'required',
             'status'    => 'required',
             'amount' => $request->status == 1 ? 'required': 'nullable',

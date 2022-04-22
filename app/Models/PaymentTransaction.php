@@ -26,14 +26,14 @@ class PaymentTransaction extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
         }
+        if (isset($posted_data['order_id'])) {
+            $query = $query->where('order_id', $posted_data['order_id']);
+        }
         if (isset($posted_data['sender_user_id'])) {
             $query = $query->where('sender_user_id', $posted_data['sender_user_id']);
         }
         if (isset($posted_data['receiver_user_id'])) {
             $query = $query->where('receiver_user_id', $posted_data['receiver_user_id']);
-        }
-        if (isset($posted_data['order_id'])) {
-            $query = $query->where('order_id', $posted_data['order_id']);
         }
 
         $query->select('*');
@@ -69,23 +69,32 @@ class PaymentTransaction extends Model
             $data = new PaymentTransaction;
         }
 
+        if (isset($posted_data['order_id'])) {
+            $data->order_id = $posted_data['order_id'];
+        }
         if (isset($posted_data['sender_user_id'])) {
             $data->sender_user_id = $posted_data['sender_user_id'];
         }
         if (isset($posted_data['receiver_user_id'])) {
             $data->receiver_user_id = $posted_data['receiver_user_id'];
         }
-        if (isset($posted_data['order_id'])) {
-            $data->order_id = $posted_data['order_id'];
-        }
-        if (isset($posted_data['amount_captured'])) {
-            $data->amount_captured = $posted_data['amount_captured'];
-        }
         if (isset($posted_data['currency'])) {
             $data->currency = $posted_data['currency'];
         }
-        if (isset($posted_data['response_object'])) {
-            $data->response_object = $posted_data['response_object'];
+        if (isset($posted_data['total_amount_captured'])) {
+            $data->total_amount_captured = $posted_data['total_amount_captured'];
+        }
+        if (isset($posted_data['admin_amount_captured'])) {
+            $data->admin_amount_captured = $posted_data['admin_amount_captured'];
+        }
+        if (isset($posted_data['provider_amount_captured'])) {
+            $data->provider_amount_captured = $posted_data['provider_amount_captured'];
+        }
+        if (isset($posted_data['admin_response_object'])) {
+            $data->admin_response_object = $posted_data['admin_response_object'];
+        }
+        if (isset($posted_data['provider_response_object'])) {
+            $data->provider_response_object = $posted_data['provider_response_object'];
         }
 
         $data->save();

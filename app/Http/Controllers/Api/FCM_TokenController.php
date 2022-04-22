@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Validator;
 use App\Models\Chat;
 use App\Models\User;
 use App\Models\FCM_Token;
@@ -50,7 +49,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',
@@ -93,7 +92,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',
@@ -139,7 +138,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all();
 
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',

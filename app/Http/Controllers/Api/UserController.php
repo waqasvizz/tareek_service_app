@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Validator;
 use App\Models\User;
 
 class UserController extends BaseController
@@ -37,7 +36,7 @@ class UserController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'name'    => 'required',
         ]);
    
@@ -85,7 +84,7 @@ class UserController extends BaseController
         $request_data = $request->all(); 
         $request_data['update_id'] = $id;
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'update_id' => 'required|exists:users,id',
             // 'full_name'    => 'required',
         ],[

@@ -21,9 +21,12 @@ class CreatePaymentTransactionsTable extends Migration
             $table->foreign('sender_user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->bigInteger('receiver_user_id')->unsigned();
             $table->foreign('receiver_user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
-            $table->double('amount_captured');
             $table->string('currency',20);
-            $table->longText('response_object')->nullable();
+            $table->double('total_amount_captured');
+            $table->double('admin_amount_captured');
+            $table->double('provider_amount_captured');
+            $table->longText('admin_response_object')->nullable();
+            $table->longText('provider_response_object')->nullable();
             $table->timestamps();
         });
     }

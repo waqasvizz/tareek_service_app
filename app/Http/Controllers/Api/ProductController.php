@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Validator;
 use App\Models\Product;
-use Auth;
 // use App\Http\Resources\Product as ProductResource;
 
 class ProductController extends BaseController
@@ -52,7 +50,7 @@ class ProductController extends BaseController
     {
         $request_data = $request->all();
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'product_title'       => 'required',
             'product_price'       => 'required',
             'product_category'    => 'required',
@@ -93,7 +91,7 @@ class ProductController extends BaseController
         }
 
         $category = Product::saveUpdateProduct([
-            'user_id'       => Auth::user()->id,
+            'user_id'       => \Auth::user()->id,
             'product_title'       => $request_data['product_title'],
             'product_price'       => $request_data['product_price'],
             'product_category'    => $request_data['product_category'],

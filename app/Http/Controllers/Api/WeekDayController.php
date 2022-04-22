@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Validator;
 use App\Models\WeekDay;
 
 class WeekDayController extends BaseController
@@ -37,7 +36,7 @@ class WeekDayController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'name'    => 'required',
         ]);
    
@@ -84,7 +83,7 @@ class WeekDayController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'name'    => 'required',
         ]);
    

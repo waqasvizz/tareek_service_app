@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMultipleAddresseController;
 use App\Http\Controllers\Api\UserCardController;
 use App\Http\Controllers\Api\UserDeliveryOptionController;
+use App\Http\Controllers\Api\UserStripeInformationController;
 
 
 /*
@@ -59,8 +60,10 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user_delivery_option/{id}', [UserDeliveryOptionController::class, 'update']);
     Route::post('orders/{id}', [OrderController::class, 'update']);
     Route::post('users/{id}', [UserController::class, 'update']);
+    Route::post('user_stripe_informations/{id}', [UserStripeInformationController::class, 'update']);
 
     //resouce routes
+    Route::resource('user_stripe_informations', UserStripeInformationController::class);
     Route::resource('orders', OrderController::class);
     Route::resource('user_delivery_option', UserDeliveryOptionController::class);
     Route::resource('user_cards', UserCardController::class);

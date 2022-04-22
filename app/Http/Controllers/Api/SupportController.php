@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
-use Validator;
 use App\Models\Support;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,7 +38,7 @@ class SupportController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'meta_key'     => 'required',
             'meta_value'     => 'required',
         ]);
@@ -55,7 +54,7 @@ class SupportController extends BaseController
             $request_data['update_id'] = $getSupports->id;
         }
 
-        $request_data['user_id'] = Auth::user()->id;
+        $request_data['user_id'] = \Auth::user()->id;
         $support = Support::saveUpdateSupport($request_data);
 
         if ( isset($support->id) ){
@@ -99,7 +98,7 @@ class SupportController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'meta_key'     => 'required',
             'meta_value'     => 'required',
         ]);
@@ -107,7 +106,7 @@ class SupportController extends BaseController
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
-        $request_data['user_id'] = Auth::user()->id;
+        $request_data['user_id'] = \Auth::user()->id;
         $request_data['update_id'] = $id;
         $support = Support::saveUpdateSupport($request_data);
 

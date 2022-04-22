@@ -7,8 +7,6 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Validator;
-use DB;
 use App\Models\User;
 use App\Models\Service;
 use App\Models\AssignService;
@@ -248,8 +246,8 @@ class RegisterController extends BaseController
         $email = isset($posted_data['email']) ? $posted_data['email'] : '';
         $password = isset($posted_data['password']) ? $posted_data['password'] : '';
 
-        if(Auth::attempt(['email' => $email, 'password' => $password])){ 
-            $user = Auth::user();
+        if(\Auth::attempt(['email' => $email, 'password' => $password])){ 
+            $user = \Auth::user();
             $response =  $user;
             $response['token'] =  $user->createToken('MyApp')->accessToken;
 
@@ -282,7 +280,7 @@ class RegisterController extends BaseController
                 $email = $request->get('email');
                 $password = Hash::make($random_hash);
 
-                DB::update('update users set password = ? where email = ?',[$password,$email]);
+                \DB::update('update users set password = ? where email = ?',[$password,$email]);
 
                 $data = [
                     'new_password' => $random_hash,
@@ -304,8 +302,8 @@ class RegisterController extends BaseController
 
     public function logoutUser(Request $request)
     {
-        if (!empty(Auth::user()) ) {
-            $user = Auth::user()->token();
+        if (!empty(\Auth::user()) ) {
+            $user = \Auth::user()->token();
             $user->revoke();
         }
         return $this->sendResponse([], 'User is successfully logout.');
@@ -313,10 +311,11 @@ class RegisterController extends BaseController
 
     public function getProfile(Request $request)
     {
-        if (!empty(Auth::user()) ) {
+        if (!empty(\Auth::user()) ) {
              
             $posted_data = array();
-            $posted_data['id'] = Auth::user()->id; 
+            $posted_data['id'] = \Auth::user()->id; 
+            $posted_data['detail'] = true;
             $user = User::getUser($posted_data);
             return $this->sendResponse($user, 'User profile is successfully loaded.');
         }

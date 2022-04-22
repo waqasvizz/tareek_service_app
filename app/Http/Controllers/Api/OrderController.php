@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Validator;
-use Auth;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderService;
-use Stripe;
+
 
 class OrderController extends BaseController
 {
@@ -57,7 +55,7 @@ class OrderController extends BaseController
 
 
         //     // // $cusRec = $stripe->customers->create([
-        //     // //     'email' => Auth::user()->email,
+        //     // //     'email' => \Auth::user()->email,
         //     // //     'source'  => $card_tok,
         //     // //     'description' => 'new customer added',
         //     // // ]);
@@ -127,7 +125,7 @@ class OrderController extends BaseController
         // exit;
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'order_type'    => 'required',
             'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
             'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
@@ -146,7 +144,7 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['user_id'] = Auth::user()->id;
+        $request_data['user_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
         $response = Order::saveUpdateOrder($request_data);
 
@@ -209,7 +207,7 @@ class OrderController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = Validator::make($request_data, [
+        $validator = \Validator::make($request_data, [
             'order_status'    => 'required',
         ]);
    

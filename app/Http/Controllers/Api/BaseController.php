@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Validator;
+use Crypt;
+use Auth;
+use DB;
+use Stripe;
 
 class BaseController extends Controller
 {
