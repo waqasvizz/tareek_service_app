@@ -104,6 +104,9 @@ class Service extends Model
         if (isset($posted_data['service_img'])) {
             $data->service_img = $posted_data['service_img'];
         }
+        if (isset($posted_data['avg_rating'])) {
+            $data->avg_rating = $posted_data['avg_rating'];
+        }
 
         $data->save();
         // $data = Service::getServices([

@@ -17,17 +17,17 @@ class ProductController extends BaseController
      */
     public function index(Request $request)
     {
-        $params = $request->all();
+        // $params = $request->all();
 
-        $posted_data =  array();
+        $posted_data = $request->all();
         $posted_data['paginate'] = 10;
 
-        if (isset($params['product_id']))
-            $posted_data['id'] = $params['product_id'];
-        if (isset($params['product_name']))
-            $posted_data['product_name'] = $params['product_name'];
-        if (isset($params['per_page']))
-            $posted_data['paginate'] = $params['per_page'];
+        if (isset($posted_data['product_id']))
+            $posted_data['id'] = $posted_data['product_id'];
+        if (isset($posted_data['product_name']))
+            $posted_data['product_name'] = $posted_data['product_name'];
+        if (isset($posted_data['per_page']))
+            $posted_data['paginate'] = $posted_data['per_page'];
         
         $products = Product::getProducts($posted_data);
         $message = count($products) > 0 ? 'Products retrieved successfully.' : 'Products not found against your query.';

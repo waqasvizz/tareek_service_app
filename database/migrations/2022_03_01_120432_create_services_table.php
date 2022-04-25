@@ -27,6 +27,7 @@ class CreateServicesTable extends Migration
             $table->string('long', 255)->nullable();
             $table->text('description')->nullable();
             $table->string('contact', 255)->nullable();
+            $table->string('avg_rating',20)->nullable();
             $table->timestamps();
         });
     }

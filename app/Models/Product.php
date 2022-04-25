@@ -33,6 +33,12 @@ class Product extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('products.id', $posted_data['id']);
         }
+        if (isset($posted_data['user_id'])) {
+            $query = $query->where('products.user_id', $posted_data['user_id']);
+        }
+        if (isset($posted_data['category_id'])) {
+            $query = $query->where('products.category_id', $posted_data['category_id']);
+        }
         if (isset($posted_data['product_name'])) {
             $query = $query->where('products.title', 'like', '%' . $posted_data['product_name'] . '%');
         }
@@ -98,6 +104,9 @@ class Product extends Model
         }
         if (isset($posted_data['product_img'])) {
             $data->product_img = $posted_data['product_img'];
+        }
+        if (isset($posted_data['avg_rating'])) {
+            $data->avg_rating = $posted_data['avg_rating'];
         }
 
         $data->save();

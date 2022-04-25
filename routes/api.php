@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FCM_TokenController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductReviewController;
+use App\Http\Controllers\Api\ServiceReviewController;
 use App\Http\Controllers\Api\WeekDayController;
 use App\Http\Controllers\Api\UserWeekDayController;
 use App\Http\Controllers\Api\UserController;
@@ -61,8 +63,12 @@ Route::middleware('auth:api')->group( function () {
     Route::post('orders/{id}', [OrderController::class, 'update']);
     Route::post('users/{id}', [UserController::class, 'update']);
     Route::post('user_stripe_informations/{id}', [UserStripeInformationController::class, 'update']);
+    Route::post('service_reviews/{id}', [ServiceReviewController::class, 'update']);
+    Route::post('product_reviews/{id}', [ProductReviewController::class, 'update']);
 
     //resouce routes
+    Route::resource('product_reviews', ProductReviewController::class);
+    Route::resource('service_reviews', ServiceReviewController::class);
     Route::resource('user_stripe_informations', UserStripeInformationController::class);
     Route::resource('orders', OrderController::class);
     Route::resource('user_delivery_option', UserDeliveryOptionController::class);

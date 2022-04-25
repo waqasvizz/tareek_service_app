@@ -47,8 +47,8 @@ class ChatController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required',
-            'sender_id' => 'required',
+            'receiver_id' => 'required|exists:users,id',
+            'sender_id' => 'required|exists:users,id',
             'text' => 'required',
         ]);
    
@@ -124,8 +124,8 @@ class ChatController extends BaseController
     {
         $request_data = $request->all();
         $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required',
-            'sender_id' => 'required',
+            'receiver_id' => 'required|exists:users,id',
+            'sender_id' => 'required|exists:users,id',
             'stars' => 'required',
             'description' => 'required'
         ]);
