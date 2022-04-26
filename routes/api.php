@@ -65,6 +65,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user_stripe_informations/{id}', [UserStripeInformationController::class, 'update']);
     Route::post('service_reviews/{id}', [ServiceReviewController::class, 'update']);
     Route::post('product_reviews/{id}', [ProductReviewController::class, 'update']);
+    Route::post('read_chats', [ChatController::class, 'read_chats']);
 
     //resouce routes
     Route::resource('product_reviews', ProductReviewController::class);

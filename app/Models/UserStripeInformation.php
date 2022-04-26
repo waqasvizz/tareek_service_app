@@ -13,7 +13,7 @@ class UserStripeInformation extends Model
 
     public function getSkLiveAttribute($value)
     {
-        return  Crypt::decrypt($value);
+        return  $value == null? $value:Crypt::decrypt($value);
     }
 
     public function setSkLiveAttribute($value)
@@ -23,7 +23,7 @@ class UserStripeInformation extends Model
 
     public function getPkLiveAttribute($value)
     {
-        return  Crypt::decrypt($value);
+        return  $value == null? $value:Crypt::decrypt($value);
     }
 
     public function setPkLiveAttribute($value)
@@ -33,7 +33,7 @@ class UserStripeInformation extends Model
     
     public function getSkTestAttribute($value)
     {
-        return  Crypt::decrypt($value);
+        return  $value == null? $value:Crypt::decrypt($value);
     }
 
     public function setSkTestAttribute($value)
@@ -43,7 +43,7 @@ class UserStripeInformation extends Model
 
     public function getPkTestAttribute($value)
     {
-        return  Crypt::decrypt($value);
+        return  $value == null? $value:Crypt::decrypt($value);
     }
 
     public function setPkTestAttribute($value)

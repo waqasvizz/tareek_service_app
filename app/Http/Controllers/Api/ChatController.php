@@ -176,4 +176,31 @@ class ChatController extends BaseController
             return $this->sendError($error_message['error'], $error_message);
         } 
     }
+
+
+
+    public function read_chats(Request $request)
+    {
+        $request_data = $request->all(); 
+   
+        $validator = \Validator::make($request_data, [
+            'chat_id' => 'required|exists:chats,id',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
+        }
+
+        $request_data['update_id'] = $request_data['chat_id'];
+        $request_data['seen_at'] = date('Y-m-d h:i:s');
+
+        $check_read_chat = Chat::where('id', $request_data['update_id'])->whereNull('seen_at')->first();
+        if($check_read_chat){
+            $chat = Chat::saveUpdateChat($request_data);
+            return $this->sendResponse($chat, 'Chat read successfully.');
+        }else{
+            $error_message['error'] = 'Chat already read successfully.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+    } 
 }

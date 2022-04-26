@@ -20,8 +20,8 @@ class CreateChatsTable extends Migration
             $table->foreign('sender_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('receiver_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->text('text');
-            $table->dateTime('seen_at')->nullable();
-            $table->string('attachment_path')->nullable();
+            $table->timestamp('seen_at')->nullable();
+            $table->string('attachment_path', 255)->nullable();
             $table->timestamps();
         });
     }
