@@ -30,6 +30,13 @@ class ChatController extends BaseController
             $posted_data['receiver_id'] = $params['receiver_id'];
         if (isset($params['per_page']))
             $posted_data['paginate'] = $params['per_page'];
+
+
+        if (isset($params['last_chat_all']) && !isset($params['sender_id'])){
+            $error_message['error'] = 'Please enter sender id.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+            
         
         $chats = Chat::getChats($posted_data);
         $message = !empty($chats) ? 'Chats retrieved successfully.' : 'Chats not found against your query.';
@@ -56,6 +63,10 @@ class ChatController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
 
+        if (isset($request->attachment_path)) {
+            $response = upload_files_to_storage($request, $request->attachment_path, 'chat_attachments');
+            $request_data['attachment_path'] = $response['file_path'];
+        }
         $chat = Chat::saveUpdateChat($request_data);
         
         $posted_data = array();

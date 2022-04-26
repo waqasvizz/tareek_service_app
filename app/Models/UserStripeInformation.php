@@ -11,6 +11,46 @@ class UserStripeInformation extends Model
     use HasFactory;
     protected $table = 'user_stripe_informations';
 
+    public function getSkLiveAttribute($value)
+    {
+        return  Crypt::decrypt($value);
+    }
+
+    public function setSkLiveAttribute($value)
+    {
+        $this->attributes['sk_live'] = Crypt::encrypt($value);
+    }
+
+    public function getPkLiveAttribute($value)
+    {
+        return  Crypt::decrypt($value);
+    }
+
+    public function setPkLiveAttribute($value)
+    {
+        $this->attributes['pk_live'] = Crypt::encrypt($value);
+    }
+    
+    public function getSkTestAttribute($value)
+    {
+        return  Crypt::decrypt($value);
+    }
+
+    public function setSkTestAttribute($value)
+    {
+        $this->attributes['sk_test'] = Crypt::encrypt($value);
+    }
+
+    public function getPkTestAttribute($value)
+    {
+        return  Crypt::decrypt($value);
+    }
+
+    public function setPkTestAttribute($value)
+    {
+        $this->attributes['pk_test'] = Crypt::encrypt($value);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class)->with('role');
@@ -67,26 +107,25 @@ class UserStripeInformation extends Model
             $data->user_id = $posted_data['user_id'];
         }
         if (isset($posted_data['stripe_mode'])) {
-            $data->stripe_mode = Crypt::encrypt($posted_data['stripe_mode']);
+            $data->stripe_mode = $posted_data['stripe_mode'];
         }
         if (isset($posted_data['pk_test'])) {
-            $data->pk_test = Crypt::encrypt($posted_data['pk_test']);
+            $data->pk_test = $posted_data['pk_test'];
         }
         if (isset($posted_data['sk_test'])) {
-            $data->sk_test = Crypt::encrypt($posted_data['sk_test']);
+            $data->sk_test = $posted_data['sk_test'];
         }
         if (isset($posted_data['pk_live'])) {
-            $data->pk_live = Crypt::encrypt($posted_data['pk_live']);
+            $data->pk_live = $posted_data['pk_live'];
         }
         if (isset($posted_data['sk_live'])) {
-            $data->sk_live = Crypt::encrypt($posted_data['sk_live']);
+            $data->sk_live = $posted_data['sk_live'];
         }
         if (isset($posted_data['publishable_key'])) {
-            $data->pk_live = Crypt::encrypt($posted_data['publishable_key']);
+            $data->pk_live = $posted_data['publishable_key'];
         }
         if (isset($posted_data['secret_key'])) {
-            $data->sk_live = Crypt::encrypt($posted_data['secret_key']);
-            // $data->sk_live = Crypt::decrypt($posted_data['secret_key']);
+            $data->sk_live = $posted_data['secret_key'];
         }
 
         $data->save();

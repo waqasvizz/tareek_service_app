@@ -98,8 +98,10 @@ class UserStripeInformationController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'exists:user_stripe_informations,id',
             'publishable_key'    => 'required',
             'secret_key'    => 'required',
         ]);
@@ -108,7 +110,6 @@ class UserStripeInformationController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         try {
             $stripe = new \Stripe\StripeClient($request_data['secret_key']);
             $stripe->balance->retrieve();
