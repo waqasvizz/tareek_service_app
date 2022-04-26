@@ -9,6 +9,7 @@ use Crypt;
 use Auth;
 use DB;
 use Stripe;
+use Storage;
 
 class BaseController extends Controller
 {

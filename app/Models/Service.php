@@ -38,6 +38,12 @@ class Service extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('services.id', $posted_data['id']);
         }
+        if (isset($posted_data['user_id'])) {
+            $query = $query->where('services.user_id', $posted_data['user_id']);
+        }
+        if (isset($posted_data['category_id'])) {
+            $query = $query->where('services.category_id', $posted_data['category_id']);
+        }
         if (isset($posted_data['service_name'])) {
             $query = $query->where('services.title', 'like', '%' . $posted_data['service_name'] . '%');
         }
@@ -48,7 +54,7 @@ class Service extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'ASC');
+            $query->orderBy('id', 'DESC');
         }
         
         if (isset($posted_data['paginate'])) {

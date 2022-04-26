@@ -29,7 +29,7 @@ class UserDeliveryOption extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'ASC');
+            $query->orderBy('id', 'DESC');
         }
 
         if (isset($posted_data['paginate'])) {

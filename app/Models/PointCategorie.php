@@ -5,19 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserCard extends Model
+class PointCategorie extends Model
 {
     use HasFactory;
 
-    public function getUserCard($posted_data = array())
+    public function getPointCategorie($posted_data = array())
     {
-        $query = UserCard::latest();
+        $query = PointCategorie::latest();
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
-        }
-        if (isset($posted_data['user_id'])) {
-            $query = $query->where('user_id', $posted_data['user_id']);
         }
 
         $query->select('*');
@@ -45,31 +42,22 @@ class UserCard extends Model
 
 
 
-    public function saveUpdateUserCard($posted_data = array())
+    public function saveUpdatePointCategorie($posted_data = array())
     {
         if (isset($posted_data['update_id'])) {
-            $data = UserCard::find($posted_data['update_id']);
+            $data = PointCategorie::find($posted_data['update_id']);
         } else {
-            $data = new UserCard;
+            $data = new PointCategorie;
+        } 
+        
+        if (isset($posted_data['point_name'])) {
+            $data->point_name = $posted_data['point_name'];
         }
-
-        if (isset($posted_data['user_id'])) {
-            $data->user_id = $posted_data['user_id'];
+        if (isset($posted_data['point_value'])) {
+            $data->point_value = $posted_data['point_value'];
         }
-        if (isset($posted_data['card_name'])) {
-            $data->card_name = $posted_data['card_name'];
-        }
-        if (isset($posted_data['card_number'])) {
-            $data->card_number = $posted_data['card_number'];
-        }
-        if (isset($posted_data['exp_month'])) {
-            $data->exp_month = $posted_data['exp_month'];
-        }
-        if (isset($posted_data['exp_year'])) {
-            $data->exp_year = $posted_data['exp_year'];
-        }
-        if (isset($posted_data['cvc_number'])) {
-            $data->cvc_number = $posted_data['cvc_number'];
+        if (isset($posted_data['point_target'])) {
+            $data->point_target = $posted_data['point_target'];
         }
 
         $data->save();
@@ -77,8 +65,8 @@ class UserCard extends Model
     }
 
 
-    public function deleteUserCard($id) {
-        $data = UserCard::find($id);
+    public function deletePointCategorie($id) {
+        $data = PointCategorie::find($id);
         if (isset($data->id) )
             return $data->delete();
         else 

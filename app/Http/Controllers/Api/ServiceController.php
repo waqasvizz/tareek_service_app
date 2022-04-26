@@ -19,17 +19,17 @@ class ServiceController extends BaseController
      */
     public function index(Request $request)
     {
-        $params = $request->all();
+        // $params = $request->all();
 
-        $posted_data =  array();
+        $posted_data = $request->all();
         $posted_data['paginate'] = 10;
 
-        if (isset($params['service_id']))
-            $posted_data['id'] = $params['service_id'];
-        if (isset($params['service_name']))
-            $posted_data['service_name'] = $params['service_name'];
-        if (isset($params['per_page']))
-            $posted_data['paginate'] = $params['per_page'];
+        if (isset($posted_data['service_id']))
+            $posted_data['id'] = $posted_data['service_id'];
+        if (isset($posted_data['service_name']))
+            $posted_data['service_name'] = $posted_data['service_name'];
+        if (isset($posted_data['per_page']))
+            $posted_data['paginate'] = $posted_data['per_page'];
         
         $services = Service::getServices($posted_data);
         $message = count($services) > 0 ? 'Services retrieved successfully.' : 'Services not found against your query.';

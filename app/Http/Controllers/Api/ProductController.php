@@ -53,7 +53,7 @@ class ProductController extends BaseController
         $validator = \Validator::make($request_data, [
             'product_title'       => 'required',
             'product_price'       => 'required',
-            'product_category'    => 'required',
+            'product_category'    => 'required|exists:categories,id',
             'product_location'    => 'required',
             'product_lat'         => 'required',
             'product_long'        => 'required',
@@ -142,21 +142,17 @@ class ProductController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all();
-         
-        $post_data = array();
-        $post_data['detail'] = true;
-        $post_data['id'] = isset($id) ? $id : 0;
-        $product_record = Product::getProducts($post_data);
-        if(!$product_record){
-            $error_message['error'] = 'This Product cannot found in database.';
-            return $this->sendError($error_message['error'], $error_message);  
+        $request_data['update_id'] = $id;
+   
+        $validator = \Validator::make($request_data, [
+            'update_id'    => 'required|exists:products,id',
+            'product_category'    => 'required|exists:categories,id',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
         }
-
-        // if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
-        //     $error_message['category_type'] = 'You entered the invalid category type.';
-        //     return $this->sendError('Validation Error.', $error_message);
-        // }
-
+        
         $img_data = array();
         if (isset($request->product_image)) {
             
@@ -196,7 +192,7 @@ class ProductController extends BaseController
             'product_long'        => $request_data['product_long'],
             'product_description' => $request_data['product_description'],
             'product_contact'     => $request_data['product_contact'],
-            'product_img'         => $img_data['file_path'],
+            'product_img'         => isset($img_data['file_path'])?$img_data['file_path']:'',
         ]);
 
         if ( isset($category->id) ){

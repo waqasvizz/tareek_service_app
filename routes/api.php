@@ -23,7 +23,7 @@ use App\Http\Controllers\Api\UserMultipleAddresseController;
 use App\Http\Controllers\Api\UserCardController;
 use App\Http\Controllers\Api\UserDeliveryOptionController;
 use App\Http\Controllers\Api\UserStripeInformationController;
-
+use App\Http\Controllers\Api\PointCategorieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +48,7 @@ Route::post('forgot_password', [RegisterController::class, 'forgotPassword']);
 
 Route::middleware('auth:api')->group( function () {
     
+    Route::post('read_chats', [ChatController::class, 'read_chats']);
     Route::get('get_profile', [RegisterController::class, 'getProfile']);
     Route::post('logout', [RegisterController::class, 'logoutUser']);
 
@@ -65,9 +66,10 @@ Route::middleware('auth:api')->group( function () {
     Route::post('user_stripe_informations/{id}', [UserStripeInformationController::class, 'update']);
     Route::post('service_reviews/{id}', [ServiceReviewController::class, 'update']);
     Route::post('product_reviews/{id}', [ProductReviewController::class, 'update']);
-    Route::post('read_chats', [ChatController::class, 'read_chats']);
+    Route::post('point_categories/{id}', [PointCategorieController::class, 'update']);
 
     //resouce routes
+    Route::resource('point_categories', PointCategorieController::class);
     Route::resource('product_reviews', ProductReviewController::class);
     Route::resource('service_reviews', ServiceReviewController::class);
     Route::resource('user_stripe_informations', UserStripeInformationController::class);

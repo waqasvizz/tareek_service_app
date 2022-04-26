@@ -168,8 +168,25 @@ class ChatController extends BaseController
      */
     public function destroy($id)
     {
-        if(Chat::find($id)){
-            Chat::deleteChat($id); 
+        $data = Chat::find($id);
+        if($data){
+            $attachQuery = Chat::latest()->whereNotNull('attachment_path')->get();
+            foreach($attachQuery as $filePath){
+                delete_files_from_storage($filePath['attachment_path']);
+            }
+
+            
+            $del_query = Chat::latest();
+            $del_query = $del_query->orWhere(function ($del_query) use ($data) {
+                $del_query->where('sender_id', '=', $data['sender_id'])
+                    ->where('receiver_id', '=', $data['receiver_id']);
+            });
+            $del_query = $del_query->orWhere(function ($del_query) use ($data) {
+                $del_query->where('sender_id', '=', $data['receiver_id'])
+                    ->where('receiver_id', '=', $data['sender_id']);
+            });
+            $del_query->delete();
+
             return $this->sendResponse([], 'Chat deleted successfully.');
         }else{
             $error_message['error'] = 'The chat is already deleted.';
