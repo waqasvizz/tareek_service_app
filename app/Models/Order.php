@@ -122,6 +122,15 @@ class Order extends Model
         if (isset($posted_data['grand_total'])) {
             $data->grand_total = $posted_data['grand_total'];
         }
+        if (isset($posted_data['redeem_point'])) {
+            $data->redeem_point = $posted_data['redeem_point'];
+        }
+        if (isset($posted_data['total'])) {
+            $data->total = $posted_data['total'];
+        }
+        if (isset($posted_data['discount'])) {
+            $data->discount = $posted_data['discount'];
+        }
 
         $data->save();
 

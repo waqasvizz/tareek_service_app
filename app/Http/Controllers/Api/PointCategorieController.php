@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PointCategorie;
+use App\Models\UserPoint;
+use App\Models\UserPointLog;
 
 class PointCategorieController extends BaseController
 {
@@ -40,6 +42,7 @@ class PointCategorieController extends BaseController
             'point_name'    => 'required',
             'point_value'    => 'required',
             'point_target'    => 'required',
+            'per_point_value'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -89,6 +92,7 @@ class PointCategorieController extends BaseController
             'point_name'    => 'required',
             'point_value'    => 'required',
             'point_target'    => 'required',
+            'per_point_value'    => 'required',
         ]);
    
         if($validator->fails()){

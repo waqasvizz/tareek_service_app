@@ -18,6 +18,7 @@ class CreatePointCategoriesTable extends Migration
             $table->string('point_name', 255)->nullable();
             $table->integer('point_value')->nullable();
             $table->integer('point_target')->nullable();
+            $table->integer('per_point_value')->nullable();
             $table->timestamps();
         });
     }

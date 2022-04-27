@@ -153,20 +153,17 @@ class ServiceController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all();
-         
-        $post_data = array();
-        $post_data['detail'] = true;
-        $post_data['id'] = isset($id) ? $id : 0;
-        $service_record = Service::getServices($post_data);
-        if(!$service_record){
-            $error_message['error'] = 'This Service cannot found in database.';
-            return $this->sendError($error_message['error'], $error_message);
+        $request_data['update_id'] = $id;
+   
+        $validator = \Validator::make($request_data, [
+            'update_id'    => 'required|exists:services,id',
+            'service_category'    => 'required|exists:categories,id',
+        ]);
+
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
         }
         
-        // if( isset($request_data['service_type']) && $request_data['service_type'] != 1 && $request_data['service_type'] != 2 ){
-        //     $error_message['service_type'] = 'You entered the invalid service type.';
-        //     return $this->sendError('Validation Error.', $error_message);
-        // }
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -197,7 +194,6 @@ class ServiceController extends BaseController
             }
         }
 
-        $request_data['update_id'] = $id;
         $service = Service::saveUpdateService($request_data);
 
         if ( isset($service->id) ){

@@ -20,6 +20,7 @@ class CreateUserPointsTable extends Migration
             $table->unsignedBigInteger('point_categorie_id');
             $table->foreign('point_categorie_id')->references('id')->on('point_categories')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('total_points')->nullable();
+            $table->integer('total_point_count')->nullable();
             $table->integer('last_points')->nullable();
             $table->timestamps();
         });

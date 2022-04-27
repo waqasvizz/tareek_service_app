@@ -25,7 +25,10 @@ class CreateOrdersTable extends Migration
             $table->foreign('user_delivery_option_id')->references('id')->on('user_delivery_options')->onUpdate('cascade')->onDelete('cascade');
             $table->unsignedBigInteger('user_card_id');
             $table->foreign('user_card_id')->references('id')->on('user_cards')->onUpdate('cascade')->onDelete('cascade');
-            $table->double('grand_total');
+            $table->double('total')->nullable();
+            $table->double('discount')->nullable();
+            $table->double('grand_total')->nullable();
+            $table->double('redeem_point')->nullable();
             $table->timestamps();
         });
     }

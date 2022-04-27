@@ -170,6 +170,7 @@ class ProductController extends BaseController
                     if( isset($response['action']) && $response['action'] == true ) {
                         $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
                         $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
+                        $request_data['product_img'] = $img_data['file_path'];
                     }
                 }
                 else {
@@ -182,18 +183,7 @@ class ProductController extends BaseController
             }
         }
 
-        $category = Product::saveUpdateProduct([
-            'update_id'           => $id,
-            'product_title'       => $request_data['product_title'],
-            'product_price'       => $request_data['product_price'],
-            'product_category'    => $request_data['product_category'],
-            'product_location'    => $request_data['product_location'],
-            'product_lat'         => $request_data['product_lat'],
-            'product_long'        => $request_data['product_long'],
-            'product_description' => $request_data['product_description'],
-            'product_contact'     => $request_data['product_contact'],
-            'product_img'         => isset($img_data['file_path'])?$img_data['file_path']:'',
-        ]);
+        $category = Product::saveUpdateProduct($request_data);
 
         if ( isset($category->id) ){
             return $this->sendResponse($category, 'Product is successfully added.');

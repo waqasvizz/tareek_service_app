@@ -19,6 +19,7 @@ class CreateUserPointLogsTable extends Migration
             $table->foreign('user_point_id')->references('id')->on('user_points')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('point_value')->nullable();
             $table->integer('point_target')->nullable();
+            $table->integer('per_point_value')->nullable();
             $table->integer('total_point_count')->nullable();
             $table->integer('total_point_value')->nullable();
             $table->timestamps();

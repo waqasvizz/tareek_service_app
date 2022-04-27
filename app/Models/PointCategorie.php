@@ -59,6 +59,9 @@ class PointCategorie extends Model
         if (isset($posted_data['point_target'])) {
             $data->point_target = $posted_data['point_target'];
         }
+        if (isset($posted_data['per_point_value'])) {
+            $data->per_point_value = $posted_data['per_point_value'];
+        }
 
         $data->save();
         return $data;

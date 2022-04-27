@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\OrderService;
+use App\Models\PointCategorie;
+use App\Models\User;
 
 
 class OrderController extends BaseController
@@ -129,8 +131,9 @@ class OrderController extends BaseController
             'order_type'    => 'required',
             'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
             'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
+            'user_delivery_option_id' => $request->order_type == 2 ? 'required|exists:user_delivery_options,id': 'nullable',
             'user_card_id' => 'required|exists:user_cards,id',
-            'grand_total'    => 'required',
+            // 'grand_total'    => 'required',
             'service_id' => $request->order_type == 1 ? 'required|exists:services,id': 'nullable',
             'service_price' => $request->order_type == 1 ? 'required': 'nullable',
             'schedule_date' => $request->order_type == 1 ? 'required': 'nullable',
@@ -138,6 +141,7 @@ class OrderController extends BaseController
             'product_id' => $request->order_type == 2 ? 'required|exists:products,id': 'nullable',
             'product_quantity' => $request->order_type == 2 ? 'required': 'nullable',
             'product_price' => $request->order_type == 2 ? 'required': 'nullable',
+            // 'redeem_point'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -147,8 +151,19 @@ class OrderController extends BaseController
         $request_data['user_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
         $response = Order::saveUpdateOrder($request_data);
+        $user_detail = User::getUser([
+            'detail' => true,
+            'id' => $request_data['user_id']
+        ]);
+
+        if(isset($request_data['redeem_point']) && ($request_data['redeem_point'] > $user_detail->remaining_point)){
+            $error_message['error'] = 'You have entered invalid redeem points.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+
 
         if ( isset($response->id) ){
+            $grand_total = 0;
 
             if(isset($request_data['product_id'])){
                 foreach ($request_data['product_id'] as $key => $item) {
@@ -158,6 +173,7 @@ class OrderController extends BaseController
                         'quantity' => $request_data['product_quantity'][$key],
                         'price' => $request_data['product_price'][$key],
                     ]);
+                    $grand_total = $grand_total + $request_data['product_price'][$key] * $request_data['product_quantity'][$key];
                 }
             }
 
@@ -169,7 +185,31 @@ class OrderController extends BaseController
                     'schedule_time' => $request_data['schedule_time'],
                     'service_price' => $request_data['service_price'],
                 ]);
+                $grand_total = $request_data['service_price'];
             }
+
+            $update_data = array();
+            $update_data['update_id'] = $response->id;
+            $update_data['total'] = $grand_total;
+            if(isset($request_data['redeem_point'])){
+
+                $PointCategorieDetail = PointCategorie::getPointCategorie([
+                    'id' => 1,
+                    'detail' => true,
+                ]);
+                if(isset($PointCategorieDetail)){
+                    $discount = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+                    $grand_total = $grand_total - $discount;
+                    $update_data['discount'] = $discount;
+                    $update_data['redeem_point'] = $request_data['redeem_point'];
+                }
+
+                $user = User::find($request_data['user_id']);
+                $user->increment('redeem_point',$request_data['redeem_point']);
+                $user->decrement('remaining_point',$request_data['redeem_point']);
+            }
+            $update_data['grand_total'] = $grand_total;
+            Order::saveUpdateOrder($update_data);
 
             return $this->sendResponse($response, 'Order is successfully added.');
         }else{

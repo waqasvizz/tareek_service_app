@@ -17,9 +17,9 @@ class PaymentTransactionController extends BaseController
     public function index(Request $request)
     {
         $request_data = $request->all();
-        // $request_data['paginate'] = 10;
-        // if (isset($request_data['per_page']))
-        //     $request_data['paginate'] = $request_data['per_page'];
+        $request_data['paginate'] = 10;
+        if (isset($request_data['per_page']))
+            $request_data['paginate'] = $request_data['per_page'];
         
         $week_day = PaymentTransaction::getPaymentTransaction($request_data);
         $message = count($week_day) > 0 ? 'Payment transactions retrieved successfully.' : 'Payment transactions not found against your query.';

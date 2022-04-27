@@ -14,14 +14,14 @@ class Chat extends Model
     {
         return $this->belongsTo('App\Models\User', 'sender_id')
             ->with('role')
-            ->select(['id', 'role_id', 'name', 'email', 'profile_image']);
+            ->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
     }
 
     public function receiverDetails()
     {
         return $this->belongsTo('App\Models\User', 'receiver_id')
             ->with('role')
-            ->select(['id', 'role_id', 'name', 'email', 'profile_image']);
+            ->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
     }
 
     public function getChats($posted_data = array())

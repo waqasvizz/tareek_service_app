@@ -34,6 +34,9 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             // $table->tinyInteger('account_status')->comment('1=active, 0=block')->default(1);
             $table->enum('account_status', ['Active', 'Block'])->default('Active');
+            $table->integer('total_point')->nullable()->default(0);
+            $table->integer('redeem_point')->nullable()->default(0);
+            $table->integer('remaining_point')->nullable()->default(0);
             $table->rememberToken();
             $table->timestamps();
         });

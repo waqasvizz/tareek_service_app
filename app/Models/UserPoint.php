@@ -76,6 +76,9 @@ class UserPoint extends Model
         if (isset($posted_data['total_points'])) {
             $data->total_points = $posted_data['total_points'];
         }
+        if (isset($posted_data['total_user_point_count'])) {
+            $data->total_point_count = $posted_data['total_user_point_count'];
+        }
         if (isset($posted_data['last_points'])) {
             $data->last_points = $posted_data['last_points'];
         }
@@ -91,5 +94,91 @@ class UserPoint extends Model
             return $data->delete();
         else 
             return false;
+    }
+
+    // *********************************
+    // $totalorder = $request->get('totalorder');
+    // UserPoint::assignUserPoint([
+    //     'point_categorie_id' => 1,
+    //     'totalorder' => $totalorder,
+    // ]);
+    // echo '<pre>';
+    // print_r('test');
+    // exit;        
+    // *********************************
+    public function assignUserPoint($posted_data = array()){
+
+        if (isset($posted_data['point_categorie_id'])) {
+            $point_categorie_id = $posted_data['point_categorie_id'];
+        }
+        if (isset($posted_data['totalorder'])) {
+            $totalorder = $posted_data['totalorder'];
+        }
+        
+        $PointCategorieDetail = PointCategorie::getPointCategorie([
+            'id' => $point_categorie_id,
+            'detail' => true,
+        ]);
+        
+        if($PointCategorieDetail){
+            $point_value = $PointCategorieDetail->point_value;
+            $point_target = $PointCategorieDetail->point_target;
+            $per_point_value = $PointCategorieDetail->per_point_value;
+            $point_categorie_id = $PointCategorieDetail->id;
+            $user_id = \Auth::user()->id;
+            
+            $getUserPoint = UserPoint::getUserPoint([
+                'user_id' => $user_id,
+                'point_categorie_id' => $point_categorie_id,
+                'detail' => true,
+            ]);
+            $oldorder = 0;
+            $old_total_points = 0;
+            $old_total_user_point_count = 0;
+            if($getUserPoint){
+                $UserPointUpdate_id = $getUserPoint->id;
+                $oldorder = $getUserPoint->last_points;
+                $old_total_points = $getUserPoint->total_points;
+                $old_total_user_point_count = $getUserPoint->total_point_count;
+            }
+            $oldorder = $totalorder - $oldorder;
+
+            if($oldorder>=$point_target){
+                $total_points = floor($oldorder/$point_target);
+                $total_point_count = $total_points;
+                $total_points = floor($total_points*$point_value);
+                $total_point_value = $total_points;
+                $total_points = $old_total_points+$total_points;
+                $last_points = floor($totalorder/$point_target);
+                $last_points = $last_points*$point_target;
+
+                $total_user_point_count = $total_point_count + $old_total_user_point_count;
+
+                $posted_data = array();
+                $posted_data['user_id'] = $user_id;
+                $posted_data['point_categorie_id'] = $point_categorie_id;
+                $posted_data['total_points'] = $total_points;
+                $posted_data['last_points'] = $last_points;
+                $posted_data['total_user_point_count'] = $total_user_point_count;
+                if(isset($UserPointUpdate_id)){
+                    $posted_data['update_id'] = $UserPointUpdate_id;
+                }
+                $user_point_res = UserPoint::saveUpdateUserPoint($posted_data);
+
+                $posted_data = array();
+                $posted_data['user_point_id'] = $user_point_res->id;
+                $posted_data['point_value'] = $point_value;
+                $posted_data['point_target'] = $point_target;
+                $posted_data['per_point_value'] = $per_point_value;
+                $posted_data['total_point_count'] = $total_point_count;
+                $posted_data['total_point_value'] = $total_point_value;
+                UserPointLog::saveUpdateUserPointLog($posted_data);
+
+                $user = User::find($user_id);
+                $user->increment('total_point',$total_point_value);
+                $user->increment('remaining_point',$total_point_value);
+            }
+
+        }
     }
 }   
