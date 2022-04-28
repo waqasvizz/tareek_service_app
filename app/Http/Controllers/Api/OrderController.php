@@ -260,61 +260,61 @@ class OrderController extends BaseController
         }
 
 
-        // if($request_data['order_status'] == 2){    
-        //     try {
+        if($request_data['order_status'] == 2){    
+            try {
 
-        //         $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
-        //             'user_id' => 1,
-        //             'detail' => true
-        //         ]);
+                $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+                    'user_id' => 1,
+                    'detail' => true
+                ]);
 
-        //         if(!$check_admin_stripe_info){
-        //             $error_message['error'] = 'Something went wrong please contact with support.';
-        //             return $this->sendError($error_message['error'], $error_message);  
-        //         }
+                if(!$check_admin_stripe_info){
+                    $error_message['error'] = 'Something went wrong please contact with support.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
 
-        //         $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
-        //             'user_id' => \Auth::user()->id,
-        //             'detail' => true
-        //         ]);
+                $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
+                    'user_id' => \Auth::user()->id,
+                    'detail' => true
+                ]);
 
-        //         if(!$check_provider_stripe_info){
-        //             $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
-        //             return $this->sendError($error_message['error'], $error_message);  
-        //         }
-        //         echo 'sa';
-        //         exit;
+                if(!$check_provider_stripe_info){
+                    $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
+                echo 'sa';
+                exit;
 
 
-        //         $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
-        //         $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
+                $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
+                $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
             
-        //         $create_token_res = $stripe->tokens->create([
-        //             'card' => [
-        //             'number' => '4242424242424242',
-        //             'exp_month' => 4,
-        //             'exp_year' => 2023,
-        //             'cvc' => '314',
-        //             ],
-        //         ]);
-        //         echo '<pre>';
-        //         print_r($create_token_res);
-        //         exit;
-        //         $card_tok = $create_token_res->id;
+                $create_token_res = $stripe->tokens->create([
+                    'card' => [
+                    'number' => '4242424242424242',
+                    'exp_month' => 4,
+                    'exp_year' => 2023,
+                    'cvc' => '314',
+                    ],
+                ]);
+                echo '<pre>';
+                print_r($create_token_res);
+                exit;
+                $card_tok = $create_token_res->id;
 
-        //         $res = $stripe->charges->create([
-        //             'amount' => 1000,
-        //             'currency' => 'usd',
-        //             'source' => $card_tok,
-        //             'description' => 'My First Test Charge (created for API docs)',
-        //         ]);
+                $res = $stripe->charges->create([
+                    'amount' => 1000,
+                    'currency' => 'usd',
+                    'source' => $card_tok,
+                    'description' => 'My First Test Charge (created for API docs)',
+                ]);
 
 
-        //     } catch (\Throwable $th) {
-        //         $error_message['error'] = $th->getMessage();
-        //         return $this->sendError($error_message['error'], $error_message);
-        //     }
-        // }
+            } catch (\Throwable $th) {
+                $error_message['error'] = $th->getMessage();
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }
 
         $response = Order::saveUpdateOrder($request_data);
 
