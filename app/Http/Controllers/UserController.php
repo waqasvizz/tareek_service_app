@@ -284,8 +284,10 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $posted_data = $request->all(); 
+        $posted_data['update_id'] = $id;
         
         $rules = array(
+            'update_id' => 'exists:users,id',
             'phone_number' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:12',
             'user_role' => 'required',
             'user_name' => 'required',
@@ -304,12 +306,8 @@ class UserController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
             // ->withInput($request->except('password'));
         } else {
-            // echo '<pre>';
-            // print_r($posted_data);
-            // exit;
 
             try{
-                $posted_data['update_id'] = $id;
                 $posted_data['role'] = $posted_data['user_role'];
                 $posted_data['name'] = $posted_data['user_name'];
 

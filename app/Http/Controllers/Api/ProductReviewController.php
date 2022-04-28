@@ -109,6 +109,7 @@ class ProductReviewController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
             'update_id' => 'exists:product_reviews,id',
@@ -125,8 +126,7 @@ class ProductReviewController extends BaseController
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
-
-        $request_data['update_id'] = $id;
+ 
         $response = ProductReview::saveUpdateProductReview($request_data);
 
         if ( isset($response->id) ){

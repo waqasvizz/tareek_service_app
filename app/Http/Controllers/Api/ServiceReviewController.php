@@ -108,6 +108,7 @@ class ServiceReviewController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
             'update_id' => 'exists:service_reviews,id',
@@ -125,7 +126,6 @@ class ServiceReviewController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $response = ServiceReview::saveUpdateServiceReview($request_data);
 
         if ( isset($response->id) ){

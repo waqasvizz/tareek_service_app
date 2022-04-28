@@ -121,14 +121,17 @@ class CategoryController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
-        $post_data = array();
-        $post_data['detail'] = true;
-        $post_data['id'] = isset($id) ? $id : 0;
-        $category_record = Category::getCategories($post_data);
-        if(!$category_record){
-            $error_message['error'] = 'This Category cannot found in database.';
-            return $this->sendError($error_message['error'], $error_message);  
+        $validator = \Validator::make($request_data, [
+            'update_id' => 'exists:categories,id',
+            'category_title'    => 'required',
+            'category_type'     => 'required',
+            'commission'     => 'required',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
         
         if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
@@ -167,7 +170,6 @@ class CategoryController extends BaseController
             }
         }
 
-        $request_data['update_id'] = $id;
         $category = Category::saveUpdateCategory($request_data);
 
         if ( isset($category->id) ){

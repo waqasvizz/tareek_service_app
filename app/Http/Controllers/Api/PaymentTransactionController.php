@@ -82,8 +82,10 @@ class PaymentTransactionController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'required|exists:payment_transactions,id',
             'name'    => 'required',
         ]);
    
@@ -91,7 +93,6 @@ class PaymentTransactionController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $week_day = PaymentTransaction::saveUpdatePaymentTransaction($request_data);
 
         if ( isset($week_day->id) ){

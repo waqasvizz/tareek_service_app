@@ -60,10 +60,22 @@ class UserStripeInformationController extends BaseController
             return $this->sendError($error_message['error'], $error_message);  
         }
         
+        $check_keys = UserStripeInformation::getUserStripeInformation([
+            'user_id' => $request_data['user_id'],
+            'detail' => true,
+        ]);
+        if($check_keys){
+            $request_data['update_id'] = $check_keys->id;
+        }
+
         $response = UserStripeInformation::saveUpdateUserStripeInformation($request_data);
 
         if ( isset($response->id) ){
-            return $this->sendResponse($response, 'User stripe information is successfully added.');
+            if(isset($request_data['update_id'])){
+                return $this->sendResponse($response, 'User stripe information is successfully updated.');
+            }else{
+                return $this->sendResponse($response, 'User stripe information is successfully added.');
+            }
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  

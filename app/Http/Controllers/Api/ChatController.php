@@ -133,31 +133,7 @@ class ChatController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $request_data = $request->all();
-        $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required|exists:users,id',
-            'sender_id' => 'required|exists:users,id',
-            'stars' => 'required',
-            'description' => 'required'
-        ]);
-   
-        if($validator->fails()){
-            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
-        }
-
-        $posted_data = array();
-        $posted_data['detail'] = true;
-        $posted_data['id'] = $id;
-        $chat = Chat::getChats($posted_data);
-        if(!$chat){
-            $error_message['error'] = 'The chat is not found.';
-            return $this->sendError($error_message['error'], $error_message);
-        }
-        
-        $request_data['update_id'] = $id;
-        $chat = Chat::saveUpdateChat($request_data);
-
-        return $this->sendResponse($chat, 'Chat updated successfully.');
+        //
     }
    
     /**

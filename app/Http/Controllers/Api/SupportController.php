@@ -97,8 +97,10 @@ class SupportController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'required|exists:supports,id',
             'meta_key'     => 'required',
             'meta_value'     => 'required',
         ]);
@@ -107,7 +109,6 @@ class SupportController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
         $request_data['user_id'] = \Auth::user()->id;
-        $request_data['update_id'] = $id;
         $support = Support::saveUpdateSupport($request_data);
 
         if ( isset($support->id) ){

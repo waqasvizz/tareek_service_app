@@ -82,8 +82,10 @@ class UserWeekDayController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'required|exists:user_week_days,id',
             'name'    => 'required',
         ]);
    
@@ -91,7 +93,6 @@ class UserWeekDayController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $user_week_day = UserWeekDay::saveUpdateUserWeekDay($request_data);
 
         if ( isset($user_week_day->id) ){

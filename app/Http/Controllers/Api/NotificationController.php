@@ -45,8 +45,8 @@ class NotificationController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required',
-            'sender_id' => 'required',
+            'receiver_id' => 'required|exists:users,id',
+            'sender_id' => 'required|exists:users,id',
             'text' => 'required',
         ]);
    
@@ -93,11 +93,13 @@ class NotificationController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all();
+        $request_data['update_id'] = $id;
+        
         $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required',
-            'sender_id' => 'required',
-            'stars' => 'required',
-            'description' => 'required'
+            'update_id' => 'required|exists:notifications,id',
+            'receiver_id' => 'required|exists:users,id',
+            'sender_id' => 'required|exists:users,id',
+            'text' => 'required',
         ]);
    
         if($validator->fails()){
@@ -113,7 +115,6 @@ class NotificationController extends BaseController
             return $this->sendError($error_message['error'], $error_message);
         }
         
-        $request_data['update_id'] = $id;
         $notification = Notification::saveUpdateNotification($request_data);
 
         return $this->sendResponse($notification, 'Notification updated successfully.');

@@ -84,8 +84,10 @@ class UserDeliveryOptionController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'required|exists:user_delivery_options,id',
             'title'    => 'required',
             'status'    => 'required',
             'amount' => $request->status == 1 ? 'required': 'nullable',
@@ -95,7 +97,6 @@ class UserDeliveryOptionController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $response = UserDeliveryOption::saveUpdateUserDeliveryOption($request_data);
 
         if ( isset($response->id) ){

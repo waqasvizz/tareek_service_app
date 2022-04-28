@@ -36,9 +36,10 @@ class OrderProductController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'order_id'    => 'required|exists:orders,id',
+            'product_id'    => 'required|exists:products,id',
+            'quantity'    => 'required',
+            'price'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -84,18 +85,20 @@ class OrderProductController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
-            'title'    => 'required',
-            'status'    => 'required',
-            'amount' => $request->status == 1 ? 'required': 'nullable',
+            'update_id' => 'exists:order_products,id',
+            'order_id'    => 'required|exists:orders,id',
+            'product_id'    => 'required|exists:products,id',
+            'quantity'    => 'required',
+            'price'    => 'required',
         ]);
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
         $response = OrderProduct::saveUpdateOrderProduct($request_data);
 
         if ( isset($response->id) ){

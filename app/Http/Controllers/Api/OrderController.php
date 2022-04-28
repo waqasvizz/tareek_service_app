@@ -246,8 +246,10 @@ class OrderController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all(); 
+        $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
+            'update_id' => 'required|exists:orders,id',
             'order_status'    => 'required',
         ]);
    
@@ -255,7 +257,39 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['update_id'] = $id;
+
+        // if($request_data['order_status'] == 2){    
+        //     try {
+        //         $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
+        //         $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
+            
+        //         $create_token_res = $stripe->tokens->create([
+        //             'card' => [
+        //             'number' => '4242424242424242',
+        //             'exp_month' => 4,
+        //             'exp_year' => 2023,
+        //             'cvc' => '314',
+        //             ],
+        //         ]);
+        //         echo '<pre>';
+        //         print_r($create_token_res);
+        //         exit;
+        //         $card_tok = $create_token_res->id;
+
+        //         $res = $stripe->charges->create([
+        //             'amount' => 1000,
+        //             'currency' => 'usd',
+        //             'source' => $card_tok,
+        //             'description' => 'My First Test Charge (created for API docs)',
+        //         ]);
+
+
+        //     } catch (\Throwable $th) {
+        //         $error_message['error'] = $th->getMessage();
+        //         return $this->sendError($error_message['error'], $error_message);
+        //     }
+        // }
+
         $response = Order::saveUpdateOrder($request_data);
 
         if ( isset($response->id) ){
