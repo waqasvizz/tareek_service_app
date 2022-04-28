@@ -19,8 +19,11 @@ class CreateOrdersTable extends Migration
             $table->enum('order_status', ['Pending', 'Request accepted', 'Request rejected', 'On the way', 'In-progress', 'Completed']);
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
-            $table->unsignedBigInteger('user_multiple_address_id');
-            $table->foreign('user_multiple_address_id')->references('id')->on('user_multiple_addresses')->onUpdate('cascade')->onDelete('cascade');
+            
+            $table->BigInteger('user_multiple_address_id')->nullable();
+            // $table->unsignedBigInteger('user_multiple_address_id');
+            // $table->foreign('user_multiple_address_id')->references('id')->on('user_multiple_addresses')->onUpdate('cascade')->onDelete('cascade');
+
             $table->unsignedBigInteger('user_delivery_option_id');
             $table->foreign('user_delivery_option_id')->references('id')->on('user_delivery_options')->onUpdate('cascade')->onDelete('cascade');
             $table->unsignedBigInteger('user_card_id');

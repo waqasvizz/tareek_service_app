@@ -162,6 +162,7 @@ class ProductController extends BaseController
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
                 
+                $res['action'] = true;
                 if (isset($product_record->product_img) && $product_record->product_img != '')
                     $res = delete_files_from_storage($product_record->product_img);
 
