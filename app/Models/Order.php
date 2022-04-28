@@ -49,8 +49,11 @@ class Order extends Model
         if (isset($posted_data['name'])) {
             $query = $query->where('name', 'like', '%' . $posted_data['name'] . '%');
         }
-        if (isset($posted_data['user_id'])) {
-            $query = $query->where('user_id', $posted_data['user_id']);
+        if (isset($posted_data['sender_id'])) {
+            $query = $query->where('sender_id', $posted_data['sender_id']);
+        }
+        if (isset($posted_data['receiver_id'])) {
+            $query = $query->where('receiver_id', $posted_data['receiver_id']);
         }
         if (isset($posted_data['user_multiple_address_id'])) {
             $query = $query->where('user_multiple_address_id', $posted_data['user_multiple_address_id']);
@@ -107,8 +110,11 @@ class Order extends Model
         if (isset($posted_data['order_status'])) {
             $data->order_status = $posted_data['order_status'];
         }
-        if (isset($posted_data['user_id'])) {
-            $data->user_id = $posted_data['user_id'];
+        if (isset($posted_data['sender_id'])) {
+            $data->sender_id = $posted_data['sender_id'];
+        }
+        if (isset($posted_data['receiver_id'])) {
+            $data->receiver_id = $posted_data['receiver_id'];
         }
         if (isset($posted_data['user_multiple_address_id'])) {
             $data->user_multiple_address_id = $posted_data['user_multiple_address_id'];

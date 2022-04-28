@@ -9,6 +9,7 @@ use App\Models\OrderProduct;
 use App\Models\OrderService;
 use App\Models\PointCategorie;
 use App\Models\User;
+use App\Models\UserStripeInformation;
 
 
 class OrderController extends BaseController
@@ -129,6 +130,7 @@ class OrderController extends BaseController
    
         $validator = \Validator::make($request_data, [
             'order_type'    => 'required',
+            'receiver_id' => 'required|exists:users,id',
             'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
             'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
             'user_delivery_option_id' => $request->order_type == 2 ? 'required|exists:user_delivery_options,id': 'nullable',
@@ -148,12 +150,12 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['user_id'] = \Auth::user()->id;
+        $request_data['sender_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
         $response = Order::saveUpdateOrder($request_data);
         $user_detail = User::getUser([
             'detail' => true,
-            'id' => $request_data['user_id']
+            'id' => $request_data['sender_id']
         ]);
 
         if(isset($request_data['redeem_point']) && ($request_data['redeem_point'] > $user_detail->remaining_point)){
@@ -204,7 +206,7 @@ class OrderController extends BaseController
                     $update_data['redeem_point'] = $request_data['redeem_point'];
                 }
 
-                $user = User::find($request_data['user_id']);
+                $user = User::find($request_data['sender_id']);
                 $user->increment('redeem_point',$request_data['redeem_point']);
                 $user->decrement('remaining_point',$request_data['redeem_point']);
             }
@@ -260,6 +262,30 @@ class OrderController extends BaseController
 
         // if($request_data['order_status'] == 2){    
         //     try {
+
+        //         $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //             'user_id' => 1,
+        //             'detail' => true
+        //         ]);
+
+        //         if(!$check_admin_stripe_info){
+        //             $error_message['error'] = 'Something went wrong please contact with support.';
+        //             return $this->sendError($error_message['error'], $error_message);  
+        //         }
+
+        //         $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //             'user_id' => \Auth::user()->id,
+        //             'detail' => true
+        //         ]);
+
+        //         if(!$check_provider_stripe_info){
+        //             $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
+        //             return $this->sendError($error_message['error'], $error_message);  
+        //         }
+        //         echo 'sa';
+        //         exit;
+
+
         //         $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
         //         $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
             
