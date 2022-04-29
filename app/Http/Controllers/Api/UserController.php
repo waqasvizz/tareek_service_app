@@ -196,11 +196,11 @@ class UserController extends BaseController
             $data['total_products'] = Product::getProducts($posted_data);
         }
 
-        if ($response->role->id == 1 || $response->role->id == 2) {
+        if ($response->role->id == 1 || $response->role->id == 3) {
             $posted_data = array();
             $posted_data['count'] = true;
             
-            if ($response->role->id == 2) {
+            if ($response->role->id == 3) {
                 $posted_data['receiver_user_id'] = $request_data['user_id'];
             }
 
@@ -214,7 +214,7 @@ class UserController extends BaseController
             $posted_data = array();
             $posted_data['count'] = true;
 
-            if ($response->role->id == 2) {
+            if ($response->role->id == 3) {
                 $posted_data['receiver_id'] = $request_data['user_id'];
             }
 
@@ -226,7 +226,7 @@ class UserController extends BaseController
             $posted_data = array();
             $posted_data['count'] = true;
 
-            if ($response->role->id == 2) {
+            if ($response->role->id == 3) {
                 $posted_data['receiver_id'] = $request_data['user_id'];
             }
             

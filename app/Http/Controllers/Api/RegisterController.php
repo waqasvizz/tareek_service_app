@@ -186,7 +186,7 @@ class RegisterController extends BaseController
                 $user_data = array();
                 $user_data['email'] = $posted_data['email'];
                 $user_data['role'] = 2;
-                $user_data['account_status'] = $user_data['role'] == 3 ? 2 : 1;
+                $user_data['account_status'] = 1;
                 $user_data['password'] = '12345678@d';
                 
                 if ( isset($posted_data['facebook_id']) && !isset($posted_data['gmail_id']) )
