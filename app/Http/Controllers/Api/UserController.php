@@ -199,7 +199,11 @@ class UserController extends BaseController
         if ($response->role->id == 1 || $response->role->id == 2) {
             $posted_data = array();
             $posted_data['count'] = true;
-            // $posted_data['to_sql'] = true;
+            
+            if ($response->role->id == 2) {
+                $posted_data['receiver_user_id'] = $request_data['user_id'];
+            }
+
             $posted_data['filter_by_date'] = date('Y-m-d H:i:s', strtotime("-1 day"));
             $data['transactions']['today'] = PaymentTransaction::getPaymentTransaction($posted_data);
             $posted_data['filter_by_date'] = date('Y-m-d H:i:s', strtotime("-30 day"));
@@ -209,6 +213,11 @@ class UserController extends BaseController
 
             $posted_data = array();
             $posted_data['count'] = true;
+
+            if ($response->role->id == 2) {
+                $posted_data['receiver_id'] = $request_data['user_id'];
+            }
+
             $posted_data['order_status'] = 6;
             $data['requests']['completed'] = Order::getOrder($posted_data);
             $posted_data['order_status'] = 1;
@@ -216,6 +225,11 @@ class UserController extends BaseController
 
             $posted_data = array();
             $posted_data['count'] = true;
+
+            if ($response->role->id == 2) {
+                $posted_data['receiver_id'] = $request_data['user_id'];
+            }
+            
             $data['requests']['total'] = Order::getOrder($posted_data);
         }
         
