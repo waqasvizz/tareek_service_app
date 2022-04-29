@@ -39,9 +39,19 @@ class Order extends Model
         return $this->hasMany(OrderService::class)->with('service');
     }
 
+    public function senderDetails()
+    {
+        return $this->belongsTo('App\Models\User', 'sender_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+    }
+
+    public function receiverDetails()
+    {
+        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+    }
+
     public function getOrder($posted_data = array())
     {
-        $query = Order::latest()->with('user')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
+        $query = Order::latest()->with('senderDetails')->with('receiverDetails')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
