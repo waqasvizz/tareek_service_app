@@ -9,6 +9,7 @@ use App\Models\OrderProduct;
 use App\Models\OrderService;
 use App\Models\PointCategorie;
 use App\Models\User;
+use App\Models\UserStripeInformation;
 
 
 class OrderController extends BaseController
@@ -129,6 +130,7 @@ class OrderController extends BaseController
    
         $validator = \Validator::make($request_data, [
             'order_type'    => 'required',
+            'receiver_id' => 'required|exists:users,id',
             'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
             'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
             'user_delivery_option_id' => $request->order_type == 2 ? 'required|exists:user_delivery_options,id': 'nullable',
@@ -148,12 +150,12 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $request_data['user_id'] = \Auth::user()->id;
+        $request_data['sender_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
         $response = Order::saveUpdateOrder($request_data);
         $user_detail = User::getUser([
             'detail' => true,
-            'id' => $request_data['user_id']
+            'id' => $request_data['sender_id']
         ]);
 
         if(isset($request_data['redeem_point']) && ($request_data['redeem_point'] > $user_detail->remaining_point)){
@@ -204,7 +206,7 @@ class OrderController extends BaseController
                     $update_data['redeem_point'] = $request_data['redeem_point'];
                 }
 
-                $user = User::find($request_data['user_id']);
+                $user = User::find($request_data['sender_id']);
                 $user->increment('redeem_point',$request_data['redeem_point']);
                 $user->decrement('remaining_point',$request_data['redeem_point']);
             }
@@ -257,31 +259,113 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
+        // $order_detail = Order::getOrder([
+        //     'id' => $id,
+        //     'detail' => true
+        // ]);
+        // // $order_detail = Order::find($id);
 
-        // if($request_data['order_status'] == 2){    
+        // echo '<pre>';
+        // print_r($order_detail->toArray());
+        // exit;
+
+
+        // if($request_data['order_status'] == 2){  
+        //     $payment_transactions = array();  
         //     try {
-        //         $STRIPE_SECRET = 'sk_test_51KqBGECRyRnAcPDLU1rfQ3M49v1xkf3dYYF0ekLprUYMWEEdno7FPLPToWwGFjspnmui2tK8wPMnRS9ybHXVdkjR00b7Dh6QsC';        
-        //         $stripe = new \Stripe\StripeClient($STRIPE_SECRET);
-            
-        //         $create_token_res = $stripe->tokens->create([
+        //         $currency = 'USD';
+        //         $total_amount_captured = $order_detail->grand_total;
+        //         $admin_amount_captured = 'USD';
+        //         $provider_amount_captured = 'USD';
+
+        //         echo '<pre>';
+        //         print_r('test');
+        //         exit;
+
+        //         $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //             'user_id' => 1,
+        //             'detail' => true
+        //         ]);
+
+        //         if(!$check_admin_stripe_info){
+        //             $error_message['error'] = 'Something went wrong please contact with support.';
+        //             return $this->sendError($error_message['error'], $error_message);  
+        //         }
+
+        //         $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //             'user_id' => \Auth::user()->id,
+        //             'detail' => true
+        //         ]);
+
+        //         if(!$check_provider_stripe_info){
+        //             $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
+        //             return $this->sendError($error_message['error'], $error_message);  
+        //         }
+
+
+        //         // send commission to the admin
+        //         // start
+        //         // ***********************************************************
+        //         if($check_admin_stripe_info->stripe_mode == 'Test'){
+        //             $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
+        //         }else{
+        //             $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
+        //         }
+
+        //         $create_token_res = $admin_stripe->tokens->create([
         //             'card' => [
-        //             'number' => '4242424242424242',
-        //             'exp_month' => 4,
-        //             'exp_year' => 2023,
-        //             'cvc' => '314',
+        //             'number' => $order_detail->user_card->card_number,
+        //             'exp_month' => $order_detail->user_card->exp_month,
+        //             'exp_year' => $order_detail->user_card->exp_year,
+        //             'cvc' => $order_detail->user_card->cvc_number
         //             ],
         //         ]);
-        //         echo '<pre>';
-        //         print_r($create_token_res);
-        //         exit;
         //         $card_tok = $create_token_res->id;
 
-        //         $res = $stripe->charges->create([
-        //             'amount' => 1000,
-        //             'currency' => 'usd',
+        //         $admin_charge_res = $admin_stripe->charges->create([
+        //             'amount' => $admin_amount_captured,
+        //             'currency' => $currency,
         //             'source' => $card_tok,
-        //             'description' => 'My First Test Charge (created for API docs)',
+        //             // 'description' => 'My First Test Charge (created for API docs)',
         //         ]);
+        //         $payment_transactions['admin_response_object'] = $admin_charge_res;
+        //         $payment_transactions['admin_amount_captured'] = $admin_amount_captured;
+        //         // end
+        //         // ***********************************************************
+
+
+
+        //         // send remaining amount to the provider
+        //         // start
+        //         // ***********************************************************
+        //         if($check_provider_stripe_info->stripe_mode == 'Test'){
+        //             $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_test);
+        //         }else{
+        //             $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_live);
+        //         }
+
+        //         $create_token_res = $provider_stripe->tokens->create([
+        //             'card' => [
+        //             'number' => $order_detail->user_card->card_number,
+        //             'exp_month' => $order_detail->user_card->exp_month,
+        //             'exp_year' => $order_detail->user_card->exp_year,
+        //             'cvc' => $order_detail->user_card->cvc_number
+        //             ],
+        //         ]);
+        //         $card_tok = $create_token_res->id;
+
+        //         $admin_charge_res = $provider_stripe->charges->create([
+        //             'amount' => $provider_amount_captured,
+        //             'currency' => $currency,
+        //             'source' => $card_tok,
+        //             // 'description' => 'My First Test Charge (created for API docs)',
+        //         ]);
+        //         $payment_transactions['provider_response_object'] = $admin_charge_res;
+        //         $payment_transactions['provider_amount_captured'] = $provider_amount_captured;
+        //         // end
+        //         // ***********************************************************
+        //         $payment_transactions['total_amount_captured'] = $total_amount_captured;
+        //         $payment_transactions['currency'] = $currency;
 
 
         //     } catch (\Throwable $th) {

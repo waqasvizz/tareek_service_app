@@ -39,9 +39,19 @@ class Order extends Model
         return $this->hasMany(OrderService::class)->with('service');
     }
 
+    public function senderDetails()
+    {
+        return $this->belongsTo('App\Models\User', 'sender_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+    }
+
+    public function receiverDetails()
+    {
+        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+    }
+
     public function getOrder($posted_data = array())
     {
-        $query = Order::latest()->with('user')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
+        $query = Order::latest()->with('senderDetails')->with('receiverDetails')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('id', $posted_data['id']);
@@ -49,8 +59,11 @@ class Order extends Model
         if (isset($posted_data['name'])) {
             $query = $query->where('name', 'like', '%' . $posted_data['name'] . '%');
         }
-        if (isset($posted_data['user_id'])) {
-            $query = $query->where('user_id', $posted_data['user_id']);
+        if (isset($posted_data['sender_id'])) {
+            $query = $query->where('sender_id', $posted_data['sender_id']);
+        }
+        if (isset($posted_data['receiver_id'])) {
+            $query = $query->where('receiver_id', $posted_data['receiver_id']);
         }
         if (isset($posted_data['user_multiple_address_id'])) {
             $query = $query->where('user_multiple_address_id', $posted_data['user_multiple_address_id']);
@@ -121,8 +134,11 @@ class Order extends Model
         if (isset($posted_data['order_status'])) {
             $data->order_status = $posted_data['order_status'];
         }
-        if (isset($posted_data['user_id'])) {
-            $data->user_id = $posted_data['user_id'];
+        if (isset($posted_data['sender_id'])) {
+            $data->sender_id = $posted_data['sender_id'];
+        }
+        if (isset($posted_data['receiver_id'])) {
+            $data->receiver_id = $posted_data['receiver_id'];
         }
         if (isset($posted_data['user_multiple_address_id'])) {
             $data->user_multiple_address_id = $posted_data['user_multiple_address_id'];
