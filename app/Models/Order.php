@@ -46,7 +46,7 @@ class Order extends Model
 
     public function receiverDetails()
     {
-        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image', 'company_name']);
     }
 
     public function getOrder($posted_data = array())
@@ -54,34 +54,46 @@ class Order extends Model
         $query = Order::latest()->with('senderDetails')->with('receiverDetails')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
 
         if (isset($posted_data['id'])) {
-            $query = $query->where('id', $posted_data['id']);
+            $query = $query->where('orders.id', $posted_data['id']);
         }
         if (isset($posted_data['name'])) {
-            $query = $query->where('name', 'like', '%' . $posted_data['name'] . '%');
+            $query = $query->where('orders.name', 'like', '%' . $posted_data['name'] . '%');
         }
         if (isset($posted_data['sender_id'])) {
-            $query = $query->where('sender_id', $posted_data['sender_id']);
+            $query = $query->where('orders.sender_id', $posted_data['sender_id']);
         }
         if (isset($posted_data['receiver_id'])) {
-            $query = $query->where('receiver_id', $posted_data['receiver_id']);
+            $query = $query->where('orders.receiver_id', $posted_data['receiver_id']);
         }
         if (isset($posted_data['user_multiple_address_id'])) {
-            $query = $query->where('user_multiple_address_id', $posted_data['user_multiple_address_id']);
+            $query = $query->where('orders.user_multiple_address_id', $posted_data['user_multiple_address_id']);
         }
         if (isset($posted_data['user_delivery_option_id'])) {
-            $query = $query->where('user_delivery_option_id', $posted_data['user_delivery_option_id']);
+            $query = $query->where('orders.user_delivery_option_id', $posted_data['user_delivery_option_id']);
         }
         if (isset($posted_data['user_card_id'])) {
-            $query = $query->where('user_card_id', $posted_data['user_card_id']);
+            $query = $query->where('orders.user_card_id', $posted_data['user_card_id']);
         }
         if (isset($posted_data['order_type'])) {
-            $query = $query->where('order_type', $posted_data['order_type']);
+            $query = $query->where('orders.order_type', $posted_data['order_type']);
         }
         if (isset($posted_data['order_status'])) {
-            $query = $query->where('order_status', $posted_data['order_status']);
+            $query = $query->where('orders.order_status', $posted_data['order_status']);
         }
 
-        $query->select('*');
+
+        if (isset($posted_data['service_id'])) {
+            $query = $query->where('order_services.service_id', $posted_data['service_id']);
+            $query->join('order_services', 'order_services.order_id', '=', 'orders.id');
+        }
+
+        if (isset($posted_data['product_id'])) {
+            $query = $query->where('order_products.product_id', $posted_data['product_id']);
+            $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
+        }
+        
+
+        $query->select('orders.*');
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
@@ -161,7 +173,11 @@ class Order extends Model
         if (isset($posted_data['discount'])) {
             $data->discount = $posted_data['discount'];
         }
+        if (isset($posted_data['rejection_message'])) {
+            $data->rejection_message = $posted_data['rejection_message'];
+        }
 
+        
         $data->save();
 
         $data = Order::getOrder([

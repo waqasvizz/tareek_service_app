@@ -37,6 +37,7 @@ class CreateOrdersTable extends Migration
             $table->double('discount')->nullable();
             $table->double('grand_total')->nullable();
             $table->double('redeem_point')->nullable();
+            $table->longText('rejection_message')->nullable();
             $table->timestamps();
         });
     }

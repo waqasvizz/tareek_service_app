@@ -167,7 +167,7 @@ class OrderController extends BaseController
         if ( isset($response->id) ){
             $grand_total = 0;
 
-            if(isset($request_data['product_id'])){
+            if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
                 foreach ($request_data['product_id'] as $key => $item) {
                     OrderProduct::saveUpdateOrderProduct([
                         'order_id' => $response->id,
@@ -179,7 +179,7 @@ class OrderController extends BaseController
                 }
             }
 
-            if(isset($request_data['service_id'])){
+            if($request_data['order_type'] == 1 && isset($request_data['service_id'])){
                 OrderService::saveUpdateOrderService([
                     'order_id' => $response->id,
                     'service_id' => $request_data['service_id'],
@@ -211,7 +211,7 @@ class OrderController extends BaseController
                 $user->decrement('remaining_point',$request_data['redeem_point']);
             }
             $update_data['grand_total'] = $grand_total;
-            Order::saveUpdateOrder($update_data);
+            $response = Order::saveUpdateOrder($update_data);
 
             return $this->sendResponse($response, 'Order is successfully added.');
         }else{
