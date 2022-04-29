@@ -84,10 +84,24 @@ class Order extends Model
                 $result = $query->first();
             } else if (isset($posted_data['count'])) {
                 $result = $query->count();
+            } else if (isset($posted_data['to_array'])) {
+                $result = $query->get()->toArray();
             } else {
                 $result = $query->get();
             }
         }
+        
+        if (isset($posted_data['to_sql'])) {
+            $result = $query->toSql();
+            echo '<pre>';
+            print_r($result);
+            exit;
+        }
+
+        if (isset($posted_data['sumBy_column'])) {
+            $result = $result->sum($posted_data['sumBy_columnName']);
+        }
+
         return $result;
     }
 

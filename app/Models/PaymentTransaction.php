@@ -35,6 +35,9 @@ class PaymentTransaction extends Model
         if (isset($posted_data['receiver_user_id'])) {
             $query = $query->where('receiver_user_id', $posted_data['receiver_user_id']);
         }
+        if(isset($posted_data['filter_by_date'])){
+            $query = $query->where('created_at', '>=' ,$posted_data['filter_by_date']);
+        }
 
         $query->select('*');
         
@@ -52,10 +55,24 @@ class PaymentTransaction extends Model
                 $result = $query->first();
             } else if (isset($posted_data['count'])) {
                 $result = $query->count();
+            } else if (isset($posted_data['to_array'])) {
+                $result = $query->get()->toArray();
             } else {
                 $result = $query->get();
             }
         }
+
+        if (isset($posted_data['to_sql'])) {
+            $result = $query->toSql();
+            echo '<pre>';
+            print_r($result);
+            exit;
+        }
+
+        if (isset($posted_data['sumBy_column'])) {
+            $result = $result->sum($posted_data['sumBy_columnName']);
+        }
+        
         return $result;
     }
 

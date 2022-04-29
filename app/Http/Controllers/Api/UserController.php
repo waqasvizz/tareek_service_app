@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Service;
+use App\Models\Product;
+use App\Models\PaymentTransaction;
+use App\Models\Order;
 
 class UserController extends BaseController
 {
@@ -144,5 +148,77 @@ class UserController extends BaseController
             $error_message['error'] = 'User already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function get_dashboards(Request $request)
+    {
+        $request_data = $request->all();
+
+        $validator = \Validator::make($request_data, [
+            'user_id' => 'required|exists:users,id',
+        ],[
+            'user_id.exists' => 'User id is not exists',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
+        }
+        
+        $data = array();
+
+        $posted_data = array();
+        $posted_data['id'] = $request_data['user_id'];
+        $posted_data['detail'] = true;
+        $response = User::getUser($posted_data);
+
+        if ($response->role->id == 1) {
+            $posted_data = array();
+            $posted_data['count'] = true;
+            $data['total_users'] = User::getUser($posted_data);
+    
+            $posted_data = array();
+            $posted_data['sumBy_column'] = true;
+            $posted_data['sumBy_columnName'] = 'total_amount_captured';
+            $data['total_earnings'] = PaymentTransaction::getPaymentTransaction($posted_data);
+    
+            $posted_data = array();
+            $posted_data['count'] = true;
+            $data['total_services'] = Service::getServices($posted_data);
+    
+            $posted_data = array();
+            $posted_data['count'] = true;
+            $data['total_products'] = Product::getProducts($posted_data);
+        }
+
+        if ($response->role->id == 1 || $response->role->id == 2) {
+            $posted_data = array();
+            $posted_data['count'] = true;
+            // $posted_data['to_sql'] = true;
+            $posted_data['filter_by_date'] = date('Y-m-d H:i:s', strtotime("-1 day"));
+            $data['transactions']['today'] = PaymentTransaction::getPaymentTransaction($posted_data);
+            $posted_data['filter_by_date'] = date('Y-m-d H:i:s', strtotime("-30 day"));
+            $data['transactions']['monthly'] = PaymentTransaction::getPaymentTransaction($posted_data);
+            $posted_data['filter_by_date'] = date('Y-m-d H:i:s', strtotime("-365 day"));
+            $data['transactions']['yearly'] = PaymentTransaction::getPaymentTransaction($posted_data);
+
+            $posted_data = array();
+            $posted_data['count'] = true;
+            $posted_data['order_status'] = 6;
+            $data['requests']['completed'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 1;
+            $data['requests']['pending'] = Order::getOrder($posted_data);
+
+            $posted_data = array();
+            $posted_data['count'] = true;
+            $data['requests']['total'] = Order::getOrder($posted_data);
+        }
+        
+        return $this->sendResponse($data, 'Dashboard items successfully fetched.');
     }
 }

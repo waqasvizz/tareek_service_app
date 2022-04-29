@@ -51,6 +51,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('read_chats', [ChatController::class, 'read_chats']);
     Route::get('get_profile', [RegisterController::class, 'getProfile']);
     Route::post('logout', [RegisterController::class, 'logoutUser']);
+    Route::get('dashboards', [UserController::class, 'get_dashboards']);
 
     // Route::post('bids/{id}', [BidController::class, 'update']);
     // Route::post('posts/{id}', [PostController::class, 'update']);
