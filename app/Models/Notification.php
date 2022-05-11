@@ -14,14 +14,14 @@ class Notification extends Model
     {
         return $this->belongsTo('App\Models\User', 'sender')
             ->with('role')
-            ->select(['id', 'role_id', 'name', 'email', 'profile_image']);
+            ->select(['id', 'role', 'name', 'first_name', 'last_name', 'email', 'profile_image']);
     }
 
     public function receiverDetails()
     {
         return $this->belongsTo('App\Models\User', 'receiver')
             ->with('role')
-            ->select(['id', 'role_id', 'name', 'email', 'profile_image']);
+            ->select(['id', 'role', 'name', 'first_name', 'last_name', 'email', 'profile_image']);
     }
 
     public function getNotifications($posted_data = array())

@@ -1,23 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Mail</title>
-</head>
-<body>
+<section style="width: 100%;">
+    <div style="
+        min-width:600px;
+        width:700px;
+        min-height: 700px;
+        max-height: 100vh;
+        background-image: url({{ asset('storage/default-images/email-background.png') }});
+        background-repeat: no-repeat;       
+        background-size: cover;
+        background-position: bottom center;
+        margin: 10px auto;
+        box-sizing: border-box;
+        overflow: hidden;
+        padding: 10px 20px;
+        position:relative;
+        ">
 
-<h2 style="font-size: 18px; font-weight: 600;">Dealer Genius Welcomes You<h2>
-<div style="font-size: 16px; font-weight: 500;">
-<p>Hello {{ $name }}, <br> You have been registered with an employee account under the Company "{{ $company_name }}".<br>
-Following are your login details. <br>
-Login Email : "{{ $email }}"<br> Password : "{{ $random_pass }}"<br>
-<a href="{{ url('/verification_process') }}?vc={{ $verification_code }}"><strong style="font-size: 18px; font-weight: 600;">CLICK HERE TO LOGIN</strong></a>
-</p>
-</div>
-<p style="font-size: 18px; font-weight: 600;">Thank You</p>
+        <figure style="display:flex;justify-content:center">
+            <img src="{{ asset('storage/default-images/app-logo-email.png') }}" alt="{{ config('app.name') }} Logo" height="100" style="margin: 40px 0;">
+        </figure>
 
+        <div style="padding: 20px 40px; position:absolute; top: 30%;">
+            <p style="font-size:18px;font-family: Arial, Helvetica, sans-serif;color: #FFF;">Hi <b>{{ $email_data['name'] }},</b></p>
+            <p style="font-size:18px;font-family: Arial, Helvetica, sans-serif;color: #FFF;">We are happy that you signed up for {{ config('app.name') }}.<br> To start exploring the {{ config('app.name') }}, please confirm your email address.<br><br><br>
+            <a href="{{ route('email_verify', $email_data['token']) }}" target="_blank" style="background-color: #FFF; border: none; padding: 10px 20px; text-decoration: none; margin: 4px 2px; cursor: pointer; border-radius: 20px; font-size: 16px; color: #000;">Verify Now</a></p><br>
+            <p style="font-size:18px;font-family: Arial, Helvetica, sans-serif;color: #FFF;">Welcome to {{ config('app.name') }}.</p>
+            <p style="font-size:16px;font-family: Arial, Helvetica, sans-serif;color: #FFF;">{{ config('app.name') }} Team</p>
+            <br>
+            <br>
+        </div>
 
-</body>
-</html>
+    </div>
+</section>

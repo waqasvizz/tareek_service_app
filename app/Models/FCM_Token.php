@@ -64,7 +64,7 @@ class FCM_Token extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'DESC');
+            $query->orderBy('id', 'ASC');
         }
         
         if (isset($posted_data['paginate'])) {
@@ -128,13 +128,39 @@ class FCM_Token extends Model
 
             $response = curl_exec($ch);
             curl_close($ch);
-            // $notification_responses['android'] = $response;
-            ob_flush();
 
-            if($response === false)
-                die('Curl failed ' . curl_error());
-            else 
-                return true;
+            // ob_flush();
+
+            if($response === false) {
+                $fcm_response['status'] = false;
+                // die('Curl failed ' . curl_error());
+            }
+            else {
+                $fcm_response['status'] = true;
+            }
+
+            $fcm_response['response'] = $response;
+            return $fcm_response;
+
+            /*
+                firebase sample response_object
+                <pre>Array
+                (
+                    [status] => 1
+                    [response] => {
+                        "multicast_id":3249491517268760704,
+                        "success":0,
+                        "failure":1,
+                        "canonical_ids":0,
+                        "results":[
+                            {
+                                "error":"MessageTooBig"
+                            }
+                        ]
+                    }
+                )
+                </pre>
+            */
         }
     }
 

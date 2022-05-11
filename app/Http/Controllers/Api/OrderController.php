@@ -9,6 +9,7 @@ use App\Models\OrderProduct;
 use App\Models\OrderService;
 use App\Models\PointCategorie;
 use App\Models\User;
+use App\Models\FCM_Token;
 use App\Models\UserStripeInformation;
 
 
@@ -374,10 +375,55 @@ class OrderController extends BaseController
         //     }
         // }
 
-        $response = Order::saveUpdateOrder($request_data);
+        $model_response = Order::saveUpdateOrder($request_data);
 
-        if ( isset($response->id) ){
-            return $this->sendResponse($response, 'Order is successfully updated.');
+        // $get_data = array();
+        // $get_data['detail'] = true;
+        // $get_data['order_id'] = $model_response->id;
+        // $bid_data = Bid::getBids($get_data);
+        // $model_response = $bid_data->toArray();
+
+        $order_id = $model_response->id;
+        $notification_text = "Your order status has been updated.";
+
+        $notification_params = array();
+        $notification_params['sender'] = $model_response->sender_id;
+        $notification_params['receiver'] = $model_response->receiver_id;
+        $notification_params['slugs'] = "order-update";
+        $notification_params['notification_text'] = $notification_text;
+        $notification_params['seen_by'] = "";
+        $notification_params['metadata'] = "order_id=$order_id";
+        
+        $response = Notification::saveUpdateNotification([
+            'sender' => $notification_params['sender'],
+            'receiver' => $notification_params['receiver'],
+            'slugs' => $notification_params['slugs'],
+            'notification_text' => $notification_params['notification_text'],
+            'seen_by' => $notification_params['seen_by'],
+            'metadata' => $notification_params['metadata']
+        ]);
+
+        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+        $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+
+        if ($response) {
+
+            if ( isset($model_response['user']) )
+                unset($model_response['user']);
+            if ( isset($model_response['post']) )
+                unset($model_response['post']);
+
+            $notification = FCM_Token::sendFCM_Notification([
+                'title' => $notification_params['slugs'],
+                'body' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata'],
+                'registration_ids' => $notification_params['registration_ids'],
+                'details' => $model_response
+            ]);
+        }
+
+        if ( isset($model_response->id) ){
+            return $this->sendResponse($model_response, 'Order is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  

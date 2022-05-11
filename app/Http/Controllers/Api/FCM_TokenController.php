@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
+use Validator;
 use App\Models\Chat;
 use App\Models\User;
 use App\Models\FCM_Token;
@@ -49,7 +50,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = \Validator::make($request_data, [
+        $validator = Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',
@@ -60,13 +61,15 @@ class FCM_TokenController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
 
+        $data['device_id'] = $request_data['device_id'];
+        $data['detail'] = true;
+        
+        $token_res = FCM_Token::getFCM_Tokens($data);
+        
         if ($request_data['device_type'] == 'ios') {
             $request_data['device_token'] = $this->fetchIOSToken($request_data)['device_token'];
         }
 
-        $request_data['detail'] = true;
-        $token_res = FCM_Token::getFCM_Tokens($request_data);
-        
         if ($token_res)
             $request_data['update_id'] = $token_res->id;
 
@@ -92,7 +95,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = \Validator::make($request_data, [
+        $validator = Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',
@@ -138,7 +141,7 @@ class FCM_TokenController extends BaseController
     {
         $request_data = $request->all();
 
-        $validator = \Validator::make($request_data, [
+        $validator = Validator::make($request_data, [
             'user_id' => 'required',
             'device_id' => 'required',
             'device_token' => 'required',
@@ -171,7 +174,7 @@ class FCM_TokenController extends BaseController
         if ( !empty($posted_data) ) {
 
             $data = array(
-                'application'       => 'com.vizz.serenity',
+                'application'       => 'com.vizz.tareekApp',
                 'sandbox'           => true,
                 'apns_tokens'       => array(
                     $posted_data['device_token']

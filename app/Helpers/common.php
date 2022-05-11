@@ -103,3 +103,47 @@ if (! function_exists('isApiRequest')) {
         return $isApiRequest;
     }
 }
+
+if (! function_exists('array_flatten')) {
+    function array_flatten($array) { 
+        if (!is_array($array)) { 
+            return FALSE; 
+        } 
+        $result = array(); 
+        foreach ($array as $key => $value) { 
+            if (is_array($value)) { 
+                $result = array_merge($result, array_flatten($value)); 
+            } 
+            else { 
+                $result[$key] = $value; 
+            } 
+        } 
+        return $result; 
+    } 
+}
+
+if (! function_exists('multidimentional_array_flatten')) {
+    function multidimentional_array_flatten($array, $key) { 
+        $unique_ids = array_unique(array_map(
+            function ($i) use ($key) {
+                return $i[$key];
+            }, $array)
+        );
+    
+        return $unique_ids;
+    }
+}
+
+if (! function_exists('split_metadata_strings')) {
+    function split_metadata_strings($string = "") {
+        $final_result = array();
+
+        foreach (explode('&', $string) as $piece) {
+            $result = array();
+            $result = explode('=', $piece);
+            $final_result[$result[0]] = $result[1];
+        }
+    
+        return $final_result;
+    }
+}

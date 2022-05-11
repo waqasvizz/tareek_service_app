@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
+use Validator;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Bid;
+use App\Models\Chat;
+use App\Models\Post;
+use Auth;
 
 class NotificationController extends BaseController
 {
@@ -24,10 +29,53 @@ class NotificationController extends BaseController
             $params['last_day_time'] = date("Y-m-d", strtotime( '-1 days' ) );
         if ( isset($params['filter']) && $params['filter'] == 'seven-day')
             $params['last_seven_day_time'] = date("Y-m-d", strtotime( '-7 days' ) );
-
+        
+        if ( isset($params['user_id']) && $params['user_id'] != '') {
+            $params['receiver'] = $params['user_id'];
+            unset($params['user_id']);
+        }
+        else $params['receiver'] = Auth::user()->id;
+                    
         $params['paginate'] = 10;
 
-        $notification = Notification::getNotifications($params);
+        $notification = Notification::getNotifications($params)->ToArray();
+
+        foreach ($notification['data'] as $key => $item) {
+            $response = split_metadata_strings($item['metadata']);
+
+            if (isset($item['slugs']) && $item['slugs'] == 'new-chat' ) {
+
+                if ( array_key_exists('chat_id', $response) ) {
+                    $get_data = array();
+                    $get_data['detail'] = true;
+                    $get_data['chat_id'] = $response['chat_id'];
+                    $response_data = Chat::getChats($get_data);
+                    $notification['data'][$key]['details'] = $response_data->toArray();
+                }
+                else {
+                    $notification['data'][$key]['details'] = [];
+                }
+                
+            }
+            else if (isset($item['slugs']) && ( $item['slugs'] == 'assign-job' || $item['slugs'] == 'new-post'  || $item['slugs'] == 'new-bid' )) {
+
+                if ( array_key_exists('post_id', $response) ) {
+                    $get_data = array();
+                    $get_data['detail'] = true;
+                    $get_data['id'] = $response['post_id'];
+                    $response_data = Post::getPost($get_data);
+                    if($response_data){
+                        $notification['data'][$key]['details'] = $response_data->toArray();
+                    }else{
+                        $notification['data'][$key]['details'] = [];
+                    }
+                }
+                else {
+                    $notification['data'][$key]['details'] = [];
+                }
+            }
+        }
+
         $message = !empty($notification) ? 'Notifications retrieved successfully.' : 'Notifications not found against your query.';
 
         return $this->sendResponse($notification, $message);
@@ -44,9 +92,9 @@ class NotificationController extends BaseController
     {
         $request_data = $request->all(); 
    
-        $validator = \Validator::make($request_data, [
-            'receiver_id' => 'required|exists:users,id',
-            'sender_id' => 'required|exists:users,id',
+        $validator = Validator::make($request_data, [
+            'receiver_id' => 'required',
+            'sender_id' => 'required',
             'text' => 'required',
         ]);
    
@@ -93,13 +141,11 @@ class NotificationController extends BaseController
     public function update(Request $request, $id)
     {
         $request_data = $request->all();
-        $request_data['update_id'] = $id;
-        
-        $validator = \Validator::make($request_data, [
-            'update_id' => 'required|exists:notifications,id',
-            'receiver_id' => 'required|exists:users,id',
-            'sender_id' => 'required|exists:users,id',
-            'text' => 'required',
+        $validator = Validator::make($request_data, [
+            'receiver_id' => 'required',
+            'sender_id' => 'required',
+            'stars' => 'required',
+            'description' => 'required'
         ]);
    
         if($validator->fails()){
@@ -115,6 +161,7 @@ class NotificationController extends BaseController
             return $this->sendError($error_message['error'], $error_message);
         }
         
+        $request_data['update_id'] = $id;
         $notification = Notification::saveUpdateNotification($request_data);
 
         return $this->sendResponse($notification, 'Notification updated successfully.');

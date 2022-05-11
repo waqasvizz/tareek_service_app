@@ -13,6 +13,7 @@ use App\Models\AssignService;
 use App\Models\StorageAssets;
 use App\Models\UserAssets;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class RegisterController extends BaseController
 {
@@ -93,6 +94,10 @@ class RegisterController extends BaseController
 
             $posted_data['account_status'] = $posted_data['role'] == 3 ? 2 : 1;
             $posted_data['user_type'] = 1; //app
+
+            $token = Str::random(64);
+            $posted_data['email_token'] = $token;
+
             $user_detail = $this->UserObj->saveUpdateUser($posted_data);
             $user_id = $user_detail->id;
             
@@ -143,11 +148,25 @@ class RegisterController extends BaseController
                     'id'       => $user_id,
                     'detail'       => true
                 ]);
+
+                $data = [
+                    'subject' => 'Email Verification',
+                    'name' => $request->get('full_name'),
+                    'email' => $request->get('email'),
+                    'token' => $token,
+                ];
+
+                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
+
                 return $this->sendResponse($user_detail, $message);
             }
-            else
+            else {
                 $error_message['error'] = $message;
                 return $this->sendError($error_message['error'], $error_message);
+            }
         }
     }
    
@@ -258,6 +277,56 @@ class RegisterController extends BaseController
         }
     }
 
+    public function verifyUserEmail($token){
+
+        $where_query = array(
+            ['remember_token', '=', isset($token) ? $token : 0]
+        );
+
+        $verifyUser = User::where($where_query)->first();
+
+        $verifyUser = [];
+
+        $status = 404;
+        $message = 'Sorry your email cannot be identified.';
+  
+        if($verifyUser){
+
+            $user_obj = new User();
+
+            if($verifyUser->email_verified_at == null) {
+                
+                $params = array(
+                    'user_id'           => $verifyUser->id,
+                    'remember_token'    => 'NULL',
+                    'email_verified_at' => ''//convertUTCToLocal(Carbon::now())
+                );
+
+                $model_response = $user_obj->updateUser($params);
+
+                if (!empty($model_response)) {
+                    $status = 200;
+                    $message = "Your e-mail is verified.";
+                }
+
+            }
+            else {
+                $params = array(
+                    'user_id'           => $verifyUser->id,
+                    'remember_token'    => 'NULL'
+                );
+
+                $model_response = $user_obj->updateUser($params);
+
+                if (!empty($model_response)) {
+                    $status = 200;
+                    $message = "Your e-mail is already verified.";
+                }
+            }           
+        }
+        return view('emails.emailing_response', compact('status', 'message'));
+        // return makeAPIResponse($status, $message, ["error"=> '']);
+    }
 
     public function forgotPassword(Request $request)
     {

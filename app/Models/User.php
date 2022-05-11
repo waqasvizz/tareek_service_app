@@ -207,6 +207,9 @@ class User extends Authenticatable
         if (isset($posted_data['account_status'])) {
             $data->account_status = $posted_data['account_status'];
         }
+        if (isset($posted_data['email_token'])) {
+            $data->remember_token = $posted_data['email_token'];
+        }
 
         $data->save();
 
