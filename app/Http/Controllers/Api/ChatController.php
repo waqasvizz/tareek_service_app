@@ -73,6 +73,7 @@ class ChatController extends BaseController
         $posted_data['detail'] = true;
         $posted_data['chat_id'] = $chat['id'];
         $chat_data = Chat::getChats($posted_data);
+
         $model_response = $chat_data->toArray();
         
         $notification_text = "You have got a new message from ".$model_response['sender_details']['name'].'.';
@@ -81,11 +82,8 @@ class ChatController extends BaseController
         $notification_params['receiver'] = $request_data['receiver_id'];
         $notification_params['slugs'] = "new-chat";
         $notification_params['notification_text'] = $notification_text;
-        // $notification_params['seen_by'] = "";
         $notification_params['metadata'] = "receiver_id=".$request_data['receiver_id'];
 
-        // $notification_params['receiver_devices'] = array_column($firebase_devices, 'device_token');
-        // $response = Notification::saveUpdateNotification($notification_params);
         
         $response = Notification::saveUpdateNotification($notification_params);
 
@@ -103,7 +101,7 @@ class ChatController extends BaseController
             ]);
         }
 
-        return $this->sendResponse($chat_data, 'Chat posted successfully.');
+        return $this->sendResponse($model_response, 'Chat posted successfully.');
     } 
    
     /**

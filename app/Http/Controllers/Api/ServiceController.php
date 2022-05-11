@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Models\Service;
 use App\Models\UserWeekDay;
+use App\Models\FCM_Token;
+use App\Models\Notification;
 
 // use App\Http\Resources\Service as ServiceResource;
 
@@ -115,6 +117,43 @@ class ServiceController extends BaseController
                 'detail' => true
             ]);
 
+            $notification_text = "A new service has been added into the app.";
+            $user_id = \Auth::user()->id;
+    
+            $notification_params = array();
+            $notification_params['sender'] = $user_id;
+            $notification_params['receiver'] = 1;
+            $notification_params['slugs'] = "new-service";
+            $notification_params['notification_text'] = $notification_text;
+            $notification_params['metadata'] = "service_id=$service->id";
+            
+            $response = Notification::saveUpdateNotification([
+                'sender' => $notification_params['sender'],
+                'receiver' => $notification_params['receiver'],
+                'slugs' => $notification_params['slugs'],
+                'notification_text' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata']
+            ]);
+    
+            $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+            $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+    
+            if ($response) {
+    
+                if ( isset($model_response['user']) )
+                    unset($model_response['user']);
+                if ( isset($model_response['post']) )
+                    unset($model_response['post']);
+    
+                $notification = FCM_Token::sendFCM_Notification([
+                    'title' => $notification_params['slugs'],
+                    'body' => $notification_params['notification_text'],
+                    'metadata' => $notification_params['metadata'],
+                    'registration_ids' => $notification_params['registration_ids'],
+                    'details' => $service
+                ]);
+            }
+            
             return $this->sendResponse($service, 'Service is successfully added.');
         }
         else{

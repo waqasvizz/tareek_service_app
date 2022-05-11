@@ -62,6 +62,12 @@ class User extends Authenticatable
         return $this->hasMany(UserMultipleAddresse::class);
     }
 
+    public function fcm_tokens()
+    {
+        return $this->hasMany('App\Models\FCM_Token');
+        // return $this->belongsToMany('App\Models\AssignJob');
+    }
+
     public function AssignService()
     {
         return $this->hasMany(AssignService::class);
@@ -75,7 +81,11 @@ class User extends Authenticatable
 
     public function getUser($posted_data = array())
     {
-        $query = User::latest()->with('role')->with('userAssets')->with('userAddress');
+        $query = User::latest()
+                    ->with('role')
+                    ->with('userAssets')
+                    ->with('userAddress')
+                    ->with('fcm_tokens');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);

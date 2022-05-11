@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Models\Product;
+use App\Models\Notification;
+use App\Models\FCM_Token;
 // use App\Http\Resources\Product as ProductResource;
 
 class ProductController extends BaseController
@@ -90,8 +92,8 @@ class ProductController extends BaseController
             return $this->sendError($error_message['error'], $error_message);  
         }
 
-        $category = Product::saveUpdateProduct([
-            'user_id'       => \Auth::user()->id,
+        $product = Product::saveUpdateProduct([
+            'user_id'             => \Auth::user()->id,
             'product_title'       => $request_data['product_title'],
             'product_price'       => $request_data['product_price'],
             'product_category'    => $request_data['product_category'],
@@ -103,8 +105,45 @@ class ProductController extends BaseController
             'product_img'         => $img_data['file_path'],
         ]);
 
-        if ( isset($category->id) ){
-            return $this->sendResponse($category, 'Product is successfully added.');
+        $notification_text = "A new product has been added into the app.";
+        $user_id = \Auth::user()->id;
+
+        $notification_params = array();
+        $notification_params['sender'] = $user_id;
+        $notification_params['receiver'] = 1;
+        $notification_params['slugs'] = "new-product";
+        $notification_params['notification_text'] = $notification_text;
+        $notification_params['metadata'] = "product_id=$product->id";
+        
+        $response = Notification::saveUpdateNotification([
+            'sender' => $notification_params['sender'],
+            'receiver' => $notification_params['receiver'],
+            'slugs' => $notification_params['slugs'],
+            'notification_text' => $notification_params['notification_text'],
+            'metadata' => $notification_params['metadata']
+        ]);
+
+        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+        $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+
+        if ($response) {
+
+            if ( isset($model_response['user']) )
+                unset($model_response['user']);
+            if ( isset($model_response['post']) )
+                unset($model_response['post']);
+
+            $notification = FCM_Token::sendFCM_Notification([
+                'title' => $notification_params['slugs'],
+                'body' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata'],
+                'registration_ids' => $notification_params['registration_ids'],
+                'details' => $product
+            ]);
+        }
+
+        if ( isset($product->id) ){
+            return $this->sendResponse($product, 'Product is successfully added.');
         }
         else{
             $error_message['error'] = 'Somthing went wrong during query.';
@@ -184,10 +223,10 @@ class ProductController extends BaseController
             }
         }
 
-        $category = Product::saveUpdateProduct($request_data);
+        $product = Product::saveUpdateProduct($request_data);
 
-        if ( isset($category->id) ){
-            return $this->sendResponse($category, 'Product is successfully added.');
+        if ( isset($product->id) ){
+            return $this->sendResponse($product, 'Product is successfully added.');
         }
         else{
             $error_message['error'] = 'Somthing went wrong during query.';

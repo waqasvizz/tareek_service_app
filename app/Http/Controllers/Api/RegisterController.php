@@ -12,6 +12,8 @@ use App\Models\Service;
 use App\Models\AssignService;
 use App\Models\StorageAssets;
 use App\Models\UserAssets;
+use App\Models\Notification;
+use App\Models\FCM_Token;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -155,7 +157,43 @@ class RegisterController extends BaseController
                     'email' => $request->get('email'),
                     'token' => $token,
                 ];
-
+                
+                $notification_text = "A new user has been register into the app.";
+    
+                $notification_params = array();
+                $notification_params['sender'] = $user_id;
+                $notification_params['receiver'] = 1;
+                $notification_params['slugs'] = "new-user";
+                $notification_params['notification_text'] = $notification_text;
+                $notification_params['metadata'] = "user_id=$user_id";
+                
+                $response = Notification::saveUpdateNotification([
+                    'sender' => $notification_params['sender'],
+                    'receiver' => $notification_params['receiver'],
+                    'slugs' => $notification_params['slugs'],
+                    'notification_text' => $notification_params['notification_text'],
+                    'metadata' => $notification_params['metadata']
+                ]);
+        
+                $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+                $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+        
+                if ($response) {
+        
+                    if ( isset($model_response['user']) )
+                        unset($model_response['user']);
+                    if ( isset($model_response['post']) )
+                        unset($model_response['post']);
+        
+                    $notification = FCM_Token::sendFCM_Notification([
+                        'title' => $notification_params['slugs'],
+                        'body' => $notification_params['notification_text'],
+                        'metadata' => $notification_params['metadata'],
+                        'registration_ids' => $notification_params['registration_ids'],
+                        'details' => $user_detail
+                    ]);
+                }
+                
                 Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
                     $message->to($data['email'])
                             ->subject($data['subject']);

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Models\Category;
+use App\Models\User;
+use App\Models\Notification;
+use App\Models\FCM_Token;
 
 class CategoryController extends BaseController
 {
@@ -81,10 +84,52 @@ class CategoryController extends BaseController
             return $this->sendError($error_message['error'], $error_message);  
         }
 
-        $category = Category::saveUpdateCategory($request_data);
+        $model_response = Category::saveUpdateCategory($request_data);
+            
+        $data = array();
+        $data['role'] = 3;
+        $user_data = User::getUser($data)->ToArray();
 
-        if ( isset($category->id) ){
-            return $this->sendResponse($category, 'Category is successfully added.');
+        $notification_text = "A new category has been added into the system.";
+
+        foreach ($user_data as $key => $value) {
+
+            $receiver_id = $value['id'];
+            $category_id = $model_response->id;
+
+            $notification_params = array();
+            $notification_params['sender'] = \Auth::user()->id;
+            $notification_params['receiver'] = $value['id'];
+            $notification_params['slugs'] = "new-category";
+            $notification_params['notification_text'] = $notification_text;
+            $notification_params['metadata'] = "category_id=$category_id";
+           
+            $response = Notification::saveUpdateNotification([
+                'sender' => $notification_params['sender'],
+                'receiver' => $notification_params['receiver'],
+                'slugs' => $notification_params['slugs'],
+                'notification_text' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata']
+            ]);
+            
+            $tokens[] = array_column($value['fcm_tokens'], 'device_token');
+        }
+
+        $registration_ids = array_flatten($tokens);
+        
+        $notification = false;
+        if ($response) {
+            $notification = FCM_Token::sendFCM_Notification([
+                'title' => $notification_params['slugs'],
+                'body' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata'],
+                'registration_ids' => $registration_ids,
+                'details' => $model_response
+            ]);
+        }
+
+        if ( isset($model_response->id) ){
+            return $this->sendResponse($model_response, 'Category is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
