@@ -42,7 +42,7 @@ use App\Http\Controllers\Api\PointCategorieController;
 
 
 // Route::post('authorize', [RegisterController::class, 'authorizeUser']);
-Route::post('login', [RegisterController::class, 'loginUser']);
+Route::post('login', [RegisterController::class, 'loginUser'])->name('login');
 Route::post('register', [RegisterController::class, 'registerUser']);
 Route::post('forgot_password', [RegisterController::class, 'forgotPassword']);
 Route::get('/verify-email/{token?}', [RegisterController::class, 'verifyUserEmail'])->name('email_verify');
