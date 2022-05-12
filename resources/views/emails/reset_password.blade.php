@@ -12,7 +12,7 @@
 <div style="font-size: 16px; font-weight: 500;">
 <p>Your password has been changed successfully.<br>
    Your new password is "{{ $new_password }}" <br>
-  <a href="{{ route('login') }}"><strong style="font-size: 18px; font-weight: 600;">CLICK HERE TO LOGIN</strong></a>
+   {{--<a href="{{ route('login') }}"><strong style="font-size: 18px; font-weight: 600;">CLICK HERE TO LOGIN</strong></a>--}}
 </p>
 </div>
 
