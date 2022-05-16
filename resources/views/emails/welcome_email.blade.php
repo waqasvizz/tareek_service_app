@@ -4,7 +4,7 @@
         width:700px;
         min-height: 700px;
         max-height: 100vh;
-        background-image: url({{ asset('storage/default-images/email-background.png') }});
+        background-image: url('https://tareek.go-demo.com/public/storage/default-images/email-background.png');
         background-repeat: no-repeat;       
         background-size: cover;
         background-position: bottom center;
@@ -16,7 +16,7 @@
         ">
 
         <figure style="display:flex;justify-content:center">
-            <img src="{{ asset('storage/default-images/app-logo-email.png') }}" alt="{{ config('app.name') }} Logo" height="100" style="margin: 40px 0;">
+            <img src="https://tareek.go-demo.com/public/storage/default-images/app-logo-email.png" alt="{{ config('app.name') }} Logo" height="100" style="margin: 40px 0;">
         </figure>
 
         <div style="padding: 20px 40px; position:absolute; top: 30%;">

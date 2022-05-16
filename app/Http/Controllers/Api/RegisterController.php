@@ -59,19 +59,28 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
-            if($posted_data['role'] == 2 && (!isset($posted_data['full_name']) || empty($posted_data['full_name']))){
-                $error_message['error'] = 'Please enter the full name for the customer.';
+            if($posted_data['role'] == 2 && isset($posted_data['user_type']) && $posted_data['user_type'] != 'app') {
+                $error_message['error'] = 'Only customers can login using social accounts.';
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
-            if($posted_data['role'] == 2 && (!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
-                $error_message['error'] = 'Please enter the phone number for the customer.';
-                return $this->sendError($error_message['error'], $error_message);   
-            }
+            if($posted_data['role'] == 2) {
 
-            if($posted_data['role'] == 2 && (!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
-                $error_message['error'] = 'Please enter the date of birth for the customer.';
-                return $this->sendError($error_message['error'], $error_message);  
+                if((!isset($posted_data['full_name']) || empty($posted_data['full_name']))){
+                    $error_message['error'] = 'Please enter the full name for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
+    
+                if((!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
+                    $error_message['error'] = 'Please enter the phone number for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);   
+                }
+    
+                if((!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
+                    $error_message['error'] = 'Please enter the date of birth for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
+
             }
 
             if(!isset($posted_data['email']) || empty($posted_data['email'])){
