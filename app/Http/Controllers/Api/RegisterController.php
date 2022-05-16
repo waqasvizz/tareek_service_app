@@ -29,6 +29,7 @@ class RegisterController extends BaseController
         $posted_data = $request->all();
         $rules = array(
             'role'              => 'required',
+            'user_type'         => 'required',
             'full_name'         => 'nullable|max:50',
             // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable',
@@ -37,8 +38,10 @@ class RegisterController extends BaseController
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
             'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            /*
             'password'          => 'required|min:8',
             'confirm_password'  => 'required|required_with:password|same:password'
+            */
             
             // 'phone_number' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:12',
             // 'user_role' => 'required',
@@ -59,8 +62,8 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
-            if($posted_data['role'] == 2 && isset($posted_data['user_type']) && $posted_data['user_type'] != 'app') {
-                $error_message['error'] = 'Only customers can login using social accounts.';
+            if($posted_data['role'] != 2 && isset($posted_data['user_type']) && $posted_data['user_type'] != 'app') {
+                $error_message['error'] = 'Sorry, only customers can login using social accounts.';
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
@@ -80,7 +83,74 @@ class RegisterController extends BaseController
                     $error_message['error'] = 'Please enter the date of birth for the customer.';
                     return $this->sendError($error_message['error'], $error_message);  
                 }
+            }
 
+            if(isset($posted_data['user_type']) && $posted_data['user_type'] == 'app') {
+                
+                if( empty($posted_data['password']) || empty($posted_data['confirm_password']) ) {
+                    $error_message['error'] = 'The password and confirm password must not be empty.';
+                    return $this->sendError($error_message['error'], $error_message);
+                }
+
+                if( isset($posted_data['password']) && isset($posted_data['confirm_password']) ) {
+                    if ( $posted_data['password'] != $posted_data['confirm_password'] ) {
+                        $error_message['error'] = 'The password and confirm password must be same.';
+                        return $this->sendError($error_message['error'], $error_message);
+                    }
+                }
+            }
+            else {
+                if( isset($posted_data['user_type']) && ( $posted_data['user_type'] == 'facebook' || $posted_data['user_type'] == 'google' ) ){
+
+                    $user_data = array();
+                    $user_data['email'] = $posted_data['email'];
+                    $user_data['detail'] = true;
+                    $user_data = $this->UserObj->getUser($user_data);
+
+                    if ( isset($user_data['id']) && isset($user_data['user_type']) ) {
+
+                        $user = User::where('email', $posted_data['email'])->first();    
+                        if (Auth::loginUsingId($user->id)){
+                            $user = Auth::user();
+                            $response =  $user;
+                            $response['token'] =  $user->createToken('MyApp')->accessToken;
+                        }else {
+                            $response = false;
+                        }
+
+                        if ($response)
+                            return $this->sendResponse($response, 'User login successfully.');
+                        else {
+                            $error_message['error'] = 'This email has already been registered.';
+                            return $this->sendError($error_message['error'], $error_message);
+                        }
+                    }
+                    else {
+        
+                        $user_data = array();
+                        $user_data['name'] = $posted_data['full_name'];
+                        $user_data['email'] = $posted_data['email'];
+                        $user_data['role'] = 2;
+                        $user_data['account_status'] = $user_data['role'] == 2 ? 'Active' : 'Block';
+                        $user_data['password'] = '12345678@d';
+                        $user_data['user_type'] = $posted_data['user_type'];
+            
+                        $user_id = $this->UserObj->saveUpdateUser($user_data);
+                        
+                        if ($user_id) {
+                            $response = $this->authorizeUser([
+                                'email' => $posted_data['email'],
+                                'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
+                            ]);
+            
+                            if ($response)
+                                return $this->sendResponse($response, 'User login successfully.');
+                            else
+                                $error_message['error'] = 'The user credentials are not valid.';
+                                return $this->sendError($error_message['error'], $error_message);
+                        }
+                    }
+                }
             }
 
             if(!isset($posted_data['email']) || empty($posted_data['email'])){
