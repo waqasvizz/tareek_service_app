@@ -49,7 +49,8 @@ class User extends Authenticatable
 
     public function role()
     {
-        return $this->belongsTo('App\Models\Role');
+        return $this->belongsTo('App\Models\Role')
+            ->select(['roles.id', 'roles.name']);
     }
 
     public function userAssets()

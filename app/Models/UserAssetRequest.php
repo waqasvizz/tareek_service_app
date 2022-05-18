@@ -11,7 +11,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UserAssets extends Model
+class UserAssetRequest extends Model
 {
     use HasFactory;
     
@@ -21,7 +21,7 @@ class UserAssets extends Model
      * @var string[]
      */
 
-    protected $table = 'user_assets';
+    protected $table = 'user_assets_requests';
 
     public function user()
     {
@@ -30,37 +30,26 @@ class UserAssets extends Model
             ->select(['users.id', 'users.role_id', 'users.name', 'users.email', 'users.profile_image']);
     }
 
-    public function asset_type()
+    public function request_by()
     {
-        return $this->belongsTo('App\Models\AssetType', 'asset_type')
-            ->select(['id', 'title', 'type', 'sides']);
+        return $this->belongsTo('App\Models\User', 'request_by')
+            ->with('role')
+            ->select(['users.id', 'users.role_id', 'users.name', 'users.email', 'users.profile_image']);
     }
-
-    public function post()
-    {
-        return $this->belongsTo(Post::class);
-    }
-
     
-    public function getUserAssets($posted_data = array()) {
+    public function getUserAssetRequest($posted_data = array()) {
         
-        $query = UserAssets::latest()->with('user')->with('asset_type');
+        $query = UserAssetRequest::latest()->with('user')->with('request_by');
 
         if(isset($posted_data) && count($posted_data)>0){
             if(isset($posted_data['id'])){
-                $query = $query->where('user_assets.id', $posted_data['id']);
+                $query = $query->where('user_assets_requests.id', $posted_data['id']);
             }
             if(isset($posted_data['user_id'])){
-                $query = $query->where('user_assets.user_id', $posted_data['user_id']);
+                $query = $query->where('user_assets_requests.user_id', $posted_data['user_id']);
             }
-            if(isset($posted_data['asset_type'])){
-                $query = $query->where('user_assets.asset_type', $posted_data['asset_type']);
-            }
-            if(isset($posted_data['mimetypes'])){
-                $query = $query->where('user_assets.mimetypes', $posted_data['mimetypes']);
-            }
-            if(isset($posted_data['asset_status'])){
-                $query = $query->where('user_assets.asset_status', $posted_data['asset_status']);
+            if(isset($posted_data['request_by'])){
+                $query = $query->where('user_assets_requests.request_by', $posted_data['request_by']);
             }
         }
         
@@ -89,42 +78,31 @@ class UserAssets extends Model
     }
     
 
-    public function saveUpdateUserAssets($posted_data = array()) {
+    public function saveUpdateUserAssetRequest($posted_data = array()) {
+
         if(isset($posted_data['update_id'])){
-            $data = UserAssets::find($posted_data['update_id']);
+            $data = UserAssetRequest::find($posted_data['update_id']);
         }else{
-            $data = new UserAssets;
+            $data = new UserAssetRequest;
         }
 
         if(isset($posted_data['user_id'])){
             $data->user_id = $posted_data['user_id'];
         }
-        if(isset($posted_data['asset_type'])){
-            $data->asset_type = $posted_data['asset_type'];
+        if(isset($posted_data['request_by'])){
+            $data->request_by = $posted_data['request_by'];
         }
-        if(isset($posted_data['filename'])){
-            $data->filename = $posted_data['filename'];
-        }
-        if(isset($posted_data['filepath'])){
-            $data->filepath = $posted_data['filepath'];
-        }
-        if(isset($posted_data['mimetypes'])){
-            $data->mimetypes = $posted_data['mimetypes'];
-        }
-        if(isset($posted_data['asset_status'])){
-            $data->asset_status = $posted_data['asset_status'];
+        if(isset($posted_data['status'])){
+            $data->status = $posted_data['status'];
         }
 
         $data->save();
-        $data = UserAssets::getUserAssets(['id' => $data->id])->first();
+        $data = UserAssetRequest::getUserAssetRequest(['id' => $data->id])->first();
         return $data;
     }
 
-    public function deleteUserAssets($id=0) {
-        $data = UserAssets::find($id);
-
-        if (isset($data->filepath))
-            delete_files_from_storage($data->filepath);
+    public function deleteUserAssetRequest($id=0) {
+        $data = UserAssetRequest::find($id);
         
         if ($data)
             return $data->delete();

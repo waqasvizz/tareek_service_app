@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FCM_TokenController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\UserAssetsController;
+use App\Http\Controllers\Api\AssetTypesController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\ServiceReviewController;
@@ -69,6 +71,10 @@ Route::middleware('auth:api')->group( function () {
     Route::post('service_reviews/{id}', [ServiceReviewController::class, 'update']);
     Route::post('product_reviews/{id}', [ProductReviewController::class, 'update']);
     Route::post('point_categories/{id}', [PointCategorieController::class, 'update']);
+    Route::post('user_assets/{id}', [UserAssetsController::class, 'update']);
+    Route::get('user_assets/request', [UserAssetsController::class, 'request']);
+    Route::get('user_assets/approve/{id}', [UserAssetsController::class, 'approve']);
+    Route::get('user_assets/request_update/{id}', [UserAssetsController::class, 'request_update']);
 
     //resouce routes
     Route::resource('point_categories', PointCategorieController::class);
@@ -92,6 +98,8 @@ Route::middleware('auth:api')->group( function () {
 
     Route::resource('chats', ChatController::class);
     Route::resource('fcm_tokens', FCM_TokenController::class);
+    Route::resource('user_assets', UserAssetsController::class);
+    Route::resource('assets_types', AssetTypesController::class);
     Route::resource('notifications', NotificationController::class);
 });
 // Route::resource('services', ServiceController::class);

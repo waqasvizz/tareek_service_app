@@ -34,11 +34,12 @@ class RegisterController extends BaseController
             // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
-            'email'             => 'required|email|unique:users',
+            'email'             => 'required|email',
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
             'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             /*
+            'email'             => 'required|email|unique:users',
             'password'          => 'required|min:8',
             'confirm_password'  => 'required|required_with:password|same:password'
             */
@@ -57,34 +58,21 @@ class RegisterController extends BaseController
             $register_data = array();
             $documents_arr = array();
 
-            if( $posted_data['role'] != 2 && $posted_data['role'] != 3 ){
+            if( $posted_data['role'] != 2 && $posted_data['role'] != 3 && $posted_data['role'] != 4 ){
                 $error_message['error'] = 'You entered the invalid role.';
                 return $this->sendError($error_message['error'], $error_message);  
             }
 
             if($posted_data['role'] != 2 && isset($posted_data['user_type']) && $posted_data['user_type'] != 'app') {
                 $error_message['error'] = 'Sorry, only customers can login using social accounts.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
+            if((!isset($posted_data['full_name']) || empty($posted_data['full_name']))){
+                $error_message['error'] = 'Please enter the full name for the customer.';
                 return $this->sendError($error_message['error'], $error_message);  
             }
-
-            if($posted_data['role'] == 2) {
-
-                if((!isset($posted_data['full_name']) || empty($posted_data['full_name']))){
-                    $error_message['error'] = 'Please enter the full name for the customer.';
-                    return $this->sendError($error_message['error'], $error_message);  
-                }
-    
-                if((!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
-                    $error_message['error'] = 'Please enter the phone number for the customer.';
-                    return $this->sendError($error_message['error'], $error_message);   
-                }
-    
-                if((!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
-                    $error_message['error'] = 'Please enter the date of birth for the customer.';
-                    return $this->sendError($error_message['error'], $error_message);  
-                }
-            }
-
+            
             if(isset($posted_data['user_type']) && $posted_data['user_type'] == 'app') {
                 
                 if( empty($posted_data['password']) || empty($posted_data['confirm_password']) ) {
@@ -97,6 +85,16 @@ class RegisterController extends BaseController
                         $error_message['error'] = 'The password and confirm password must be same.';
                         return $this->sendError($error_message['error'], $error_message);
                     }
+                }
+
+                if((!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
+                    $error_message['error'] = 'Please enter the phone number for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);   
+                }
+
+                if((!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
+                    $error_message['error'] = 'Please enter the date of birth for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);  
                 }
             }
             else {
