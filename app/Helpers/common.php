@@ -147,3 +147,19 @@ if (! function_exists('split_metadata_strings')) {
         return $final_result;
     }
 }
+
+/* LAST UPDATED ON 19 May, 2022 */
+if (! function_exists('getSpecificColumsFromArray')) {
+    function getSpecificColumsFromArray(array $array, $keys)
+    {
+        $array = json_decode(json_encode($array), true);
+
+        if (!is_array($keys)) $keys = [$keys];
+        $filter = function($k) use ($keys){
+            return in_array($k,$keys);
+        };
+        return array_map(function ($el) use ($keys,$filter) {
+            return array_filter($el, $filter, ARRAY_FILTER_USE_KEY );
+        }, $array);
+    }
+}

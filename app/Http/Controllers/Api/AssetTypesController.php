@@ -31,6 +31,7 @@ class AssetTypesController extends BaseController
                 $params['asset_type'] = 'Document';
             else if ($params['asset_type'] == 2)
                 $params['asset_type'] = 'Image';
+                
             $posted_data['type'] = $params['asset_type'];
         }
         if (isset($params['per_page']))

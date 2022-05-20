@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserAssets;
 use App\Models\UserAssetRequest;
+use App\Models\AssetType;
 
 class UserAssetsController extends BaseController
 {
@@ -29,10 +30,10 @@ class UserAssetsController extends BaseController
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
         
-        $user_week_day = UserAssets::getUserAssets($request_data);
-        $message = count($user_week_day) > 0 ? 'User assets are retrieved successfully.' : 'User assets are not found against your query.';
+        $user_assets = UserAssets::getUserAssets($request_data);
+        $message = count($user_assets) > 0 ? 'User assets are retrieved successfully.' : 'User assets are not found against your query.';
 
-        return $this->sendResponse($user_week_day, $message);
+        return $this->sendResponse($user_assets, $message);
     }
     /**
      * Store a newly created resource in storage.
@@ -42,7 +43,7 @@ class UserAssetsController extends BaseController
      */
     public function store(Request $request)
     {
-        $request_data = $request->all();   
+        $request_data = $request->all();
         $allowedfileExtension = [];
         $validator = \Validator::make($request_data, [
             'user_id'           => 'required',
@@ -61,7 +62,8 @@ class UserAssetsController extends BaseController
         }
 
         if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 1 ) {
-            $allowedfileExtension = ['pdf','docx', 'docs'];
+            $allowedfileExtension = ['pdf','docx', 'docs','jpg','jpeg','png'];
+            $request_data['asset_view'] = 1;
         }
         else if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 2 ) {
             $allowedfileExtension = ['jpg','jpeg','png'];
@@ -81,9 +83,9 @@ class UserAssetsController extends BaseController
             }
             else {
                 if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 1 )
-                    $error_message['error'] = 'Invalid file format you can only pdf, docx and docs file format.';
+                    $error_message['error'] = 'Invalid file format you can only pdf, docx, docs, jpg, jpeg and png file format.';
                 else if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 2 )
-                    $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
+                    $error_message['error'] = 'Invalid file format you can only add jpg, jpeg and png file format.';
 
                 return $this->sendError($error_message['error'], $error_message);
             }
@@ -98,7 +100,7 @@ class UserAssetsController extends BaseController
             return $this->sendResponse($model_response, 'User asset is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during data posting.';
-            return $this->sendError($error_message['error'], $error_message);  
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
    
@@ -319,6 +321,36 @@ class UserAssetsController extends BaseController
         else {
             $error_message['error'] = 'Something went wrong during posting data.';
             return $this->sendError($error_message['error'], $error_message);  
+        }
+    }
+
+    public function request_status(Request $request)
+    {
+        $request_data = $request->all();
+        // $request_data['request_id'] = $request_id;
+
+        $validator = \Validator::make($request_data, [
+            'officer_id'      => 'required|exists:users,id',
+            'user_id'         => 'required|exists:users,id',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+        }
+
+        $posted_data = array();
+        $posted_data['request_by'] = $request_data['officer_id'];
+        $posted_data['user_id'] = $request_data['user_id'];
+        $posted_data['detail '] = true;
+        
+        $model = UserAssetRequest::getUserAssetRequest($posted_data);
+
+        if ( count($model) > 0 ){
+            return $this->sendResponse($model, 'The asset request is successfully found.');
+        }
+        else {
+            $error_message['error'] = 'The asset request is not found.';
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
 }

@@ -23,9 +23,17 @@ class AssetType extends Model
 
     protected $table = 'user_assets_categories';
 
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User', 'user_id')
+            ->with('role')
+            ->select(['users.id', 'users.role_id', 'users.name', 'users.email', 'users.profile_image']);
+    }
+
     public function getAssetType($posted_data = array())
     {
-        $query = AssetType::latest();
+        $query = AssetType::latest()
+                    ->with('user');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('user_assets_categories.id', $posted_data['id']);
@@ -37,13 +45,21 @@ class AssetType extends Model
         //     $query = $query->where('user_assets_categories.category_title', 'like', '%' . $posted_data['category_title'] . '%');
         // }
 
-        $query->select('user_assets_categories.*');
+        if(isset($posted_data['user_id'])){
+            $query->join('user_assets', 'user_assets.asset_type', '=', 'user_assets_categories.id');
+            $query = $query->where('user_assets.user_id', $posted_data['user_id']);
+            $query->groupBy('user_assets.asset_type');
+            $query->select('user_assets_categories.*', 'user_assets.user_id', 'user_assets.asset_type');
+        }
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'desc');
+            if(isset($posted_data['user_id']))
+                $query->orderBy('user_assets.id', 'desc');
+            else
+                $query->orderBy('id', 'desc');
         }
 
         if (isset($posted_data['paginate'])) {

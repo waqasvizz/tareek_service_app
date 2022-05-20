@@ -30,7 +30,7 @@ class UserAssetRequest extends Model
             ->select(['users.id', 'users.role_id', 'users.name', 'users.email', 'users.profile_image']);
     }
 
-    public function request_by()
+    public function requested_user()
     {
         return $this->belongsTo('App\Models\User', 'request_by')
             ->with('role')
@@ -39,7 +39,7 @@ class UserAssetRequest extends Model
     
     public function getUserAssetRequest($posted_data = array()) {
         
-        $query = UserAssetRequest::latest()->with('user')->with('request_by');
+        $query = UserAssetRequest::latest()->with('user')->with('requested_user');
 
         if(isset($posted_data) && count($posted_data)>0){
             if(isset($posted_data['id'])){
@@ -63,7 +63,6 @@ class UserAssetRequest extends Model
             $query->orderBy('id', 'DESC');
         }
 
-        
         if(isset($posted_data['paginate'])){
             $result = $query->paginate($posted_data['paginate']);
         }else{

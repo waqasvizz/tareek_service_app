@@ -34,6 +34,7 @@ class UserAssets extends Model
     {
         return $this->belongsTo('App\Models\AssetType', 'asset_type')
             ->select(['id', 'title', 'type', 'sides']);
+            // ->where('id', 10);
     }
 
     public function post()
@@ -63,15 +64,27 @@ class UserAssets extends Model
                 $query = $query->where('user_assets.asset_status', $posted_data['asset_status']);
             }
         }
+
         
-        // $query->join('fileponds', 'fileponds.id', '=', 'post_assets.filepond_id');
-        // $query->select('post_assets.*', 'fileponds.filename', 'fileponds.filepath');
+            
+            if(isset($posted_data['asset_type_new'])){
+                $query = $query->where('user_assets.asset_type', $posted_data['asset_type_new']);
+            }
+
+            $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
+
+        // if(isset($posted_data['group_front_back'])){
+        //     $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
+        //     $query = $query->where('user_assets_categories.type', 'Image');
+
+        //     $query->select('user_assets.*', 'user_assets_categories.type', 'user_assets_categories.sides');
+        // }
         
         $query->getQuery()->orders = null;
         if(isset($posted_data['orderBy_name'])){
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         }else{
-            $query->orderBy('id', 'DESC');
+            $query->orderBy('user_assets.id', 'DESC');
         }
 
         
@@ -85,6 +98,7 @@ class UserAssets extends Model
             }
             // $result = $query->toSql();
         }
+        
         return $result;
     }
     
@@ -113,6 +127,9 @@ class UserAssets extends Model
         }
         if(isset($posted_data['asset_status'])){
             $data->asset_status = $posted_data['asset_status'];
+        }
+        if(isset($posted_data['asset_view'])){
+            $data->asset_view = $posted_data['asset_view'];
         }
 
         $data->save();
