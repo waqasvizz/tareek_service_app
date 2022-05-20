@@ -51,7 +51,20 @@ class UserAssetRequest extends Model
             if(isset($posted_data['request_by'])){
                 $query = $query->where('user_assets_requests.request_by', $posted_data['request_by']);
             }
+            if(isset($posted_data['request_status'])){
+                if ($posted_data['request_status'] == 1) $posted_data['status'] = 'Pending';
+                else if ($posted_data['request_status'] == 2) $posted_data['status'] = 'Accept';
+                else if ($posted_data['request_status'] == 3) $posted_data['status'] = 'Reject';
+                unset($posted_data['request_status']);
+                $query = $query->where('user_assets_requests.status', $posted_data['status']);
+            }
         }
+
+        // echo "Line no awwww@"."<br>";
+        // echo "<pre>";
+        // print_r($posted_data);
+        // echo "</pre>";
+        // exit("@@@@");
         
         // $query->join('fileponds', 'fileponds.id', '=', 'post_assets.filepond_id');
         // $query->select('post_assets.*', 'fileponds.filename', 'fileponds.filepath');
@@ -92,6 +105,9 @@ class UserAssetRequest extends Model
             $data->request_by = $posted_data['request_by'];
         }
         if(isset($posted_data['status'])){
+            if ($posted_data['status'] == 1) $posted_data['status'] = 'Pending';
+            else if ($posted_data['status'] == 2) $posted_data['status'] = 'Accept';
+            else if ($posted_data['status'] == 3) $posted_data['status'] = 'Reject';
             $data->status = $posted_data['status'];
         }
 

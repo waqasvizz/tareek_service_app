@@ -72,10 +72,11 @@ Route::middleware('auth:api')->group( function () {
     Route::post('product_reviews/{id}', [ProductReviewController::class, 'update']);
     Route::post('point_categories/{id}', [PointCategorieController::class, 'update']);
     Route::post('user_assets/{id}', [UserAssetsController::class, 'update']);
+    Route::get('user_assets/get_request', [UserAssetsController::class, 'get_request']);
     Route::get('user_assets/request', [UserAssetsController::class, 'request']);
-    Route::get('user_assets/approve/{id}', [UserAssetsController::class, 'approve']);
+    Route::get('user_assets/approve', [UserAssetsController::class, 'approve']);
     Route::get('user_assets/request_update/{id}', [UserAssetsController::class, 'request_update']);
-    Route::get('user_assets/request_status', [UserAssetsController::class, 'request_status']);
+    // Route::get('user_assets/request_status', [UserAssetsController::class, 'request_status']);
 
     //resouce routes
     Route::resource('point_categories', PointCategorieController::class);

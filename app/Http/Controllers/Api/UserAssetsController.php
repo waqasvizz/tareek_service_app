@@ -30,7 +30,7 @@ class UserAssetsController extends BaseController
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
         
-        $user_assets = UserAssets::getUserAssets($request_data);
+        $user_assets = UserAssets::getUserAssets($request_data)->toArray();
         $message = count($user_assets) > 0 ? 'User assets are retrieved successfully.' : 'User assets are not found against your query.';
 
         return $this->sendResponse($user_assets, $message);
@@ -225,10 +225,44 @@ class UserAssetsController extends BaseController
         }
     }
 
-    public function request(Request $request)
+    public function get_request(Request $request)
     {
         $request_data = $request->all();
    
+        $validator = \Validator::make($request_data, [
+            'user_id'       => 'exists:users,id',
+            'officer_id'    => 'exists:users,id',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+        }
+
+        $posted_data = array();
+        if ( isset($request_data['user_id']) && $request_data['user_id'] ) {
+            $posted_data['user_id'] = $request_data['user_id'];
+            $posted_data['detail'] = true;
+        }
+        if ( isset($request_data['officer_id']) && $request_data['officer_id'] )
+            $posted_data['request_by'] = $request_data['officer_id'];
+        if ( isset($request_data['request_status']) && $request_data['request_status'] )
+            $posted_data['request_status'] = $request_data['request_status'];
+
+            
+        $model = UserAssetRequest::getUserAssetRequest($posted_data)->toArray();
+
+        if ( count($model) > 0 ){
+            return $this->sendResponse($model, 'The asset request is successfully found.');
+        }
+        else {
+            $error_message['error'] = 'The asset request record is not found.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+    }
+
+    public function request(Request $request)
+    {
+        $request_data = $request->all();
         $validator = \Validator::make($request_data, [
             'user_id'       => 'required|exists:users,id',
             'request_by'    => 'required|exists:users,id',
@@ -266,11 +300,12 @@ class UserAssetsController extends BaseController
         }
     }
 
-    public function approve($asset_id = 0)
+    public function approve(Request $request)
     {
-        $request_data['asset_id'] = $asset_id;
+        $request_data = $request->all();
         $validator = \Validator::make($request_data, [
-            'asset_id'      => 'required|exists:user_assets,id',
+            'asset_id'        => 'required|exists:user_assets,id',
+            'asset_status'    => 'required',
         ]);
    
         if($validator->fails()){
@@ -279,7 +314,7 @@ class UserAssetsController extends BaseController
 
         $posted_data = array();
         $posted_data['update_id'] = $request_data['asset_id'];
-        $posted_data['asset_status'] = 1;
+        $posted_data['asset_status'] = $request_data['asset_status'];
         $model = UserAssets::saveUpdateUserAssets($posted_data);
 
         if ( isset($model->id) ){
@@ -291,13 +326,12 @@ class UserAssetsController extends BaseController
         }
     }
 
-    public function request_update(Request $request, $request_id = 0)
+    public function request_update(Request $request)
     {
         $request_data = $request->all();
-        $request_data['request_id'] = $request_id;
-
         $validator = \Validator::make($request_data, [
-            'request_id'      => 'required|exists:user_assets_requests,id',
+            'request_id'          => 'required|exists:user_assets_requests,id',
+            'request_status'      => 'required',
         ]);
    
         if($validator->fails()){
@@ -306,12 +340,7 @@ class UserAssetsController extends BaseController
 
         $posted_data = array();
         $posted_data['update_id'] = $request_data['request_id'];
-
-        if( isset($request_data['request_status']) && $request_data['request_status']) {
-            if ($request_data['request_status'] == 1) $posted_data['status'] = 'Pending';
-            else if ($request_data['request_status'] == 2) $posted_data['status'] = 'Accept';
-            else if ($request_data['request_status'] == 3) $posted_data['status'] = 'Reject';
-        }
+        $posted_data['status'] = $request_data['request_status'];
         
         $model = UserAssetRequest::saveUpdateUserAssetRequest($posted_data);
 
@@ -321,36 +350,6 @@ class UserAssetsController extends BaseController
         else {
             $error_message['error'] = 'Something went wrong during posting data.';
             return $this->sendError($error_message['error'], $error_message);  
-        }
-    }
-
-    public function request_status(Request $request)
-    {
-        $request_data = $request->all();
-        // $request_data['request_id'] = $request_id;
-
-        $validator = \Validator::make($request_data, [
-            'officer_id'      => 'required|exists:users,id',
-            'user_id'         => 'required|exists:users,id',
-        ]);
-   
-        if($validator->fails()){
-            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
-        }
-
-        $posted_data = array();
-        $posted_data['request_by'] = $request_data['officer_id'];
-        $posted_data['user_id'] = $request_data['user_id'];
-        $posted_data['detail '] = true;
-        
-        $model = UserAssetRequest::getUserAssetRequest($posted_data);
-
-        if ( count($model) > 0 ){
-            return $this->sendResponse($model, 'The asset request is successfully found.');
-        }
-        else {
-            $error_message['error'] = 'The asset request is not found.';
-            return $this->sendError($error_message['error'], $error_message);
         }
     }
 }

@@ -33,7 +33,7 @@ class UserAssets extends Model
     public function asset_type()
     {
         return $this->belongsTo('App\Models\AssetType', 'asset_type')
-            ->select(['id', 'title', 'type', 'sides']);
+            ->select(['id as asset_type_id', 'title', 'type', 'sides']);
             // ->where('id', 10);
     }
 
@@ -72,13 +72,7 @@ class UserAssets extends Model
             }
 
             $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
-
-        // if(isset($posted_data['group_front_back'])){
-        //     $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
-        //     $query = $query->where('user_assets_categories.type', 'Image');
-
-        //     $query->select('user_assets.*', 'user_assets_categories.type', 'user_assets_categories.sides');
-        // }
+            $query->select('user_assets.*', 'user_assets_categories.type', 'user_assets_categories.sides');
         
         $query->getQuery()->orders = null;
         if(isset($posted_data['orderBy_name'])){
