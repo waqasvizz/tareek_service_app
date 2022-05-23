@@ -30,13 +30,13 @@ class UserAssets extends Model
             ->select(['users.id', 'users.role_id', 'users.name', 'users.email', 'users.profile_image']);
     }
 
-    public function asset_type()
+    public function asset_category()
     {
         return $this->belongsTo('App\Models\AssetType', 'asset_type')
             ->select(['id as asset_type_id', 'title', 'type', 'sides']);
             // ->where('id', 10);
     }
-
+    
     public function post()
     {
         return $this->belongsTo(Post::class);
@@ -45,7 +45,7 @@ class UserAssets extends Model
     
     public function getUserAssets($posted_data = array()) {
         
-        $query = UserAssets::latest()->with('user')->with('asset_type');
+        $query = UserAssets::latest()->with('user')->with('asset_category');
 
         if(isset($posted_data) && count($posted_data)>0){
             if(isset($posted_data['id'])){
@@ -65,14 +65,8 @@ class UserAssets extends Model
             }
         }
 
-        
-            
-            if(isset($posted_data['asset_type_new'])){
-                $query = $query->where('user_assets.asset_type', $posted_data['asset_type_new']);
-            }
-
-            $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
-            $query->select('user_assets.*', 'user_assets_categories.type', 'user_assets_categories.sides');
+        $query->join('user_assets_categories', 'user_assets_categories.id', '=', 'user_assets.asset_type');
+        $query->select('user_assets.*', 'user_assets_categories.title', 'user_assets_categories.type', 'user_assets_categories.sides');
         
         $query->getQuery()->orders = null;
         if(isset($posted_data['orderBy_name'])){
