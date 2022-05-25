@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\UserCardController;
 use App\Http\Controllers\Api\UserDeliveryOptionController;
 use App\Http\Controllers\Api\UserStripeInformationController;
 use App\Http\Controllers\Api\PointCategorieController;
+use App\Http\Controllers\Api\PromoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,7 @@ Route::middleware('auth:api')->group( function () {
     Route::get('user_assets/request', [UserAssetsController::class, 'request']);
     Route::get('user_assets/approve', [UserAssetsController::class, 'approve']);
     Route::get('user_assets/request_update', [UserAssetsController::class, 'request_update']);
+    Route::post('promos/{id}', [PromoController::class, 'update']);
     // Route::get('user_assets/request_status', [UserAssetsController::class, 'request_status']);
     
 
@@ -104,5 +106,6 @@ Route::middleware('auth:api')->group( function () {
     Route::resource('user_assets', UserAssetsController::class);
     Route::resource('assets_types', AssetTypesController::class);
     Route::resource('notifications', NotificationController::class);
+    Route::resource('promos', PromoController::class);
 });
 // Route::resource('services', ServiceController::class);

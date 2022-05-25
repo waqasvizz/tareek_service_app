@@ -34,7 +34,7 @@ class RegisterController extends BaseController
             // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
-            'email'             => 'required|email',
+            'email'             => 'required|email|unique:users',
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
             'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
@@ -166,9 +166,9 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);  
             }
             
-            if($posted_data['role'] == 3 && (!isset($posted_data['company_documents']) || empty($posted_data['company_documents']))){
-                $error_message['error'] = 'Please enter the company documents for the Supplier.';
-                return $this->sendError($error_message['error'], $error_message);  
+            if( ($posted_data['role'] == 3 || $posted_data['role'] == 4) && (!isset($posted_data['company_documents']) || empty($posted_data['company_documents']))){
+                $error_message['error'] = 'Please post the related documents.';
+                return $this->sendError($error_message['error'], $error_message);
             }
 
             $posted_data['account_status'] = $posted_data['role'] == 3 ? 2 : 1;
@@ -179,6 +179,11 @@ class RegisterController extends BaseController
 
             $user_detail = $this->UserObj->saveUpdateUser($posted_data);
             $user_id = $user_detail->id;
+
+            $login_response = $this->authorizeUser([
+                'email' => $posted_data['email'],
+                'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
+            ]);
             
             $message = ($user_id) > 0 ? 'User is successfully registered.' : 'Something went wrong during registration.';
             if ($user_id) {
@@ -191,6 +196,7 @@ class RegisterController extends BaseController
 
                         $check = in_array($extension, $allowedfileExtension);
                         if($check) {
+
                             $response = upload_files_to_storage($request, $mediaFiles, 'other_assets');
 
                             if( isset($response['action']) && $response['action'] == true ) {
@@ -200,15 +206,17 @@ class RegisterController extends BaseController
                             }
 
                             $asset_id = UserAssets::saveUpdateUserAssets([
-                                'user_id' => $user_id,
-                                'field_name' => 'company_documents',
-                                'filepath' => $arr['file_path'],
-                                'filename' => $arr['file_name'],
-                                'mimetypes' => $mediaFiles->getClientMimeType(),
+                                'user_id'       => $user_id,
+                                'asset_type'    => 1,
+                                'filepath'      => $arr['file_path'],
+                                'filename'      => $arr['file_name'],
+                                'mimetypes'     => $mediaFiles->getClientMimeType(),
+                                'asset_status'  => 0,
+                                'asset_view'    => 0,
                             ]);
 
-                            // $arr['asset_id'] = $asset_id;
-                            // $documents_arr[] = $arr;
+                            $arr['asset_id'] = $asset_id;
+                            $documents_arr[] = $arr;
                         }
                         else {
                             $error_message['error'] = 'Invalid file format you can only add jpg,jpeg, png and pdf file format.';
@@ -276,6 +284,7 @@ class RegisterController extends BaseController
                             ->subject($data['subject']);
                 });
 
+                $user_detail['token'] = isset($login_response['token']) ? $login_response['token'] : '';
                 return $this->sendResponse($user_detail, $message);
             }
             else {

@@ -247,17 +247,24 @@ class UserAssetsController extends BaseController
             $posted_data['request_by'] = $request_data['officer_id'];
         if ( isset($request_data['request_status']) && $request_data['request_status'] )
             $posted_data['request_status'] = $request_data['request_status'];
-
             
-        $model = UserAssetRequest::getUserAssetRequest($posted_data)->toArray();
+        $model = UserAssetRequest::getUserAssetRequest($posted_data);
 
-        if ( count($model) > 0 ){
-            return $this->sendResponse($model, 'The asset request is successfully found.');
+        if ( !empty($model) ){
+            $model = $model->toArray();
+            if ( count($model) > 0 ){
+                return $this->sendResponse($model, 'The asset request is successfully found.');
+            }
+            else {
+                $error_message['error'] = 'The asset request record is not found.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
         }
         else {
             $error_message['error'] = 'The asset request record is not found.';
             return $this->sendError($error_message['error'], $error_message);
         }
+
     }
 
     public function request(Request $request)
