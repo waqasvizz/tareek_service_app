@@ -51,17 +51,8 @@ class ProductPromos extends Model
             if(isset($posted_data['id'])){
                 $query = $query->where('promo_products.id', $posted_data['id']);
             }
-            if(isset($posted_data['user_id'])){
-                $query = $query->where('promo_products.user_id', $posted_data['user_id']);
-            }
-            if(isset($posted_data['asset_type'])){
-                $query = $query->where('promo_products.asset_type', $posted_data['asset_type']);
-            }
-            if(isset($posted_data['mimetypes'])){
-                $query = $query->where('promo_products.mimetypes', $posted_data['mimetypes']);
-            }
-            if(isset($posted_data['asset_status'])){
-                $query = $query->where('promo_products.asset_status', $posted_data['asset_status']);
+            if(isset($posted_data['product_id']) && $posted_data['product_id'] > 0){
+                $query = $query->where('promo_products.product_id', $posted_data['product_id']);
             }
         }
 
@@ -122,8 +113,8 @@ class ProductPromos extends Model
     public function deleteProductPromos($id=0) {
         $data = ProductPromos::find($id);
 
-        if (isset($data->filepath))
-            delete_files_from_storage($data->filepath);
+        if (isset($data->banner_path))
+            delete_files_from_storage($data->banner_path);
         
         if ($data)
             return $data->delete();

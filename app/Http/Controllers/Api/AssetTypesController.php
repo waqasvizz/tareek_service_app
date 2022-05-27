@@ -116,60 +116,33 @@ class AssetTypesController extends BaseController
     // public function update(Request $request, AssetType $service)
     public function update(Request $request, $id)
     {
-        $request_data = $request->all(); 
+        $request_data = $request->all();
         $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
-            'update_id' => 'exists:categories,id',
-            'category_title'    => 'required',
-            'category_type'     => 'required',
-            'commission'     => 'required',
+            'update_id'       => 'required|exists:user_assets_categories,id',
+            'asset_title'     => 'nullable',
+            'asset_type'      => 'in:1,2',
+            'asset_sides'     => 'in:1,2',
         ]);
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
-        
-        if( isset($request_data['category_type']) && $request_data['category_type'] != 1 && $request_data['category_type'] != 2 ){
-            $error_message['error'] = 'You entered the invalid category type.';
-            return $this->sendError($error_message['error'], $error_message);  
-        }
-        
-        if (isset($request->category_image)) {
-            
-            $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->category_image->getClientOriginalExtension();
 
-            $check = in_array($extension, $allowedfileExtension);
-            if($check) {
-                
-                $res['action'] = true;
-                if (isset($category_record->category_image) && $category_record->category_image != '')
-                    $res = delete_files_from_storage($category_record->category_image);
+        $posted_data = array();
+        $posted_data['update_id'] = $id;
+        if (isset($request_data['asset_title']) && $request_data['asset_title'] != '')
+            $posted_data['title'] = $request_data['asset_title'];
+        if (isset($request_data['asset_type']) && $request_data['asset_type'] != '')
+            $posted_data['type'] = $request_data['asset_type'];
+        if (isset($request_data['asset_sides']) && $request_data['asset_sides'] != '')
+            $posted_data['sides'] = $request_data['asset_sides'];
 
-                if ($res['action']) {
-                    $response = upload_files_to_storage($request, $request->category_image, 'other_assets');
-                    $request_data['category_image'] = $response['file_path'];
-                    if( isset($response['action']) && $response['action'] == true ) {
-                        $img_data['file_name'] = isset($response['file_name']) ? $response['file_name'] : "";
-                        $img_data['file_path'] = isset($response['file_path']) ? $response['file_path'] : "";
-                    }
-                }
-                else {
-                    $error_message['error'] = 'Somthing went wrong during image replacement.';
-                    return $this->sendError($error_message['error'], $error_message);  
-                }
-            }
-            else {
-                $error_message['error'] = 'Invalid file format you can only add jpg,jpeg and png file format.';
-                return $this->sendError($error_message['error'], $error_message);
-            }
-        }
+        $model_response = AssetType::saveUpdateAssetType($posted_data);
 
-        $category = AssetType::saveUpdateAssetType($request_data);
-
-        if ( isset($category->id) ){
-            return $this->sendResponse($category, 'AssetType is successfully updated.');
+        if ( isset($model_response->id) ){
+            return $this->sendResponse($model_response, 'Asset type is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -185,16 +158,30 @@ class AssetTypesController extends BaseController
     // public function destroy(AssetType $service)
     public function destroy($id)
     {
-        $category_rec = AssetType::find($id);
-        if($category_rec) {
-            $filepath = $category_rec->category_image;
-            delete_files_from_storage($filepath);
+        if ($id != 0) {
+            $request_data['asset_id'] = $id;
+            $validator = \Validator::make($request_data, [
+                'asset_id'    => 'required|exists:user_assets_categories,id',
+            ],[
+                'asset_id.exists' => 'You have selected a invalid asset type id.'
+            ]);
+     
+            if($validator->fails()){
+                return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
+            }
+
             $response = AssetType::deleteAssetType($id);
-            return $this->sendResponse([], 'AssetType deleted successfully.');
+    
+            if($response)
+                return $this->sendResponse([], 'The asset type is successfully deleted.');
+            else {
+                $error_message['error'] = 'Something went wrong during deletion.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
         }
         else {
-            $error_message['error'] = 'AssetType already deleted / Not found in database.';
-            return $this->sendError($error_message['error'], $error_message);  
+            $error_message['error'] = 'The requested data is already deleted / not found in database.';
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
 }

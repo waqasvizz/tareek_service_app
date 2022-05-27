@@ -128,7 +128,7 @@ class User extends Authenticatable
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('users.id', 'ASC');
+            $query->orderBy('users.id', 'DESC');
         }
 
         if (isset($posted_data['paginate'])) {

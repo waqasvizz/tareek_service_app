@@ -156,6 +156,11 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message); 
             }
 
+            if($posted_data['role'] == 3 && (!isset($posted_data['company_type']) || empty($posted_data['company_type']))){
+                $error_message['error'] = 'Please enter the company contact type for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
             if($posted_data['role'] == 3 && (!isset($posted_data['company_name']) || empty($posted_data['company_name']))){
                 $error_message['error'] = 'Please enter the company name for the Supplier.';
                 return $this->sendError($error_message['error'], $error_message);  

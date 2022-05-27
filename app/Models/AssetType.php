@@ -95,15 +95,13 @@ class AssetType extends Model
         }
 
         $data->save();
+        $data = AssetType::getAssetType(['id' => $data->id])->first();
         return $data;
     }
 
 
     public function deleteAssetType($id) {
         $data = AssetType::find($id);
-            
-        if (isset($data->category_image))
-            delete_files_from_storage($data->category_image);
 
         if ( isset($data->id) )
             return $data->delete();

@@ -51,17 +51,8 @@ class ServicePromos extends Model
             if(isset($posted_data['id'])){
                 $query = $query->where('promo_services.id', $posted_data['id']);
             }
-            if(isset($posted_data['user_id'])){
-                $query = $query->where('promo_services.user_id', $posted_data['user_id']);
-            }
-            if(isset($posted_data['asset_type'])){
-                $query = $query->where('promo_services.asset_type', $posted_data['asset_type']);
-            }
-            if(isset($posted_data['mimetypes'])){
-                $query = $query->where('promo_services.mimetypes', $posted_data['mimetypes']);
-            }
-            if(isset($posted_data['asset_status'])){
-                $query = $query->where('promo_services.asset_status', $posted_data['asset_status']);
+            if(isset($posted_data['service_id']) && $posted_data['service_id'] > 0){
+                $query = $query->where('promo_services.service_id', $posted_data['service_id']);
             }
         }
 
@@ -122,8 +113,8 @@ class ServicePromos extends Model
     public function deleteServicePromos($id=0) {
         $data = ServicePromos::find($id);
 
-        if (isset($data->filepath))
-            delete_files_from_storage($data->filepath);
+        if (isset($data->banner_path))
+            delete_files_from_storage($data->banner_path);
         
         if ($data)
             return $data->delete();

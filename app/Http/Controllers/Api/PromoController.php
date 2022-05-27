@@ -37,6 +37,14 @@ class PromoController extends BaseController
             return $this->sendError($error_message['error'], $error_message);
         }
 
+        if (isset($request_data['product_id'])) {
+            $request_data['paginate'] = $request_data['product_id'];
+            unset($request_data['service_id']);
+        }
+        if (isset($request_data['service_id'])) {
+            $request_data['paginate'] = $request_data['service_id'];
+            unset($request_data['product_id']);
+        }
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
         
@@ -148,7 +156,7 @@ class PromoController extends BaseController
         $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
-            'promo_type'        => 'required',
+            'promo_type'    => 'required',
         ]);
  
         if($validator->fails()){
@@ -169,21 +177,12 @@ class PromoController extends BaseController
 
         $data['id'] = $id;
         $data['detail'] = true;
-
         if ( $request_data['promo_type'] == 'product' ) {
-            // $message = 'Product promo is successfully added.';
             $model_response = ProductPromos::getProductPromos($data);
         }
         else if ( $request_data['promo_type'] == 'service' ) {
-            // $message = 'Service promo is successfully added.';
             $model_response = ServicePromos::getServicePromos($data);
         }
-
-        // echo "Line no deee@"."<br>";
-        // echo "<pre>";
-        // print_r($model_response);
-        // echo "</pre>";
-        // exit("@@@@");
 
         if ($model_response) {
             delete_files_from_storage($model_response->banner_path);
@@ -223,40 +222,6 @@ class PromoController extends BaseController
             $error_message['error'] = 'Somthing went wrong during data posting.';
             return $this->sendError($error_message['error'], $error_message);
         }
-
-        // if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] != 1 && $request_data['asset_mimetype'] != 2 ){
-        //     $error_message['error'] = 'You entered a invalid asset type.';
-        //     return $this->sendError($error_message['error'], $error_message);  
-        // }
-
-        // exit('aall okaa');
-        
-
-        // if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 1 ) {
-        //     $allowedfileExtension = ['pdf','docx', 'docs'];
-        // }
-        // else if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 2 ) {
-        //     $allowedfileExtension = ['jpg','jpeg','png'];
-        // }
-
-        // $posted_data = array();
-        // $posted_data['id'] = $id;
-        // $posted_data['detail'] = true;
-        // $model = UserAssets::getUserAssets($posted_data);
-
-       
-
-        // $request_data['asset_type'] = $request_data['asset_category'];
-        // $request_data['asset_status'] = 0;
-
-        // $model_response = UserAssets::saveUpdateUserAssets($request_data);
-
-        // if ( isset($model_response->id) ){
-        //     return $this->sendResponse($model_response, 'User asset is successfully updated.');
-        // }else{
-        //     $error_message['error'] = 'Somthing went wrong during data posting.';
-        //     return $this->sendError($error_message['error'], $error_message);  
-        // }
     }
    
     /**
@@ -265,21 +230,55 @@ class PromoController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id = 0)
     {
-        $posted_data = array();
-        $posted_data['id'] = $id;
-        $posted_data['detail'] = true;
-        $model = UserAssets::getUserAssets($posted_data);
-        $response = delete_files_from_storage(isset($model->filepath) ?? '');
+        $request_data = $request->all();
+        if ($id != 0) {
+            $validator = \Validator::make($request_data, [
+                'promo_type'    => 'required|in:product,service',
+            ],[
+                'promo_type.in' => 'You have selected a invalid promo_type.'
+            ]);
+     
+            if($validator->fails()){
+                return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
+            }
 
-        $response = UserAssets::deleteUserAssets($id);
-        if($response) {
-            return $this->sendResponse([], 'User asset is successfully deleted.');
+            $data['product_id'] = $request_data['promo_type'] == 'product' ? $id : 0;
+            $data['service_id'] = $request_data['promo_type'] == 'service' ? $id : 0;
+
+            $validator = \Validator::make($data, [
+                'product_id'    => $data['product_id'] != 0 ? 'exists:promo_products,id' : '',
+                'service_id'    => $data['service_id'] != 0 ? 'exists:promo_services,id' : '',
+            ],[
+                'product_id.exists' => 'The product id is invalid or not exists in records',
+                'service_id.exists' => 'The service id is invalid or not exists in records',
+            ]);
+     
+            if($validator->fails()){
+                return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+            }
+
+            $message = '';
+            if ($request_data['promo_type'] == 'product') {
+                $message = 'The product promo is successfully deleted.';
+                $response = ProductPromos::deleteProductPromos($id);
+            }
+            else if ($request_data['promo_type'] == 'service') {
+                $message = 'The service promo is successfully deleted.';
+                $response = ServicePromos::deleteServicePromos($id);
+            }
+    
+            if($response)
+                return $this->sendResponse([], $message);
+            else {
+                $error_message['error'] = 'The requested data already deleted / not found in database.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
         }
         else {
-            $error_message['error'] = 'User asset is already deleted / Not found in database.';
-            return $this->sendError($error_message['error'], $error_message);  
+            $error_message['error'] = 'The requested data is already deleted / not found in database.';
+            return $this->sendError($error_message['error'], $error_message);
         }
     }
 }
