@@ -21,6 +21,8 @@ class CreateOrderProducts extends Migration
             $table->foreign('product_id')->references('id')->on('products')->onUpdate('cascade')->onDelete('cascade');
             $table->integer('quantity');
             $table->double('price');
+            $table->string('discount', 100)->nullable()->default(0);
+            $table->string('net_price', 100)->nullable()->default(0);
             $table->timestamps();
         });
     }

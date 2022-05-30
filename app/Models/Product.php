@@ -36,6 +36,9 @@ class Product extends Model
         if (isset($posted_data['user_id'])) {
             $query = $query->where('products.user_id', $posted_data['user_id']);
         }
+        if (isset($posted_data['product_type'])) {
+            $query = $query->where('products.product_type', $posted_data['product_type']);
+        }
         if (isset($posted_data['category_id'])) {
             $query = $query->where('products.category_id', $posted_data['category_id']);
         }
@@ -107,6 +110,30 @@ class Product extends Model
         }
         if (isset($posted_data['avg_rating'])) {
             $data->avg_rating = $posted_data['avg_rating'];
+        }
+        if (isset($posted_data['product_type'])) {
+            $data->product_type = $posted_data['product_type'];
+        }
+        if (isset($posted_data['bulk_qty'])) {
+            $data->bulk_qty = $posted_data['bulk_qty'];
+        }
+        if (isset($posted_data['min_qty'])) {
+            $data->min_qty = $posted_data['min_qty'];
+        }
+        if (isset($posted_data['min_discount'])) {
+            $data->min_discount = $posted_data['min_discount'];
+        }
+        if (isset($posted_data['max_qty'])) {
+            $data->max_qty = $posted_data['max_qty'];
+        }
+        if (isset($posted_data['max_discount'])) {
+            $data->max_discount = $posted_data['max_discount'];
+        }
+        if (isset($posted_data['time_limit'])) {
+            $data->time_limit = $posted_data['time_limit'];
+        }
+        if (isset($posted_data['consume_qty'])) {
+            $data->consume_qty = $posted_data['consume_qty'];
         }
 
         $data->save();

@@ -25,6 +25,14 @@ class CreateProductsTable extends Migration
             $table->string('location', 255)->nullable();
             $table->string('lat', 255)->nullable();
             $table->string('long', 255)->nullable();
+            $table->enum('product_type', ['single', 'bulk'])->default('single');
+            $table->string('bulk_qty', 100)->nullable();
+            $table->string('consume_qty', 100)->nullable();
+            $table->string('min_qty', 100)->nullable();
+            $table->string('min_discount', 100)->nullable();
+            $table->string('max_qty', 100)->nullable();
+            $table->string('max_discount', 100)->nullable();
+            $table->date('expiry_time')->nullable();
             $table->text('description')->nullable();
             $table->string('contact', 255)->nullable();
             $table->string('avg_rating',20)->nullable();

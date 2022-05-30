@@ -9,6 +9,7 @@ use App\Models\OrderProduct;
 use App\Models\OrderService;
 use App\Models\PointCategorie;
 use App\Models\User;
+use App\Models\Product;
 use App\Models\FCM_Token;
 use App\Models\Notification;
 use App\Models\UserStripeInformation;
@@ -131,20 +132,23 @@ class OrderController extends BaseController
         $request_data = $request->all(); 
    
         $validator = \Validator::make($request_data, [
-            'order_type'    => 'required',
-            'receiver_id' => 'required|exists:users,id',
-            'user_multiple_address_id' => 'required|exists:user_multiple_addresses,id',
-            'user_delivery_option_id' => 'required|exists:user_delivery_options,id',
-            'user_delivery_option_id' => $request->order_type == 2 ? 'required|exists:user_delivery_options,id': 'nullable',
-            'user_card_id' => 'required|exists:user_cards,id',
+            'order_type'                => 'required',
+            'receiver_id'               => 'required|exists:users,id',
+            'user_multiple_address_id'  => 'required|exists:user_multiple_addresses,id',
+            'user_delivery_option_id'   => 'required|exists:user_delivery_options,id',
+            'user_delivery_option_id'   => $request->order_type == 2 ? 'required|exists:user_delivery_options,id': 'nullable',
+            'user_card_id'              => 'required|exists:user_cards,id',
             // 'grand_total'    => 'required',
-            'service_id' => $request->order_type == 1 ? 'required|exists:services,id': 'nullable',
-            'service_price' => $request->order_type == 1 ? 'required': 'nullable',
-            'schedule_date' => $request->order_type == 1 ? 'required': 'nullable',
-            'schedule_time' => $request->order_type == 1 ? 'required': 'nullable',
-            'product_id' => $request->order_type == 2 ? 'required|exists:products,id': 'nullable',
-            'product_quantity' => $request->order_type == 2 ? 'required': 'nullable',
-            'product_price' => $request->order_type == 2 ? 'required': 'nullable',
+            'service_id'                => $request->order_type == 1 ? 'required|exists:services,id': 'nullable',
+            'service_price'             => $request->order_type == 1 ? 'required': 'nullable',
+            'schedule_date'             => $request->order_type == 1 ? 'required': 'nullable',
+            'schedule_time'             => $request->order_type == 1 ? 'required': 'nullable',
+            // 'product_id'                => $request->order_type == 2 ? 'required|exists:products,id': 'nullable',
+            'product_id'                => $request->order_type == 2 ? 'required|array' : 'nullable',
+            'product_id.*'              => $request->order_type == 2 ? 'exists:products,id' : 'nullable',
+            'product_quantity'          => $request->order_type == 2 ? 'required' : 'nullable',
+            'product_price'             => $request->order_type == 2 ? 'required' : 'nullable',
+            'product_type'              => $request->order_type == 2 ? 'required' : 'nullable',
             // 'redeem_point'    => 'required',
         ]);
    
@@ -165,11 +169,11 @@ class OrderController extends BaseController
             return $this->sendError($error_message['error'], $error_message);
         }
 
-
         if ( isset($response->id) ){
             $grand_total = 0;
 
             if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
+
                 foreach ($request_data['product_id'] as $key => $item) {
                     OrderProduct::saveUpdateOrderProduct([
                         'order_id' => $response->id,
@@ -178,6 +182,18 @@ class OrderController extends BaseController
                         'price' => $request_data['product_price'][$key],
                     ]);
                     $grand_total = $grand_total + $request_data['product_price'][$key] * $request_data['product_quantity'][$key];
+                    
+                    if ($request_data['product_type'][$key] == 'bulk') {
+                        $product = Product::find($request_data['product_id'][$key]);
+                        $pre_qty = isset($product->consume_qty) && $product->consume_qty ? $product->consume_qty : 0;
+                        $new_qty = $pre_qty + $request_data['product_quantity'][$key];
+
+                        $product->consume_qty = $new_qty;
+                        $product->save();
+                        
+                        // $product = Product::where('id', $request_data['product_id'][$key]);
+                        //     ->update(['consume_qty'=>'Updated title']);
+                    }
                 }
             }
 

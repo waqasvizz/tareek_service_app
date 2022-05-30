@@ -28,6 +28,8 @@ class ProductController extends BaseController
             $posted_data['id'] = $posted_data['product_id'];
         if (isset($posted_data['product_name']))
             $posted_data['product_name'] = $posted_data['product_name'];
+        if (isset($posted_data['product_type']))
+            $posted_data['product_type'] = $posted_data['product_type'];
         if (isset($posted_data['per_page']))
             $posted_data['paginate'] = $posted_data['per_page'];
         
@@ -59,8 +61,11 @@ class ProductController extends BaseController
             'product_location'    => 'required',
             'product_lat'         => 'required',
             'product_long'        => 'required',
+            'product_type'        => 'required|in:single,bulk',
             'product_description' => 'required',
             'product_contact'     => 'required',
+        ],[
+            'product_type.in' => 'You have selected a invalid product type.'
         ]);
    
         if($validator->fails()){
@@ -103,6 +108,13 @@ class ProductController extends BaseController
             'product_description' => $request_data['product_description'],
             'product_contact'     => $request_data['product_contact'],
             'product_img'         => $img_data['file_path'],
+            'product_type'        => isset($request_data['product_type']) ? $request_data['product_type'] : '',
+            'bulk_qty'            => isset($request_data['bulk_qty']) ? $request_data['bulk_qty'] : 0,
+            'min_qty'             => isset($request_data['min_qty']) ? $request_data['min_qty'] : 0,
+            'min_discount'        => isset($request_data['min_discount']) ? $request_data['min_discount'] : 0,
+            'max_qty'             => isset($request_data['max_qty']) ? $request_data['max_qty'] : 0,
+            'max_discount'        => isset($request_data['max_discount']) ? $request_data['max_discount'] : 0,
+            'time_limit'          => isset($request_data['time_limit']) ? $request_data['time_limit'] : NULL,
         ]);
 
         $notification_text = "A new product has been added into the app.";
@@ -184,8 +196,9 @@ class ProductController extends BaseController
         $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
-            'update_id'    => 'required|exists:products,id',
-            'product_category'    => 'required|exists:categories,id',
+            'update_id'           => 'required|exists:products,id',
+            'product_category'    => 'exists:categories,id',
+            'product_type'        => 'in:single,bulk',
         ]);
    
         if($validator->fails()){
@@ -226,7 +239,7 @@ class ProductController extends BaseController
         $product = Product::saveUpdateProduct($request_data);
 
         if ( isset($product->id) ){
-            return $this->sendResponse($product, 'Product is successfully added.');
+            return $this->sendResponse($product, 'Product is successfully updated.');
         }
         else{
             $error_message['error'] = 'Somthing went wrong during query.';
