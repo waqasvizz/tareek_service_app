@@ -25,11 +25,23 @@ class OrderController extends BaseController
     public function index(Request $request)
     {
         $request_data = $request->all();
-        // $request_data['paginate'] = 10;
+        $data = array();
+        $request_data['paginate'] = 10;
+
+        if (isset($request_data['user_id']))
+            $data['sender_id'] = $request_data['user_id'];
+        if (isset($request_data['supplier_id']))
+            $data['receiver_id'] = $request_data['supplier_id'];
+        if (isset($request_data['order_have']))
+            $data['products_join'] = $request_data['order_have'];
+        if (isset($request_data['order_status']))
+            $data['order_status'] = $request_data['order_status'];
         if (isset($request_data['per_page']))
-            $request_data['paginate'] = $request_data['per_page'];
+            $data['paginate'] = $request_data['per_page'];
         
-        $response = Order::getOrder($request_data);
+        // $request_data['print_query'] = true;
+
+        $response = Order::getOrder($data);
         $message = count($response) > 0 ? 'Order retrieved successfully.' : 'Order not found against your query.';
 
         return $this->sendResponse($response, $message);
@@ -151,6 +163,12 @@ class OrderController extends BaseController
             'product_type'              => $request->order_type == 2 ? 'required' : 'nullable',
             // 'redeem_point'    => 'required',
         ]);
+
+        // echo "Line no all testing @"."<br>";
+        // echo "<pre>";
+        // print_r($request_data);
+        // echo "</pre>";
+        // exit("@@@@");
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
@@ -190,9 +208,6 @@ class OrderController extends BaseController
 
                         $product->consume_qty = $new_qty;
                         $product->save();
-                        
-                        // $product = Product::where('id', $request_data['product_id'][$key]);
-                        //     ->update(['consume_qty'=>'Updated title']);
                     }
                 }
             }

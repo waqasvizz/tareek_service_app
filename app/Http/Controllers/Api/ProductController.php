@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\Notification;
 use App\Models\FCM_Token;
 // use App\Http\Resources\Product as ProductResource;
@@ -19,20 +20,30 @@ class ProductController extends BaseController
      */
     public function index(Request $request)
     {
-        // $params = $request->all();
+        $params = $request->all();
+        $params['paginate'] = 10;
 
-        $posted_data = $request->all();
-        $posted_data['paginate'] = 10;
+        $posted_data = array();
 
-        if (isset($posted_data['product_id']))
-            $posted_data['id'] = $posted_data['product_id'];
-        if (isset($posted_data['product_name']))
-            $posted_data['product_name'] = $posted_data['product_name'];
-        if (isset($posted_data['product_type']))
-            $posted_data['product_type'] = $posted_data['product_type'];
-        if (isset($posted_data['per_page']))
-            $posted_data['paginate'] = $posted_data['per_page'];
-        
+        if (isset($params['product_id']))
+            $posted_data['id'] = $params['product_id'];
+        if (isset($params['orders_exists'])) {
+            $posted_data['product_orders_join'] = $params['orders_exists'];
+            $posted_data['groupBy_value'] = 'order_products.product_id';
+        }
+        if (isset($params['product_name']))
+            $posted_data['product_name'] = $params['product_name'];
+        if (isset($params['product_type']))
+            $posted_data['product_type'] = $params['product_type'];
+        if (isset($params['orders_count']))
+            $posted_data['orders_count'] = $params['orders_count'];
+        if (isset($params['orders_users_list']))
+            $posted_data['orders_users_list'] = $params['orders_users_list'];
+        if (isset($params['per_page']))
+            $posted_data['paginate'] = $params['per_page'];
+            
+            // $posted_data['print_query'] = true;
+        $posted_data['with_data'] = true;
         $products = Product::getProducts($posted_data);
         $message = count($products) > 0 ? 'Products retrieved successfully.' : 'Products not found against your query.';
 
@@ -265,5 +276,37 @@ class ProductController extends BaseController
             $error_message['error'] = 'Product already deleted.';
             return $this->sendError($error_message['error'], $error_message);  
         } 
+    }
+
+    public function get_users_list(Request $request)
+    {
+        $request_data = $request->all();
+        $validator = \Validator::make($request_data, [
+            'product_id'    => 'required|exists:products,id',
+        ],[
+            'product_id.exists' => 'You have selected a invalid product.'
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
+        }
+
+        $posted_data = array();
+        $posted_data['id'] = $request_data['product_id'];
+        $posted_data['product_orders_join'] = true;
+        $posted_data['orders_join'] = true;
+        $posted_data['to_array'] = true;
+        $posted_data['with_data'] = false;
+        $products = Product::getProducts($posted_data);
+
+        $user_ids = array_unique(array_column($products, 'client_id'));
+
+        $users_list = [];
+        if ( count($user_ids) > 0 ) {
+            $users_list = User::getUser(['users_in' => $user_ids]);
+        }
+
+        $message = count($user_ids) > 0 ? 'Users list retrieved successfully.' : 'Users list not found against your query.';
+        return $this->sendResponse($users_list, $message);
     }
 }

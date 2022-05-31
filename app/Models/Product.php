@@ -26,9 +26,21 @@ class Product extends Model
         return $this->belongsTo('App\Models\Category','category_id');
     }
 
+    public function getTotalOrdersAttribute()
+    {
+        return $this->hasMany(OrderProduct::class, 'product_id')->count();
+    }
+
     public function getProducts($posted_data = array())
     {
-        $query = Product::latest()->with('user')->with('category');
+        $columns = ['products.*'];
+        $select_columns = array_merge($columns, []);
+
+        $query = Product::latest();
+        if (isset($posted_data['with_data']) && $posted_data['with_data']) {
+            $query = $query->with('user')
+                ->with('category');
+        }
 
         if (isset($posted_data['id'])) {
             $query = $query->where('products.id', $posted_data['id']);
@@ -46,13 +58,37 @@ class Product extends Model
             $query = $query->where('products.title', 'like', '%' . $posted_data['product_name'] . '%');
         }
 
-        $query->select('products.*');
-        
+        if(isset($posted_data['product_orders_join'])){
+            $query->join('order_products', 'products.id', '=', 'order_products.product_id');
+            $columns = ['order_products.price as order_price', 'order_products.id as order_id', 'order_products.net_price as total_orders'];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        if(isset($posted_data['orders_join'])){
+            $query->join('orders', 'orders.id', '=', 'order_id');
+            $columns = ['orders.id as orders_id', 'orders.sender_id as client_id'];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        $query->select($select_columns);
+
+        if (isset($posted_data['groupBy_value'])) {
+            $query->groupBy($posted_data['groupBy_value']);
+        }
+       
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'DESC');
+            $query->orderBy('products.id', 'DESC');
+        }
+
+        if (isset($posted_data['print_query'])) {
+            $result = $query->toSql();
+            echo "<pre>";
+            print_r($result);
+            echo "</pre>";
+            exit("@@@@");
         }
         
         if (isset($posted_data['paginate'])) {
@@ -63,6 +99,8 @@ class Product extends Model
                 $result = $query->first();
             } else if (isset($posted_data['count'])) {
                 $result = $query->count();
+            } else if (isset($posted_data['to_array'])) {
+                $result = $query->get()->ToArray();
             } else {
                 $result = $query->get();
             }

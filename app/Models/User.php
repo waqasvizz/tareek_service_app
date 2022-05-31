@@ -91,6 +91,9 @@ class User extends Authenticatable
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);
         }
+        if (isset($posted_data['users_in'])) {
+            $query = $query->whereIn('users.id', $posted_data['users_in']);
+        }
         if (isset($posted_data['email'])) {
             $query = $query->where('users.email', $posted_data['email']);
         }
@@ -111,17 +114,6 @@ class User extends Authenticatable
         //     $join->on('payments.id', DB::raw('(SELECT MAX(payments.id) FROM payments WHERE `payments`.`user_id` = `users`.`id`)'));
         // });
         
-        // if ( isset($posted_data['latitude']) && isset($posted_data['longitude']) ) {
-        //     $query = $query->select('users.*', 'users.id as user_id', 'roles.name as role_name', DB::raw("(6373 * acos( 
-        //         cos( radians(users.latitude) ) 
-        //       * cos( radians( ".$posted_data['latitude']." ) ) 
-        //       * cos( radians( ".$posted_data['longitude']." ) - radians(users.longitude) ) 
-        //       + sin( radians(users.latitude) ) 
-        //       * sin( radians( ".$posted_data['latitude']." ) )
-        //         ) ) as distance"));
-        // }else{
-        //     $query->select('users.*', 'users.id as user_id', 'roles.name as role_name');
-        // }
         $query->select('*');
         
         $query->getQuery()->orders = null;

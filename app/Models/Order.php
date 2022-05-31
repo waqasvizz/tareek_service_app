@@ -78,9 +78,25 @@ class Order extends Model
             $query = $query->where('orders.order_type', $posted_data['order_type']);
         }
         if (isset($posted_data['order_status'])) {
+            if ($posted_data['order_status'] == 1) $posted_data['order_status'] = 'Pending';
+            else if ($posted_data['order_status'] == 2) $posted_data['order_status'] = 'Request accepted';
+            else if ($posted_data['order_status'] == 3) $posted_data['order_status'] = 'Request rejected';
+            else if ($posted_data['order_status'] == 4) $posted_data['order_status'] = 'On the way';
+            else if ($posted_data['order_status'] == 5) $posted_data['order_status'] = 'In-progress';
+            else if ($posted_data['order_status'] == 6) $posted_data['order_status'] = 'Completed';
             $query = $query->where('orders.order_status', $posted_data['order_status']);
         }
 
+        if(isset($posted_data['products_join'])){
+            $query->join('order_products', 'orders.id', '=', 'order_products.order_id');
+            $query->join('products', 'products.id', '=', 'order_products.product_id');
+            $query = $query->where('product_type', $posted_data['products_join']);
+            $query->groupBy('orders.id');
+            $query->select('orders.*', 'order_products`.`id` AS `order_product_id', 'order_products`.`price` AS `order_product_price', 'products`.`product_type');
+        }
+        // else {
+        //     $query->select('products.*');
+        // }
 
         if (isset($posted_data['service_id'])) {
             $query = $query->where('order_services.service_id', $posted_data['service_id']);
@@ -92,6 +108,14 @@ class Order extends Model
             $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
         }
         
+        if (isset($posted_data['print_query'])) {
+            $result = $query->toSql();
+            echo "Line no @"."<br>";
+            echo "<pre>";
+            print_r($result);
+            echo "</pre>";
+            exit("@@@@");
+        }
 
         $query->select('orders.*');
         
@@ -99,7 +123,7 @@ class Order extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'DESC');
+            $query->orderBy('orders.id', 'DESC');
         }
 
         if (isset($posted_data['paginate'])) {
