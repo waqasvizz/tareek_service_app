@@ -74,7 +74,17 @@ class RegisterController extends BaseController
             }
             
             if(isset($posted_data['user_type']) && $posted_data['user_type'] == 'app') {
-                
+            
+                if((!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
+                    $error_message['error'] = 'Please enter the phone number for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);   
+                }
+
+                if((!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
+                    $error_message['error'] = 'Please enter the date of birth for the customer.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
+
                 if( empty($posted_data['password']) || empty($posted_data['confirm_password']) ) {
                     $error_message['error'] = 'The password and confirm password must not be empty.';
                     return $this->sendError($error_message['error'], $error_message);
@@ -85,16 +95,6 @@ class RegisterController extends BaseController
                         $error_message['error'] = 'The password and confirm password must be same.';
                         return $this->sendError($error_message['error'], $error_message);
                     }
-                }
-
-                if((!isset($posted_data['phone_number']) || empty($posted_data['phone_number']))){
-                    $error_message['error'] = 'Please enter the phone number for the customer.';
-                    return $this->sendError($error_message['error'], $error_message);   
-                }
-
-                if((!isset($posted_data['date_of_birth']) || empty($posted_data['date_of_birth']))){
-                    $error_message['error'] = 'Please enter the date of birth for the customer.';
-                    return $this->sendError($error_message['error'], $error_message);  
                 }
             }
             else {
@@ -372,12 +372,22 @@ class RegisterController extends BaseController
                 return $this->sendResponse($response, 'User login successfully.');
             }
             else{
-                $error_message['error'] = 'Unauthorised';
+                $error_message['error'] = 'Please enter correct email and password.';
                 return $this->sendError($error_message['error'], $error_message);
             }
-
         }
         else {
+
+            if( (!isset($posted_data['email']) || empty($posted_data['email'])) ){
+                $error_message['error'] = 'The email address is required.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
+
+            if( (!isset($posted_data['password']) || empty($posted_data['password'])) ){
+                $error_message['error'] = 'The password is required.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
+
             $error_message['error'] = 'Please post the valid credentials for login.';
             return $this->sendError($error_message['error'], $error_message);
         }
@@ -408,53 +418,38 @@ class RegisterController extends BaseController
 
     public function verifyUserEmail($token){
 
-        $where_query = array(
-            ['remember_token', '=', isset($token) ? $token : 0]
-        );
-
+        $where_query = array(['remember_token', '=', isset($token) ? $token : 0]);
         $verifyUser = User::where($where_query)->first();
 
-        $verifyUser = [];
-
-        $status = 404;
-        $message = 'Sorry your email cannot be identified.';
+        $email_data = [
+            'name' => isset($verifyUser->name) ? $verifyUser->name : 'Dear User',
+            'text_line' => 'This verfication code is invalid. Please contact to the customer support',
+        ];
   
         if($verifyUser){
-
-            $user_obj = new User();
-
-            if($verifyUser->email_verified_at == null) {
+            if($verifyUser->email_verified_at == NULL) {
                 
-                $params = array(
-                    'user_id'           => $verifyUser->id,
-                    'remember_token'    => 'NULL',
-                    'email_verified_at' => ''//convertUTCToLocal(Carbon::now())
-                );
-
-                $model_response = $user_obj->updateUser($params);
+                $model_response = User::saveUpdateUser([
+                    'update_id' => $verifyUser->id,
+                    'remember_token' => NULL,
+                    'email_verified_at' => date('Y-m-d h:i:s')
+                ]);
 
                 if (!empty($model_response)) {
-                    $status = 200;
-                    $message = "Your e-mail is verified.";
+                    $email_data = [
+                        'name' => $verifyUser->name,
+                        'text_line' => 'Congratulations! You email is successfully verified. Welcome to '.config('app.name'),
+                    ];
                 }
-
             }
             else {
-                $params = array(
-                    'user_id'           => $verifyUser->id,
-                    'remember_token'    => 'NULL'
-                );
-
-                $model_response = $user_obj->updateUser($params);
-
-                if (!empty($model_response)) {
-                    $status = 200;
-                    $message = "Your e-mail is already verified.";
-                }
-            }           
+                $email_data = [
+                    'name' => $verifyUser->name,
+                    'text_line' => 'Your email is already verified. Welcome to '.config('app.name'),
+                ];
+            }
         }
-        return view('emails.emailing_response', compact('status', 'message'));
-        // return makeAPIResponse($status, $message, ["error"=> '']);
+        return view('emails.general_email', compact('email_data'));
     }
 
     public function forgotPassword(Request $request)
