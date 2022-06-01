@@ -10,6 +10,7 @@ use Auth;
 use DB;
 use Stripe;
 use Storage;
+use Mail;
 
 class BaseController extends Controller
 {

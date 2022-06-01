@@ -79,7 +79,8 @@ Route::middleware('auth:api')->group( function () {
     Route::get('user_assets/request', [UserAssetsController::class, 'request']);
     Route::get('user_assets/approve', [UserAssetsController::class, 'approve']);
     Route::get('user_assets/request_update', [UserAssetsController::class, 'request_update']);
-    Route::post('bulk_orders/get_users', [ProductController::class, 'get_users_list']);
+    Route::get('bulk_orders/get_details', [ProductController::class, 'get_details']);
+    Route::post('bulk_orders/update_orders', [ProductController::class, 'update_bulk_orders']);
    
 
     //resouce routes

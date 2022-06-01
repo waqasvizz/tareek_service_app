@@ -56,6 +56,9 @@ class Order extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('orders.id', $posted_data['id']);
         }
+        if (isset($posted_data['orders_in'])) {
+            $query = $query->whereIn('orders.id', $posted_data['orders_in']);
+        }
         if (isset($posted_data['name'])) {
             $query = $query->where('orders.name', 'like', '%' . $posted_data['name'] . '%');
         }
@@ -158,7 +161,22 @@ class Order extends Model
 
     public function saveUpdateOrder($posted_data = array())
     {
-        if (isset($posted_data['update_id'])) {
+        if(isset($posted_data['update_bulk_statuses'])){
+            if ($posted_data['update_bulk_statuses'] == 1) $posted_data['update_bulk_statuses'] = 'Pending';
+            else if ($posted_data['update_bulk_statuses'] == 2) $posted_data['update_bulk_statuses'] = 'Request accepted';
+            else if ($posted_data['update_bulk_statuses'] == 3) $posted_data['update_bulk_statuses'] = 'Request rejected';
+            else if ($posted_data['update_bulk_statuses'] == 4) $posted_data['update_bulk_statuses'] = 'On the way';
+            else if ($posted_data['update_bulk_statuses'] == 5) $posted_data['update_bulk_statuses'] = 'In-progress';
+            else if ($posted_data['update_bulk_statuses'] == 6) $posted_data['update_bulk_statuses'] = 'Completed';
+
+            $data = Order::whereIn('id', $posted_data['order_ids'])
+                        ->update([
+                            'order_status' => $posted_data['update_bulk_statuses'],
+                            'rejection_message' => $posted_data['rejection_message'],
+                        ]);
+            return $data;
+        }
+        else if (isset($posted_data['update_id'])) {
             $data = Order::find($posted_data['update_id']);
         } else {
             $data = new Order;

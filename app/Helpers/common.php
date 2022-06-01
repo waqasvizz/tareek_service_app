@@ -149,8 +149,8 @@ if (! function_exists('split_metadata_strings')) {
 }
 
 /* LAST UPDATED ON 19 May, 2022 */
-if (! function_exists('getSpecificColumsFromArray')) {
-    function getSpecificColumsFromArray(array $array, $keys)
+if (! function_exists('getSpecificColumnsFromArray')) {
+    function getSpecificColumnsFromArray(array $array, $keys)
     {
         $array = json_decode(json_encode($array), true);
 

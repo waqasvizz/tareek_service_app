@@ -282,6 +282,19 @@ class OrderController extends BaseController
                     'details' => $model_response
                 ]);
             }
+            
+            if (config('app.order_email')) {
+                $data = [
+                    'subject' => 'New Order - '.config('app.name'),
+                    'name' => $model_response->receiverDetails->name,
+                    'email' => $model_response->receiverDetails->email,
+                ];
+
+                \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
+            }
 
             return $this->sendResponse($model_response, 'Order is successfully added.');
         }else{
@@ -315,7 +328,7 @@ class OrderController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id = 0)
     {
         $request_data = $request->all(); 
         $request_data['update_id'] = $id;
@@ -464,7 +477,7 @@ class OrderController extends BaseController
             'metadata' => $notification_params['metadata']
         ]);
 
-        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['sender']])->toArray();
         $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
 
         if ($response) {
@@ -481,6 +494,20 @@ class OrderController extends BaseController
                 'registration_ids' => $notification_params['registration_ids'],
                 'details' => $model_response
             ]);
+        }
+
+        
+        if (config('app.order_email')) {
+            $data = [
+                'subject' => 'Order Status Updated - '.config('app.name'),
+                'name' => $model_response->senderDetails->name,
+                'email' => $model_response->senderDetails->email,
+            ];
+
+            \Mail::send('emails.order_status', ['email_data' => $data], function($message) use ($data) {
+                $message->to($data['email'])
+                        ->subject($data['subject']);
+            });
         }
 
         if ( isset($model_response->id) ){

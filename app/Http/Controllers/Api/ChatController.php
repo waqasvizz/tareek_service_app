@@ -101,6 +101,20 @@ class ChatController extends BaseController
             ]);
         }
 
+        if (config('app.chat_email')) {
+            $data = [
+                'subject' => 'New Chat Message - '.config('app.name'),
+                'name' => $model_response['receiver_details']['name'],
+                'email' => $model_response['receiver_details']['email'],
+                'text_line' => 'You have got a new chat message on '.config('app.name'),
+            ];
+
+            \Mail::send('emails.general_email', ['email_data' => $data], function($message) use ($data) {
+                $message->to($data['email'])
+                        ->subject($data['subject']);
+            });
+        }
+
         return $this->sendResponse($model_response, 'Chat posted successfully.');
     } 
    

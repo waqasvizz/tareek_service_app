@@ -74,6 +74,10 @@ return [
     |
     */
 
+    'order_email' => true,
+    'chat_email' => true,
+    'product_email' => true,
+
     'timezone' => 'GMT',
     // 'timezone' => 'UTC',
 

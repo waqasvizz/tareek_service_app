@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Notification;
 use App\Models\FCM_Token;
+use App\Models\Order;
+
 // use App\Http\Resources\Product as ProductResource;
 
 class ProductController extends BaseController
@@ -20,10 +22,9 @@ class ProductController extends BaseController
      */
     public function index(Request $request)
     {
-        $params = $request->all();
-        $params['paginate'] = 10;
-
         $posted_data = array();
+        $params = $request->all();
+        $posted_data['paginate'] = 10;
 
         if (isset($params['product_id']))
             $posted_data['id'] = $params['product_id'];
@@ -31,10 +32,16 @@ class ProductController extends BaseController
             $posted_data['product_orders_join'] = $params['orders_exists'];
             $posted_data['groupBy_value'] = 'order_products.product_id';
         }
+        if (isset($params['category_id']))
+            $posted_data['category_id'] = $params['category_id'];
+        if (isset($params['user_id']))
+            $posted_data['user_id'] = $params['user_id'];
         if (isset($params['product_name']))
             $posted_data['product_name'] = $params['product_name'];
-        if (isset($params['product_type']))
+        if (isset($params['product_type'])) {
             $posted_data['product_type'] = $params['product_type'];
+            $posted_data['orders_join'] = true;
+        }
         if (isset($params['orders_count']))
             $posted_data['orders_count'] = $params['orders_count'];
         if (isset($params['orders_users_list']))
@@ -278,11 +285,13 @@ class ProductController extends BaseController
         } 
     }
 
-    public function get_users_list(Request $request)
+    public function get_details(Request $request)
     {
         $request_data = $request->all();
         $validator = \Validator::make($request_data, [
             'product_id'    => 'required|exists:products,id',
+            'statuses'      => 'in:yes,no',
+            'users_list'    => 'in:yes,no',
         ],[
             'product_id.exists' => 'You have selected a invalid product.'
         ]);
@@ -299,14 +308,166 @@ class ProductController extends BaseController
         $posted_data['with_data'] = false;
         $products = Product::getProducts($posted_data);
 
-        $user_ids = array_unique(array_column($products, 'client_id'));
-
-        $users_list = [];
-        if ( count($user_ids) > 0 ) {
-            $users_list = User::getUser(['users_in' => $user_ids]);
+        $response = [];
+        $message = "";
+                
+        if (isset($request_data['statuses']) && $request_data['statuses'] == 'yes') {
+            $bulk_ids = array_unique(array_column($products, 'orders_id'));
+    
+            if ( count($bulk_ids) > 0 ) {
+                $response = Order::getOrder(['orders_in' => $bulk_ids]);
+            }
+            $message = count($bulk_ids) > 0 ? 'Orders statuses list retrieved successfully.' : 'Orders statuses list not found against your query.';
+        }
+        else if (isset($request_data['users_list']) && $request_data['users_list'] == 'yes') {
+            $bulk_ids = array_unique(array_column($products, 'client_id'));
+    
+            if ( count($bulk_ids) > 0 ) {
+                $response = User::getUser(['users_in' => $bulk_ids]);
+            }
+            $message = count($bulk_ids) > 0 ? 'Users list retrieved successfully.' : 'Users list not found against your query.';
         }
 
-        $message = count($user_ids) > 0 ? 'Users list retrieved successfully.' : 'Users list not found against your query.';
-        return $this->sendResponse($users_list, $message);
+        return $this->sendResponse($response, $message);
+    }
+
+    public function update_bulk_orders(Request $request)
+    {
+        $request_data = $request->all();
+        $validator = \Validator::make($request_data, [
+            'product_id'    => 'required|exists:products,id',
+            'status'        => 'required',
+        ],[
+            'product_id.exists' => 'You have selected a invalid product.'
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
+        }
+
+        if ( !isset($request_data['rejection_message']) || $request_data['rejection_message'] == '' ) {
+            unset($request_data['rejection_message']);
+        }
+
+        $posted_data = array();
+        $posted_data['id'] = $request_data['product_id'];
+        $posted_data['product_orders_join'] = true;
+        $posted_data['orders_join'] = true;
+        $posted_data['to_array'] = true;
+        $posted_data['with_data'] = false;
+        $products = Product::getProducts($posted_data);
+
+        $order_ids = array_unique(array_column($products, 'orders_id'));
+        $bulk_records = getSpecificColumnsFromArray($products, ['user_id', 'client_id', 'orders_id']);
+
+                                        // echo "Line no deeee@"."<br>";
+                                        // echo "<pre>";
+                                        // print_r($products);
+                                        // print_r($bulk_records);
+                                        // echo "</pre>";
+                                        // exit("@@@@");
+
+        $orders_list = [];
+        if ( count($order_ids) > 0 ) {
+            $orders_list = Order::saveUpdateOrder([
+                'update_bulk_statuses'  => $request_data['status'],
+                'order_ids'             => $order_ids,
+                'rejection_message'     => isset($request_data['rejection_message']) ? $request_data['rejection_message'] : NULL,
+            ]);
+        }
+
+                                        // $notif_data = array();
+
+                                        // foreach ($bulk_records as $key => $value) {
+                                        //     $data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
+
+                                        //     echo "Line no data@"."<br>";
+                                        //     echo "<pre>";
+                                        //     print_r($data);
+                                        //     echo "</pre>";
+                                        //     exit("@@@@");
+                                        // }
+
+                    
+
+
+                                        // $data = array();
+                                        // $data['detail'] = true;
+                                        // $data['id'] = $post->id;
+                                        // $post_data = Post::getPost($data);
+                                        // $model_response = $post_data->toArray();
+                                        
+                                        // $data = array();
+                                        // $data['role'] = 2;
+                                        // $user_data = User::getUser($data)->ToArray();
+
+        $notification_text = "You order status has been updated.";
+
+        foreach ($bulk_records as $key => $value) {
+            $user_data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
+
+            $supplier_id = $value['user_id'];
+            $receiver_id = $value['client_id'];
+            $order_id = $value['orders_id'];
+
+            $notification_params = array();
+            $notification_params['sender'] = $supplier_id;
+            $notification_params['receiver'] = $receiver_id;
+            $notification_params['slugs'] = "order-update";
+            $notification_params['notification_text'] = $notification_text;
+            $notification_params['seen_by'] = "";
+            $notification_params['metadata'] = "supplier_id=$supplier_id"."&order_id=$order_id";
+           
+            $response = Notification::saveUpdateNotification([
+                'sender' => $notification_params['sender'],
+                'receiver' => $notification_params['receiver'],
+                'slugs' => $notification_params['slugs'],
+                'notification_text' => $notification_params['notification_text'],
+                'seen_by' => $notification_params['seen_by'],
+                'metadata' => $notification_params['metadata']
+            ]);
+            
+            // $tokens[] = array_column($user_data['fcm_tokens'], 'device_token');
+            $token = array_column($user_data['fcm_tokens'], 'device_token');
+
+            $notification = FCM_Token::sendFCM_Notification([
+                'title' => $notification_params['slugs'],
+                'body' => $notification_params['notification_text'],
+                'metadata' => $notification_params['metadata'],
+                'registration_ids' => $token,
+                'details' => []
+            ]);
+        }
+        
+                                        // $notification = false;
+                                        // if ($response) {
+                                        //     $notification = FCM_Token::sendFCM_Notification([
+                                        //         'title' => $notification_params['slugs'],
+                                        //         'body' => $notification_params['notification_text'],
+                                        //         'metadata' => $notification_params['metadata'],
+                                        //         'registration_ids' => $registration_ids,
+                                        //         'details' => $model_response
+                                        //     ]);
+                                        // }
+        
+        if (config('app.product_email')) {
+            foreach ($bulk_records as $key => $value) {
+                $user_data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
+                
+                $data = [
+                    'subject' => 'Order Status Updated - '.config('app.name'),
+                    'name' => $user_data['name'],
+                    'email' => $user_data['email'],
+                ];
+    
+                \Mail::send('emails.order_status', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
+            }
+        }
+
+        $message = $orders_list ? 'Orders statuses updated successfully.' : 'Something went wrong during query data.';
+        return $this->sendResponse('', $message);
     }
 }
