@@ -34,11 +34,12 @@ class RegisterController extends BaseController
             // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable',
             'address'           => 'nullable|max:100',
-            'email'             => 'required|email|unique:users',
+            'email'             => $posted_data['user_type'] != 'app' ? 'required|email' : 'required|email|unique:users',
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
             'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             /*
+
             'email'             => 'required|email|unique:users',
             'password'          => 'required|min:8',
             'confirm_password'  => 'required|required_with:password|same:password'
@@ -182,6 +183,18 @@ class RegisterController extends BaseController
             $token = Str::random(64);
             $posted_data['email_token'] = $token;
 
+            if (isset($request->company_documents)) {
+                $allowedfileExtension = ['jpeg','jpg','png','pdf'];
+                foreach($request->company_documents as $mediaFiles) {
+                    $extension = strtolower($mediaFiles->getClientOriginalExtension());
+                    $check = in_array($extension, $allowedfileExtension);
+                    if(!$check) {
+                        $error_message['error'] = 'Invalid file format you can only add jpg, jpeg, png and pdf file format.';
+                        return $this->sendError($error_message['error'], $error_message);
+                    }
+                }
+            }
+
             $user_detail = $this->UserObj->saveUpdateUser($posted_data);
             $user_id = $user_detail->id;
 
@@ -197,8 +210,8 @@ class RegisterController extends BaseController
                     $allowedfileExtension = ['jpeg','jpg','png','pdf'];
                     foreach($request->company_documents as $mediaFiles) {
 
-                        $extension = $mediaFiles->getClientOriginalExtension();
-
+                        $extension = strtolower($mediaFiles->getClientOriginalExtension());
+                        
                         $check = in_array($extension, $allowedfileExtension);
                         if($check) {
 
@@ -224,17 +237,10 @@ class RegisterController extends BaseController
                             $documents_arr[] = $arr;
                         }
                         else {
-                            $error_message['error'] = 'Invalid file format you can only add jpg,jpeg, png and pdf file format.';
+                            $error_message['error'] = 'Invalid file format you can only add jpg, jpeg, png and pdf file format.';
                             return $this->sendError($error_message['error'], $error_message);
                         }
                     }
-
-                    // foreach ($documents_arr as $key => $item) {
-                    //     UserAssets::saveUpdateUserAssets([
-                    //         'user_id' => $user_id,
-                    //         'storage_id' => $item['asset_id'],
-                    //     ]);
-                    // }
                 }
                 $user_detail = $this->UserObj->getUser([
                     'id'       => $user_id,
@@ -306,9 +312,20 @@ class RegisterController extends BaseController
      */
     public function loginUser(Request $request)
     {
-        $posted_data = $request->all();
         $user_data = array();
+        $posted_data = $request->all();
+
+        $rules = array(
+            'email'             => 'required|email',
+            'password'          => 'required',
+        );
         
+        $validator = \Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
+        }
+
         if ( ( isset($posted_data['facebook_id']) || isset($posted_data['gmail_id']) ) && isset($posted_data['email']) && !isset($posted_data['password']) ) {
 
             $user_data['email'] = $posted_data['email'];
@@ -407,8 +424,12 @@ class RegisterController extends BaseController
         if(\Auth::attempt(['email' => $email, 'password' => $password])){ 
             $user = \Auth::user();
             $response =  $user;
-            $response['token'] =  $user->createToken('MyApp')->accessToken;
 
+            if ( isset($posted_data['mode']) && $posted_data['mode'] == 'only_validate' ) {
+                return $response;
+            }
+
+            $response['token'] =  $user->createToken('MyApp')->accessToken;
             return $response;
         }
         else{
@@ -490,6 +511,54 @@ class RegisterController extends BaseController
 
             }
 
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        $params = $request->all();
+        $rules = array(
+            'email'             => 'required|email',
+            'old_password'      => 'required',
+            'new_password'      => 'required|min:4',
+            'confirm_password'  => 'required|required_with:new_password|same:new_password'
+        );
+        $validator = \Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
+        }
+
+        $response = $this->authorizeUser([
+            'email' => $params['email'],
+            'password' => $params['old_password'],
+            'mode' => 'only_validate',
+        ]);
+
+        // $users = User::where('email', '=', $params['email'])->first();
+        if (!$response) {
+            $error_message['error'] = 'Pleae post the correct email and password for change.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+        else {
+            $new_password = $params['confirm_password'];
+            $email = $request->get('email');
+            $password = Hash::make($new_password);
+
+            \DB::update('update users set password = ? where email = ?',[$password,$email]);
+
+            // $data = [
+            //     'new_password' => $new_password,
+            //     'subject' => 'Reset Password',
+            //     'email' => $email
+            // ];
+
+            // Mail::send('emails.reset_password', $data, function($message) use ($data) {
+            //     $message->to($data['email'])
+            //     ->subject($data['subject']);
+            // });
+
+            return $this->sendResponse([], 'Your password has been updated.');
         }
     }
 

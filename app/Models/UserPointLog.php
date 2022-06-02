@@ -67,6 +67,9 @@ class UserPointLog extends Model
         if (isset($posted_data['point_target'])) {
             $data->point_target = $posted_data['point_target'];
         }
+        if (isset($posted_data['per_point_value'])) {
+            $data->per_point_value = $posted_data['per_point_value'];
+        }
         if (isset($posted_data['total_point_count'])) {
             $data->total_point_count = $posted_data['total_point_count'];
         }

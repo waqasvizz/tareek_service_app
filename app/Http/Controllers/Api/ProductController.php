@@ -82,6 +82,12 @@ class ProductController extends BaseController
             'product_type'        => 'required|in:single,bulk',
             'product_description' => 'required',
             'product_contact'     => 'required',
+            'bulk_qty'            => 'required_if:product_type,==,bulk',
+            'min_qty'             => 'required_if:product_type,==,bulk',
+            'max_qty'             => 'required_if:product_type,==,bulk',
+            'min_discount'        => 'required_if:product_type,==,bulk',
+            'max_discount'        => 'required_if:product_type,==,bulk',
+            'time_limit'          => 'required_if:product_type,==,bulk',
         ],[
             'product_type.in' => 'You have selected a invalid product type.'
         ]);

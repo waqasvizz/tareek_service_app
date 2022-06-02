@@ -218,10 +218,18 @@ class UserController extends BaseController
                 $posted_data['receiver_id'] = $request_data['user_id'];
             }
 
-            $posted_data['order_status'] = 6;
-            $data['requests']['completed'] = Order::getOrder($posted_data);
             $posted_data['order_status'] = 1;
             $data['requests']['pending'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 2;
+            $data['requests']['accepted'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 3;
+            $data['requests']['rejected'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 4;
+            $data['requests']['on_the_way'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 5;
+            $data['requests']['in_progres'] = Order::getOrder($posted_data);
+            $posted_data['order_status'] = 6;
+            $data['requests']['completed'] = Order::getOrder($posted_data);
 
             $posted_data = array();
             $posted_data['count'] = true;

@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\PromoController;
 Route::post('login', [RegisterController::class, 'loginUser'])->name('login');
 Route::post('register', [RegisterController::class, 'registerUser']);
 Route::post('forgot_password', [RegisterController::class, 'forgotPassword']);
+Route::post('change_password', [RegisterController::class, 'changePassword']);
 Route::get('/verify-email/{token?}', [RegisterController::class, 'verifyUserEmail'])->name('email_verify');
 
 Route::middleware('auth:api')->group( function () {
