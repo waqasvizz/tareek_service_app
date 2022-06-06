@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Notification;
 use App\Models\FCM_Token;
 use App\Models\Order;
+use App\Models\OrderProduct;
 
 // use App\Http\Resources\Product as ProductResource;
 
@@ -363,6 +364,40 @@ class ProductController extends BaseController
         $posted_data['with_data'] = false;
         $products = Product::getProducts($posted_data);
 
+        $discount_amount = 0;
+        $order_ids = array_unique(array_column($products, 'orders_id'));
+
+        foreach ($products as $key => $value) {
+            if ( isset($value['product_type']) && $value['product_type'] == 'bulk' ) {
+
+                $product_data = OrderProduct::find($value['order_id']);
+                if ($product_data) {
+                    if ($value['consume_qty'] >= $value['max_qty']) {
+                        $discount_amount = floor( ($value['max_discount']/100) * $value['price'] );
+                    }
+                    else if ($value['consume_qty'] >= $value['min_qty']) {
+                        $discount_amount = floor( ($value['min_discount']/100) * $value['price'] );
+                    }
+
+                    $product_data->discount = $discount_amount;
+                    $product_data->net_price = $product_data->price - $discount_amount;
+                    $product_data->save();
+                }
+
+                $order_data = Order::find($value['orders_id']);
+                if ($order_data) {
+                    if ($order_data->calculated == 'False') {
+                        if ( isset($order_data->discount) && $order_data->discount )
+                            $discount_amount = $order_data->discount + $discount_amount;
+    
+                        $order_data->discount = $discount_amount;
+                        $order_data->grand_total = $order_data->grand_total - $discount_amount;
+                        $order_data->save();
+                    }
+                }
+            }
+        }
+
         $order_ids = array_unique(array_column($products, 'orders_id'));
         $bulk_records = getSpecificColumnsFromArray($products, ['user_id', 'client_id', 'orders_id']);
 
@@ -378,9 +413,16 @@ class ProductController extends BaseController
             $orders_list = Order::saveUpdateOrder([
                 'update_bulk_statuses'  => $request_data['status'],
                 'order_ids'             => $order_ids,
+                'calculated'            => 'True',
                 'rejection_message'     => isset($request_data['rejection_message']) ? $request_data['rejection_message'] : NULL,
             ]);
         }
+
+        echo "Line no deee@"."<br>";
+        echo "<pre>";
+        print_r($products);
+        echo "</pre>";
+        exit("@@@@");
 
                                         // $notif_data = array();
 

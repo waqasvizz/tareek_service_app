@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\UserDeliveryOptionController;
 use App\Http\Controllers\Api\UserStripeInformationController;
 use App\Http\Controllers\Api\PointCategorieController;
 use App\Http\Controllers\Api\PromoController;
+use App\Http\Controllers\Api\PaymentTransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,7 +83,6 @@ Route::middleware('auth:api')->group( function () {
     Route::get('user_assets/request_update', [UserAssetsController::class, 'request_update']);
     Route::get('bulk_orders/get_details', [ProductController::class, 'get_details']);
     Route::post('bulk_orders/update_orders', [ProductController::class, 'update_bulk_orders']);
-   
 
     //resouce routes
     Route::resource('point_categories', PointCategorieController::class);

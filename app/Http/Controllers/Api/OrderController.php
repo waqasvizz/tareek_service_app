@@ -38,9 +38,15 @@ class OrderController extends BaseController
         if (isset($request_data['supplier_id']))
             $data['receiver_id'] = $request_data['supplier_id'];
         if (isset($request_data['order_have']))
-            $data['products_join'] = $request_data['order_have'];
+            $data['order_have'] = $request_data['order_have'];
         if (isset($request_data['order_status']))
             $data['order_status'] = $request_data['order_status'];
+        if (isset($request_data['product_id']))
+            $data['product_id'] = $request_data['product_id'];
+        if (isset($request_data['search_filter']))
+            $data['search_filter'] = $request_data['search_filter'];
+        // if (isset($request_data['service_id']))
+        //     $data['service_id'] = $request_data['service_id'];
         if (isset($request_data['per_page']))
             $data['paginate'] = $request_data['per_page'];
         
@@ -362,13 +368,14 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
+        // $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
 
-        echo '<pre>';
-        print_r($order_detail->ToArray());
+        // echo '<pre>';
+        // print_r($order_detail->ToArray());
         // print_r($order_detail);
-        exit;
+        // exit;
 
+        /*
         if($request_data['order_status'] == 2){
             $payment_transactions = array();  
             try {
@@ -479,7 +486,7 @@ class OrderController extends BaseController
 
                 // end
                 // ***********************************************************
-
+        */
 
                 /*
 
@@ -488,12 +495,14 @@ class OrderController extends BaseController
                 // ***********************************************************
                 
                 */
+        /*
 
             } catch (\Throwable $th) {
                 $error_message['error'] = $th->getMessage();
                 return $this->sendError($error_message['error'], $error_message);
             }
         }
+        */
 
         $model_response = Order::saveUpdateOrder($request_data);
 

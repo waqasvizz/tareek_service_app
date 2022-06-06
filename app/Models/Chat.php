@@ -32,6 +32,9 @@ class Chat extends Model
 
     public function getChats($posted_data = array())
     {
+        $columns = ['chats.*'];
+        $select_columns = array_merge($columns, []);
+
         $query = Chat::latest();
        
         $query = $query->with('senderDetails')
@@ -77,7 +80,10 @@ class Chat extends Model
                 $query = $query->where('chats.receiver_id', $posted_data['receiver_id']);
             }
             if (isset($posted_data['text'])) {
-                $query = $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%');
+                $query = $query->where(function ($query) use ($posted_data) {
+                    $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
+                        ->orWhere('users.name', 'like', '%' . $posted_data['text'] . '%');
+                });
             }
 
             if (isset($posted_data['last_chat'])) {
@@ -92,7 +98,13 @@ class Chat extends Model
             }
         }
 
-        $query->select('chats.*');
+        if(isset($posted_data['users_join'])){
+            $query->join('users', 'chats.receiver_id', '=', 'users.id');
+            $columns = ['users.name'];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        $query->select($select_columns);
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
@@ -104,6 +116,14 @@ class Chat extends Model
         if (isset($posted_data['groupBy_value'])) {
             // $query->groupBy($posted_data['groupBy_name'], $posted_data['groupBy_value']);
             $query->groupBy($posted_data['groupBy_value']);
+        }
+
+        if (isset($posted_data['print_query'])) {
+            $result = $query->toSql();
+            echo "<pre>";
+            print_r($result);
+            echo "</pre>";
+            exit("@@@@");
         }
         
         if (isset($posted_data['paginate'])) {

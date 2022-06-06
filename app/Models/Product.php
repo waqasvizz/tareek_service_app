@@ -66,7 +66,8 @@ class Product extends Model
 
         if(isset($posted_data['orders_join'])){
             $query->join('orders', 'orders.id', '=', 'order_id');
-            $columns = ['orders.id as orders_id', 'orders.sender_id as client_id', 'orders.order_status as order_status'];
+            $columns = ['orders.id as orders_id', 'orders.sender_id as client_id', 'orders.order_status as order_status', 'orders.order_products as orders_order_products', 'orders.receiver_id as orders_receiver_id', 'orders.user_multiple_address_id as orders_user_multiple_address_id', 'orders.user_card_id as orders_user_card_id', 'orders.total as orders_total', 'orders.discount as orders_discount', 'orders.grand_total as orders_grand_total', 'orders.redeem_point as orders_redeem_point', 'orders.calculated as orders_calculated', 'orders.payment_status as orders_payment'];
+
             $select_columns = array_merge($select_columns, $columns);
         }
 

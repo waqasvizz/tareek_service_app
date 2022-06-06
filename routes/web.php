@@ -10,6 +10,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StorageAssetsController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\Api\PaymentTransactionController;
 use RahulHaque\Filepond\Http\Controllers\FilepondController;
 
 
@@ -29,9 +30,9 @@ Route::get('/clear-cache', function() {
     Artisan::call('cache:clear');
     Artisan::call('optimize');
     Artisan::call('view:clear');
-    // Artisan::call('route:cache');
-    // Artisan::call('route:clear');
-    // Artisan::call('config:cache');
+    Artisan::call('route:cache');
+    Artisan::call('route:clear');
+    Artisan::call('config:cache');
     return '<h1>Cache facade value cleared</h1>';
 });
 
@@ -95,6 +96,7 @@ Route::get('/', function () {
 });
 Route::get('/fcm', [Controller::class, 'firebase']);
 Route::get('/send_notification', [Controller::class, 'sendNotification']);
+Route::get('process_payments', [PaymentTransactionController::class, 'start_payment_transaction']);
 
 // Auth::routes();
 

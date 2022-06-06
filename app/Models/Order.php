@@ -51,7 +51,14 @@ class Order extends Model
 
     public function getOrder($posted_data = array())
     {
+        $columns = ['orders.*'];
+        $select_columns = array_merge($columns, []);
+
         $query = Order::latest()->with('senderDetails')->with('receiverDetails')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
+
+        if (isset($posted_data['without_with']) && $posted_data['without_with']) {
+            $query = Order::latest();
+        }
 
         if (isset($posted_data['id'])) {
             $query = $query->where('orders.id', $posted_data['id']);
@@ -80,6 +87,17 @@ class Order extends Model
         if (isset($posted_data['order_type'])) {
             $query = $query->where('orders.order_type', $posted_data['order_type']);
         }
+        if (isset($posted_data['product_id'])) {
+            $query = $query->where('products.id', $posted_data['product_id']);
+        }
+        if (isset($posted_data['search_filter'])) {
+            $query = $query->where(function ($query) use ($posted_data) {
+                $query->where('sender.name', 'like', '%' . $posted_data['search_filter'] . '%')
+                    ->orWhere('receiver.name', 'like', '%' . $posted_data['search_filter'] . '%')
+                    ->orWhere('products.title', 'like', '%' . $posted_data['search_filter'] . '%');
+            });
+        }
+        
         if (isset($posted_data['order_status'])) {
             if ($posted_data['order_status'] == 1) $posted_data['order_status'] = 'Pending';
             else if ($posted_data['order_status'] == 2) $posted_data['order_status'] = 'Request accepted';
@@ -90,26 +108,45 @@ class Order extends Model
             $query = $query->where('orders.order_status', $posted_data['order_status']);
         }
 
-        if(isset($posted_data['products_join'])){
-            $query->join('order_products', 'orders.id', '=', 'order_products.order_id');
-            $query->join('products', 'products.id', '=', 'order_products.product_id');
-            $query = $query->where('product_type', $posted_data['products_join']);
-            $query->groupBy('orders.id');
-            $query->select('orders.*', 'order_products`.`id` AS `order_product_id', 'order_products`.`price` AS `order_product_price', 'products`.`product_type');
+        $query->join('order_products', 'orders.id', '=', 'order_products.order_id');
+        // $query->select('orders.*', 'order_products`.`id` AS `order_product_id', 'order_products`.`price` AS `order_product_price', 'products`.`product_type');
+        $columns = ['order_products.id AS order_product_id', 'order_products.price AS order_product_price'];
+        $select_columns = array_merge($select_columns, $columns);
+        
+        $query->join('products', 'products.id', '=', 'order_products.product_id');
+        $columns = ['products.id AS pro_product_id', 'products.product_type AS pro_product_type', 'products.title AS pro_product_name'];
+        $select_columns = array_merge($select_columns, $columns);
+
+        $query->join('users as sender', 'orders.sender_id', '=', 'sender.id');
+        $columns = ['sender.name AS sender_name'];
+        $select_columns = array_merge($select_columns, $columns);
+
+        $query->join('users as receiver', 'orders.receiver_id', '=', 'receiver.id');
+        $columns = ['receiver.name AS receiver_name'];
+        $select_columns = array_merge($select_columns, $columns);
+        
+        // $query->join('users', 'orders.id', '=', 'order_products.product_id');
+        // $query->join('products', 'products.id', '=', 'order_products.product_id');
+
+        // $query->groupBy('orders.id');
+
+        if(isset($posted_data['order_have'])){
+            $query = $query->where('product_type', $posted_data['order_have']);
         }
+            
         // else {
         //     $query->select('products.*');
         // }
 
         if (isset($posted_data['service_id'])) {
-            $query = $query->where('order_services.service_id', $posted_data['service_id']);
             $query->join('order_services', 'order_services.order_id', '=', 'orders.id');
+            $query = $query->where('order_services.service_id', $posted_data['service_id']);
         }
 
-        if (isset($posted_data['product_id'])) {
-            $query = $query->where('order_products.product_id', $posted_data['product_id']);
-            $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
-        }
+        // if (isset($posted_data['product_id'])) {
+        //     $query = $query->where('order_products.product_id', $posted_data['product_id']);
+            // $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
+        // }
         
         if (isset($posted_data['print_query'])) {
             $result = $query->toSql();
@@ -120,7 +157,14 @@ class Order extends Model
             exit("@@@@");
         }
 
-        $query->select('orders.*');
+        // echo "Line no deee@d"."<br>";
+        // echo "<pre>";
+        // print_r($select_columns);
+        // echo "</pre>";
+        // exit("@@@@");
+
+        $query->select($select_columns);
+        // $query->select('orders.*');
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
@@ -172,6 +216,7 @@ class Order extends Model
             $data = Order::whereIn('id', $posted_data['order_ids'])
                         ->update([
                             'order_status' => $posted_data['update_bulk_statuses'],
+                            'calculated' => $posted_data['calculated'],
                             'rejection_message' => $posted_data['rejection_message'],
                         ]);
             return $data;

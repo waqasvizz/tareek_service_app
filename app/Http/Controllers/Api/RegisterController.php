@@ -529,15 +529,26 @@ class RegisterController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         }
 
+        // $user_detail = $this->UserObj->getUser(['email' => $params['email'], 'detail' => true]);
+        // echo "Line no deee@"."<br>";
+        // echo "<pre>";
+        // print_r($user_detail);
+        // echo "</pre>";
+        // exit("@@@@");
+
         $response = $this->authorizeUser([
             'email' => $params['email'],
             'password' => $params['old_password'],
             'mode' => 'only_validate',
         ]);
 
-        // $users = User::where('email', '=', $params['email'])->first();
+        if ($params['old_password'] == $params['new_password']) {
+            $error_message['error'] = 'New and old password must be different.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+
         if (!$response) {
-            $error_message['error'] = 'Pleae post the correct email and password for change.';
+            $error_message['error'] = 'Your old password is incorrect.';
             return $this->sendError($error_message['error'], $error_message);
         }
         else {
