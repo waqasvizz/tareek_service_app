@@ -79,23 +79,41 @@ class Chat extends Model
             if (isset($posted_data['receiver_id']) && !isset($posted_data['sender_id']) ) {
                 $query = $query->where('chats.receiver_id', $posted_data['receiver_id']);
             }
-            if (isset($posted_data['text'])) {
-                $query = $query->where(function ($query) use ($posted_data) {
-                    $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
-                        ->orWhere('users.name', 'like', '%' . $posted_data['text'] . '%');
-                });
+            // if (isset($posted_data['text'])) {
+            //     $query = $query->where(function ($query) use ($posted_data) {
+            //         $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
+            //             ->orWhere('users.name', 'like', '%' . $posted_data['text'] . '%');
+            //     });
+            // }
+
+            // if (isset($posted_data['last_chat'])) {
+            //     $posted_data['orderBy_name'] = 'id';
+            //     $posted_data['orderBy_value'] = 'DESC';
+
+            //     if(isset($posted_data['paginate'])) {
+            //         unset($posted_data['paginate']);
+            //     }
+
+            //     $posted_data['detail'] = true;
+            // }
+        }
+
+        if (isset($posted_data['text'])) {
+            $query = $query->where(function ($query) use ($posted_data) {
+                $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
+                    ->orWhere('users.name', 'like', '%' . $posted_data['text'] . '%');
+            });
+        }
+
+        if (isset($posted_data['last_chat'])) {
+            $posted_data['orderBy_name'] = 'id';
+            $posted_data['orderBy_value'] = 'DESC';
+
+            if(isset($posted_data['paginate'])) {
+                unset($posted_data['paginate']);
             }
 
-            if (isset($posted_data['last_chat'])) {
-                $posted_data['orderBy_name'] = 'id';
-                $posted_data['orderBy_value'] = 'DESC';
-
-                if(isset($posted_data['paginate'])) {
-                    unset($posted_data['paginate']);
-                }
-
-                $posted_data['detail'] = true;
-            }
+            $posted_data['detail'] = true;
         }
 
         if(isset($posted_data['users_join'])){

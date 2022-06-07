@@ -31,14 +31,21 @@ class ChatController extends BaseController
         if (isset($params['per_page']))
             $posted_data['paginate'] = $params['per_page'];
         if (isset($params['search_chat'])) {
+            unset($posted_data['last_chat_all']);
             $posted_data['text'] = $params['search_chat'];
             $posted_data['users_join'] = true;
         }
 
         if (isset($params['last_chat_all']) && !isset($params['sender_id'])){
-            $error_message['error'] = 'Please enter sender id.';
+            $error_message['error'] = 'Please enter the sender id.';
             return $this->sendError($error_message['error'], $error_message);
         }
+
+        // echo "Line no @"."<br>";
+        // echo "<pre>";
+        // print_r($posted_data);
+        // echo "</pre>";
+        // exit("@@@@");
         
         $chats = Chat::getChats($posted_data);
         $message = !empty($chats) ? 'Chats retrieved successfully.' : 'Chats not found against your query.';

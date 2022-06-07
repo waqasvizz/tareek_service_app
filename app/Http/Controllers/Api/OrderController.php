@@ -31,8 +31,17 @@ class OrderController extends BaseController
         $data = array();
         $data['paginate'] = 10;
 
-        if (isset($request_data['order_type']))
+        if (isset($request_data['order_type'])) {
             $data['order_type'] = $request_data['order_type'];
+            if ($request_data['order_type'] == 'Service') {
+                $data['order_services_join'] = true;
+                $data['services_join'] = true;
+            }
+            else {
+                $data['order_products_join'] = true;
+                $data['products_join'] = true;
+            }
+        }
         if (isset($request_data['user_id']))
             $data['sender_id'] = $request_data['user_id'];
         if (isset($request_data['supplier_id']))
@@ -43,14 +52,28 @@ class OrderController extends BaseController
             $data['order_status'] = $request_data['order_status'];
         if (isset($request_data['product_id']))
             $data['product_id'] = $request_data['product_id'];
-        if (isset($request_data['search_filter']))
+        if (isset($request_data['search_filter'])) {
+            if (!(isset($request_data['order_type']) && $request_data['order_type'] != '' )) {
+                $error_message['error'] = 'Please select the order type for search filter.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
             $data['search_filter'] = $request_data['search_filter'];
-        // if (isset($request_data['service_id']))
-        //     $data['service_id'] = $request_data['service_id'];
+        }
+        if (isset($request_data['service_id']))
+            $data['service_id'] = $request_data['service_id'];
         if (isset($request_data['per_page']))
             $data['paginate'] = $request_data['per_page'];
+
+        $data['sender_users_join'] = true;
+        $data['receiver_users_join'] = true;
+
+        // echo "Line no deee@"."<br>";
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
+        // exit("@@@@");
         
-        // $request_data['print_query'] = true;
+        // $data['print_query'] = true;
 
         $response = Order::getOrder($data);
         $message = count($response) > 0 ? 'Order retrieved successfully.' : 'Order not found against your query.';
@@ -179,8 +202,23 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
         
+        if(isset($request_data['order_type']) && $request_data['order_type'] == 1 )
+            $request_data['order_products'] = 'Single';
+        else if (isset($request_data['order_type']) && $request_data['order_type'] == 2 ) {
+            if ($request_data['product_type'][0] == 'single')
+                $request_data['order_products'] = 'Single';
+            else if ($request_data['product_type'][0] == 'bulk')
+                $request_data['order_products'] = 'Bulk';
+        }
+
+        if( !isset($request_data['order_products']) ){
+            $error_message['error'] = 'Orders type must be a bulk or single.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+        
         $request_data['sender_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
+
         $response = Order::saveUpdateOrder($request_data);
         $user_detail = User::getUser([
             'detail' => true,
