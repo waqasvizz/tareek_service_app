@@ -142,6 +142,49 @@ class RegisterController extends BaseController
                                 'email' => $posted_data['email'],
                                 'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
                             ]);
+
+                            $notification_text = "A new user has been register into the app.";
+    
+                            $notification_params = array();
+                            $notification_params['sender'] = $user_id->id;
+                            $notification_params['receiver'] = 1;
+                            $notification_params['slugs'] = "new-user";
+                            $notification_params['notification_text'] = $notification_text;
+                            $notification_params['metadata'] = "user_id=$user_id";
+                            
+                            $notif_response = Notification::saveUpdateNotification([
+                                'sender' => $notification_params['sender'],
+                                'receiver' => $notification_params['receiver'],
+                                'slugs' => $notification_params['slugs'],
+                                'notification_text' => $notification_params['notification_text'],
+                                'metadata' => $notification_params['metadata']
+                            ]);
+                    
+                            $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+                            $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+                    
+                            if ($notif_response) {
+                    
+                                $notification = FCM_Token::sendFCM_Notification([
+                                    'title' => $notification_params['slugs'],
+                                    'body' => $notification_params['notification_text'],
+                                    'metadata' => $notification_params['metadata'],
+                                    'registration_ids' => $notification_params['registration_ids'],
+                                    'details' => []
+                                ]);
+                            }
+
+                            $data = [
+                                'subject' => 'Welcome Email',
+                                'name' => $request->get('full_name'),
+                                'email' => $request->get('email'),
+                                'token' => '',
+                            ];
+
+                            Mail::send('emails.welcome_social', ['email_data' => $data], function($message) use ($data) {
+                                $message->to($data['email'])
+                                        ->subject($data['subject']);
+                            });
             
                             if ($response)
                                 return $this->sendResponse($response, 'User login successfully.');
@@ -247,13 +290,6 @@ class RegisterController extends BaseController
                     'id'       => $user_id,
                     'detail'       => true
                 ]);
-
-                $data = [
-                    'subject' => 'Email Verification',
-                    'name' => $request->get('full_name'),
-                    'email' => $request->get('email'),
-                    'token' => $token,
-                ];
                 
                 $notification_text = "A new user has been register into the app.";
     
@@ -291,18 +327,39 @@ class RegisterController extends BaseController
                     ]);
                 }
                 
-                if ($posted_data['user_type'] != 'app') {
-                    Mail::send('emails.welcome_social', ['email_data' => $data], function($message) use ($data) {
+                $admin_data['id'] = 1;
+                $admin_data['detail'] = true;
+                $response = $this->UserObj->getUser($admin_data);
+
+                if ($response) {
+                    $data = [
+                        'subject' => 'New User Registered',
+                        'name' => $response->name,
+                        'email' => $response->email,
+                        'text_line' => "A new user ".$request->get('full_name')." has been registered on ".config('app.name'),
+                    ];
+
+                    Mail::send('emails.general_email', ['email_data' => $data], function($message) use ($data) {
                         $message->to($data['email'])
                                 ->subject($data['subject']);
                     });
                 }
-                else {
-                    Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
-                        $message->to($data['email'])
-                                ->subject($data['subject']);
-                    });
-                }
+    
+                // if ( isset($response->id) && isset($response->user_type) && $response->user_type != 1 ) {                
+
+                
+
+                $data = [
+                    'subject' => 'Email Verification',
+                    'name' => $request->get('full_name'),
+                    'email' => $request->get('email'),
+                    'token' => $token,
+                ];
+
+                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
 
                 $user_detail['token'] = isset($login_response['token']) ? $login_response['token'] : '';
                 return $this->sendResponse($user_detail, $message);
