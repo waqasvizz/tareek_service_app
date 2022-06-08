@@ -91,7 +91,7 @@ class PromoController extends BaseController
         }
 
         if (isset($request->banner)) {
-            $extension = $request->banner->getClientOriginalExtension();
+            $extension = strtolower($request->banner->getClientOriginalExtension());
             $allowedfileExtension = ['jpg','jpeg','png'];
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -190,7 +190,7 @@ class PromoController extends BaseController
 
         if (isset($request->banner)) {
             
-            $extension = $request->banner->getClientOriginalExtension();
+            $extension = strtolower($request->banner->getClientOriginalExtension());
             $allowedfileExtension = ['jpg','jpeg','png'];
             $check = in_array($extension, $allowedfileExtension);
             if($check) {

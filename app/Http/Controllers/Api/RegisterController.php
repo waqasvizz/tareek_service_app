@@ -133,6 +133,7 @@ class RegisterController extends BaseController
                         $user_data['account_status'] = $user_data['role'] == 2 ? 'Active' : 'Block';
                         $user_data['password'] = '12345678@d';
                         $user_data['user_type'] = $posted_data['user_type'];
+                        $user_data['email_verified_at'] = date('Y-m-d h:i:s');
             
                         $user_id = $this->UserObj->saveUpdateUser($user_data);
                         
@@ -290,10 +291,18 @@ class RegisterController extends BaseController
                     ]);
                 }
                 
-                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
-                    $message->to($data['email'])
-                            ->subject($data['subject']);
-                });
+                if ($posted_data['user_type'] != 'app') {
+                    Mail::send('emails.welcome_social', ['email_data' => $data], function($message) use ($data) {
+                        $message->to($data['email'])
+                                ->subject($data['subject']);
+                    });
+                }
+                else {
+                    Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
+                        $message->to($data['email'])
+                                ->subject($data['subject']);
+                    });
+                }
 
                 $user_detail['token'] = isset($login_response['token']) ? $login_response['token'] : '';
                 return $this->sendResponse($user_detail, $message);

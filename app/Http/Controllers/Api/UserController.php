@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Service;
 use App\Models\Product;
+use App\Models\Notification;
+use App\Models\FCM_Token;
 use App\Models\PaymentTransaction;
 use App\Models\Order;
 
@@ -103,7 +105,7 @@ class UserController extends BaseController
         if (isset($request->profile_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->profile_image->getClientOriginalExtension();
+            $extension = strtolower($request->profile_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -125,6 +127,52 @@ class UserController extends BaseController
         $user = User::saveUpdateUser($request_data);
 
         if ( isset($user->id) ){
+
+            if ( isset($request_data['account_status']) ) {
+
+                if ($request_data['account_status'] == 1)
+                    $acc_status = 'activated';
+                else if ($request_data['account_status'] == 2)
+                    $acc_status = 'blocked';
+
+                $notification_text = "Hi ".ucwords($user->name).", Your acount has been ".$acc_status." by Admin!.";
+                // $user_id = \Auth::user()->id;
+
+                $notification_params = array();
+                $notification_params['sender'] = 1;
+                $notification_params['receiver'] = $user->id;
+                $notification_params['slugs'] = "user-update";
+                $notification_params['notification_text'] = $notification_text;
+                $notification_params['metadata'] = "user_id=$user->id";
+                
+                $response = Notification::saveUpdateNotification([
+                    'sender' => $notification_params['sender'],
+                    'receiver' => $notification_params['receiver'],
+                    'slugs' => $notification_params['slugs'],
+                    'notification_text' => $notification_params['notification_text'],
+                    'metadata' => $notification_params['metadata']
+                ]);
+
+                $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
+                $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
+
+                if ($response) {
+
+                    if ( isset($model_response['user']) )
+                        unset($model_response['user']);
+                    if ( isset($model_response['post']) )
+                        unset($model_response['post']);
+
+                    $notification = FCM_Token::sendFCM_Notification([
+                        'title' => $notification_params['slugs'],
+                        'body' => $notification_params['notification_text'],
+                        'metadata' => $notification_params['metadata'],
+                        'registration_ids' => $notification_params['registration_ids'],
+                        'details' => $user
+                    ]);
+                }
+            }
+
             return $this->sendResponse($user, 'User is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';

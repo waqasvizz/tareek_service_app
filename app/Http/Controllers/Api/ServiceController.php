@@ -76,7 +76,7 @@ class ServiceController extends BaseController
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->service_image->getClientOriginalExtension();
+            $extension = strtolower($request->service_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -206,7 +206,7 @@ class ServiceController extends BaseController
         if (isset($request->service_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->service_image->getClientOriginalExtension();
+            $extension = strtolower($request->service_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {

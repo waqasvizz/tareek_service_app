@@ -101,7 +101,7 @@ class ProductController extends BaseController
         if (isset($request->product_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->product_image->getClientOriginalExtension();
+            $extension = strtolower($request->product_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -234,7 +234,7 @@ class ProductController extends BaseController
         if (isset($request->product_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->product_image->getClientOriginalExtension();
+            $extension = strtolower($request->product_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -365,8 +365,6 @@ class ProductController extends BaseController
         $products = Product::getProducts($posted_data);
 
         $discount_amount = 0;
-        $order_ids = array_unique(array_column($products, 'orders_id'));
-
         foreach ($products as $key => $value) {
             if ( isset($value['product_type']) && $value['product_type'] == 'bulk' ) {
 
@@ -386,7 +384,7 @@ class ProductController extends BaseController
 
                 $order_data = Order::find($value['orders_id']);
                 if ($order_data) {
-                    if ($order_data->calculated == 'False') {
+                    if ($order_data->calculated == 'False' && $order_data->order_status != 'Request accepted' ) {
                         if ( isset($order_data->discount) && $order_data->discount )
                             $discount_amount = $order_data->discount + $discount_amount;
     
@@ -401,13 +399,6 @@ class ProductController extends BaseController
         $order_ids = array_unique(array_column($products, 'orders_id'));
         $bulk_records = getSpecificColumnsFromArray($products, ['user_id', 'client_id', 'orders_id']);
 
-                                        // echo "Line no deeee@"."<br>";
-                                        // echo "<pre>";
-                                        // print_r($products);
-                                        // print_r($bulk_records);
-                                        // echo "</pre>";
-                                        // exit("@@@@");
-
         $orders_list = [];
         if ( count($order_ids) > 0 ) {
             $orders_list = Order::saveUpdateOrder([
@@ -418,39 +409,8 @@ class ProductController extends BaseController
             ]);
         }
 
-        echo "Line no deee@"."<br>";
-        echo "<pre>";
-        print_r($products);
-        echo "</pre>";
-        exit("@@@@");
-
-                                        // $notif_data = array();
-
-                                        // foreach ($bulk_records as $key => $value) {
-                                        //     $data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
-
-                                        //     echo "Line no data@"."<br>";
-                                        //     echo "<pre>";
-                                        //     print_r($data);
-                                        //     echo "</pre>";
-                                        //     exit("@@@@");
-                                        // }
-
-                    
-
-
-                                        // $data = array();
-                                        // $data['detail'] = true;
-                                        // $data['id'] = $post->id;
-                                        // $post_data = Post::getPost($data);
-                                        // $model_response = $post_data->toArray();
-                                        
-                                        // $data = array();
-                                        // $data['role'] = 2;
-                                        // $user_data = User::getUser($data)->ToArray();
-
         $notification_text = "You order status has been updated.";
-
+        $already_sent = [];
         foreach ($bulk_records as $key => $value) {
             $user_data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
 
@@ -477,26 +437,20 @@ class ProductController extends BaseController
             
             // $tokens[] = array_column($user_data['fcm_tokens'], 'device_token');
             $token = array_column($user_data['fcm_tokens'], 'device_token');
+            $user_id_arr = array($user_data['id']);
 
-            $notification = FCM_Token::sendFCM_Notification([
-                'title' => $notification_params['slugs'],
-                'body' => $notification_params['notification_text'],
-                'metadata' => $notification_params['metadata'],
-                'registration_ids' => $token,
-                'details' => []
-            ]);
+            $exist = in_array($value['client_id'], $already_sent);
+            if(!$exist) {
+                $notification = FCM_Token::sendFCM_Notification([
+                    'title' => $notification_params['slugs'],
+                    'body' => $notification_params['notification_text'],
+                    'metadata' => $notification_params['metadata'],
+                    'registration_ids' => $token,
+                    'details' => []
+                ]);
+            }
+            $already_sent = array_merge($already_sent, $user_id_arr);
         }
-        
-                                        // $notification = false;
-                                        // if ($response) {
-                                        //     $notification = FCM_Token::sendFCM_Notification([
-                                        //         'title' => $notification_params['slugs'],
-                                        //         'body' => $notification_params['notification_text'],
-                                        //         'metadata' => $notification_params['metadata'],
-                                        //         'registration_ids' => $registration_ids,
-                                        //         'details' => $model_response
-                                        //     ]);
-                                        // }
         
         if (config('app.product_email')) {
             foreach ($bulk_records as $key => $value) {

@@ -73,11 +73,32 @@ class Chat extends Model
                     ->whereIn('chats.receiver_id', $filter);
             }
 
-            if (isset($posted_data['sender_id']) && !isset($posted_data['receiver_id']) ) {
-                $query = $query->where('chats.sender_id', $posted_data['sender_id']);
+            if (isset($posted_data['text'])) {
+                $filter = array(
+                    $posted_data['sender_id']
+                );
+    
+                // $query = $query->whereIn('chats.sender_id', $filter)
+                //     ->whereIn('chats.receiver_id', $filter);
+
+                $query = $query->where(function ($query) use ($posted_data, $filter) {
+                    $query->where('chats.sender_id', $filter)
+                        ->orWhere('chats.receiver_id', $filter);
+                });
+    
+                $query = $query->where(function ($query) use ($posted_data) {
+                    $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
+                        ->orWhere('sender.name', 'like', '%' . $posted_data['text'] . '%')
+                        ->orWhere('receiver.name', 'like', '%' . $posted_data['text'] . '%');
+                });
             }
-            if (isset($posted_data['receiver_id']) && !isset($posted_data['sender_id']) ) {
-                $query = $query->where('chats.receiver_id', $posted_data['receiver_id']);
+            else {
+                if (isset($posted_data['sender_id']) && !isset($posted_data['receiver_id']) ) {
+                    $query = $query->where('chats.sender_id', $posted_data['sender_id']);
+                }
+                if (isset($posted_data['receiver_id']) && !isset($posted_data['sender_id']) ) {
+                    $query = $query->where('chats.receiver_id', $posted_data['receiver_id']);
+                }
             }
             // if (isset($posted_data['text'])) {
             //     $query = $query->where(function ($query) use ($posted_data) {
@@ -98,13 +119,6 @@ class Chat extends Model
             // }
         }
 
-        if (isset($posted_data['text'])) {
-            $query = $query->where(function ($query) use ($posted_data) {
-                $query->where('chats.text', 'like', '%' . $posted_data['text'] . '%')
-                    ->orWhere('users.name', 'like', '%' . $posted_data['text'] . '%');
-            });
-        }
-
         if (isset($posted_data['last_chat'])) {
             $posted_data['orderBy_name'] = 'id';
             $posted_data['orderBy_value'] = 'DESC';
@@ -117,8 +131,14 @@ class Chat extends Model
         }
 
         if(isset($posted_data['users_join'])){
-            $query->join('users', 'chats.receiver_id', '=', 'users.id');
-            $columns = ['users.name'];
+            $query->join('users as sender', 'chats.sender_id', '=', 'sender.id');
+            $columns = ['sender.name'];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        if(isset($posted_data['users_join'])){
+            $query->join('users as receiver', 'chats.receiver_id', '=', 'receiver.id');
+            $columns = ['receiver.name'];
             $select_columns = array_merge($select_columns, $columns);
         }
 

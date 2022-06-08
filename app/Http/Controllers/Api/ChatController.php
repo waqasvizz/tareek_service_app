@@ -33,10 +33,16 @@ class ChatController extends BaseController
         if (isset($params['search_chat'])) {
             unset($posted_data['last_chat_all']);
             $posted_data['text'] = $params['search_chat'];
+            $posted_data['last_chat'] = true;
             $posted_data['users_join'] = true;
         }
 
         if (isset($params['last_chat_all']) && !isset($params['sender_id'])){
+            $error_message['error'] = 'Please enter the sender id.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+
+        if (isset($params['search_chat']) && !isset($params['sender_id'])){
             $error_message['error'] = 'Please enter the sender id.';
             return $this->sendError($error_message['error'], $error_message);
         }
@@ -48,6 +54,10 @@ class ChatController extends BaseController
         // exit("@@@@");
         
         $chats = Chat::getChats($posted_data);
+        if (isset($params['search_chat'])) {
+            $result['data'][] = $chats;
+            $chats = $result;
+        }
         $message = !empty($chats) ? 'Chats retrieved successfully.' : 'Chats not found against your query.';
 
         return $this->sendResponse($chats, $message);

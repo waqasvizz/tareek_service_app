@@ -310,6 +310,10 @@ class OrderController extends BaseController
                 'totalorder' => $total_orders,
             ]);
 
+            ///////////////////////////////////////////////////////////////////
+            ///////////////////*     USER NOTIFICATION     */
+            ///////////////////////////////////////////////////////////////////
+
             $order_id = $model_response->id;
             $notification_text = "A new order has been placed.";
 
@@ -360,7 +364,7 @@ class OrderController extends BaseController
                 });
             }
 
-            return $this->sendResponse($model_response, 'Order is successfully added.');
+            return $this->sendResponse($model_response, 'Order is successfully created.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -548,8 +552,8 @@ class OrderController extends BaseController
         $notification_text = "Your order status has been updated.";
 
         $notification_params = array();
-        $notification_params['sender'] = $model_response->sender_id;
-        $notification_params['receiver'] = $model_response->receiver_id;
+        $notification_params['sender'] = $model_response->receiver_id;
+        $notification_params['receiver'] = $model_response->sender_id;
         $notification_params['slugs'] = "order-update";
         $notification_params['notification_text'] = $notification_text;
         $notification_params['metadata'] = "order_id=$order_id";
@@ -562,7 +566,7 @@ class OrderController extends BaseController
             'metadata' => $notification_params['metadata']
         ]);
 
-        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['sender']])->toArray();
+        $firebase_devices = FCM_Token::getFCM_Tokens(['user_id' => $notification_params['receiver']])->toArray();
         $notification_params['registration_ids'] = array_column($firebase_devices, 'device_token');
 
         if ($response) {
@@ -580,7 +584,6 @@ class OrderController extends BaseController
                 'details' => $model_response
             ]);
         }
-
         
         if (config('app.order_email')) {
             $data = [

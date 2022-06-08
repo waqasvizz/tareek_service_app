@@ -64,7 +64,7 @@ class CategoryController extends BaseController
         if (isset($request->category_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->category_image->getClientOriginalExtension();
+            $extension = strtolower($request->category_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -187,7 +187,7 @@ class CategoryController extends BaseController
         if (isset($request->category_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];
-            $extension = $request->category_image->getClientOriginalExtension();
+            $extension = strtolower($request->category_image->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {

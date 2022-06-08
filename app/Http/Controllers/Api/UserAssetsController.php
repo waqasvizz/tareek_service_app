@@ -70,7 +70,7 @@ class UserAssetsController extends BaseController
         }
 
         if (isset($request->asset_file)) {
-            $extension = $request->asset_file->getClientOriginalExtension();
+            $extension = strtolower($request->asset_file->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
@@ -167,7 +167,7 @@ class UserAssetsController extends BaseController
 
         if (isset($request->asset_file)) {
             
-            $extension = $request->asset_file->getClientOriginalExtension();
+            $extension = strtolower($request->asset_file->getClientOriginalExtension());
 
             $check = in_array($extension, $allowedfileExtension);
             if($check) {
