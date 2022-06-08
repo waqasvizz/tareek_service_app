@@ -94,6 +94,9 @@ class User extends Authenticatable
         if (isset($posted_data['users_in'])) {
             $query = $query->whereIn('users.id', $posted_data['users_in']);
         }
+        if (isset($posted_data['users_not_in'])) {
+            $query = $query->whereNotIn('users.id', $posted_data['users_not_in']);
+        }
         if (isset($posted_data['email'])) {
             $query = $query->where('users.email', $posted_data['email']);
         }

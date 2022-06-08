@@ -26,6 +26,10 @@ class UserController extends BaseController
         $request_data['paginate'] = 10;
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
+
+        if ( !isset($request_data['id']) ) {
+            $request_data['users_not_in'] = [1];
+        }
         
         $user = User::getUser($request_data);
         $message = count($user) > 0 ? 'Users retrieved successfully.' : 'Users not found against your query.';

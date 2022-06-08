@@ -326,6 +326,18 @@ class RegisterController extends BaseController
                         'details' => $user_detail
                     ]);
                 }
+
+                $data = [
+                    'subject' => 'Email Verification',
+                    'name' => $request->get('full_name'),
+                    'email' => $request->get('email'),
+                    'token' => $token,
+                ];
+
+                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
                 
                 $admin_data['id'] = 1;
                 $admin_data['detail'] = true;
@@ -344,22 +356,6 @@ class RegisterController extends BaseController
                                 ->subject($data['subject']);
                     });
                 }
-    
-                // if ( isset($response->id) && isset($response->user_type) && $response->user_type != 1 ) {                
-
-                
-
-                $data = [
-                    'subject' => 'Email Verification',
-                    'name' => $request->get('full_name'),
-                    'email' => $request->get('email'),
-                    'token' => $token,
-                ];
-
-                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
-                    $message->to($data['email'])
-                            ->subject($data['subject']);
-                });
 
                 $user_detail['token'] = isset($login_response['token']) ? $login_response['token'] : '';
                 return $this->sendResponse($user_detail, $message);
