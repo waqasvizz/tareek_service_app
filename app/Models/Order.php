@@ -274,6 +274,16 @@ class Order extends Model
         if (isset($posted_data['order_products'])) {
             $data->order_products = $posted_data['order_products'];
         }
+        if (isset($posted_data['calculated'])) {
+            if ($posted_data['calculated'] == 1) $posted_data['calculated'] = 'False';
+            else if ($posted_data['calculated'] == 2) $posted_data['calculated'] = 'True';
+            $data->calculated = $posted_data['calculated'];
+        }
+        if (isset($posted_data['payment_status'])) {
+            if ($posted_data['payment_status'] == 1) $posted_data['payment_status'] = 'False';
+            else if ($posted_data['payment_status'] == 2) $posted_data['payment_status'] = 'True';
+            $data->payment_status = $posted_data['payment_status'];
+        }
         if (isset($posted_data['sender_id'])) {
             $data->sender_id = $posted_data['sender_id'];
         }
@@ -289,17 +299,29 @@ class Order extends Model
         if (isset($posted_data['user_card_id'])) {
             $data->user_card_id = $posted_data['user_card_id'];
         }
-        if (isset($posted_data['grand_total'])) {
-            $data->grand_total = $posted_data['grand_total'];
-        }
-        if (isset($posted_data['redeem_point'])) {
-            $data->redeem_point = $posted_data['redeem_point'];
-        }
         if (isset($posted_data['total'])) {
             $data->total = $posted_data['total'];
         }
         if (isset($posted_data['discount'])) {
             $data->discount = $posted_data['discount'];
+        }
+        if (isset($posted_data['grand_total'])) {
+            $data->grand_total = $posted_data['grand_total'];
+        }
+        if (isset($posted_data['admin_gross'])) {
+            $data->admin_gross = $posted_data['admin_gross'];
+        }
+        if (isset($posted_data['supplier_gross'])) {
+            $data->supplier_gross = $posted_data['supplier_gross'];
+        }
+        if (isset($posted_data['admin_avg'])) {
+            $data->admin_avg = $posted_data['admin_avg'];
+        }
+        if (isset($posted_data['supplier_avg'])) {
+            $data->supplier_avg = $posted_data['supplier_avg'];
+        }
+        if (isset($posted_data['redeem_point'])) {
+            $data->redeem_point = $posted_data['redeem_point'];
         }
         if (isset($posted_data['rejection_message'])) {
             $data->rejection_message = $posted_data['rejection_message'];

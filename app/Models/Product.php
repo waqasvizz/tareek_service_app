@@ -60,7 +60,7 @@ class Product extends Model
 
         if(isset($posted_data['product_orders_join'])){
             $query->join('order_products', 'products.id', '=', 'order_products.product_id');
-            $columns = ['order_products.price as order_price', 'order_products.id as order_id', 'order_products.net_price as total_orders'];
+            $columns = ['order_products.price as order_price', 'order_products.id as order_id', 'order_products.prod_price as total_orders'];
             $select_columns = array_merge($select_columns, $columns);
         }
 

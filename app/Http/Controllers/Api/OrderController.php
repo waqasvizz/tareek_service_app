@@ -238,53 +238,90 @@ class OrderController extends BaseController
             $grand_total = 0;
             $admin_total = 0;
             $supplier_total = 0;
+            $count = 0;
+            $admin_avg = 0;
+            $supplier_avg = 0;
+            $reedem_disc_total = 0;
 
             if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
 
-                $PointCategorieDetail = PointCategorie::getPointCategorie(['id' => 1, 'detail' => true,]);
+                $PointCategorieDetail = PointCategorie::getPointCategorie(['id' => 1, 'detail' => true]);
                 foreach ($request_data['product_id'] as $key => $item) {
+                    $save_product_order = array();
 
                     $product_details = Product::getProducts(['id' => $request_data['product_id'][$key], 'detail' => true, 'with_data' => true]);
-
-                    $admin_part = isset($product_details->category->commission) ? $product_details->category->commission : 2000;
+                    $admin_part = isset($product_details->category->commission) ? $product_details->category->commission : 0;
                     $supplier_part = 100 - $admin_part;
+                    
+                    $admin_avg += isset($product_details->category->commission) ? $product_details->category->commission : 0;
+                    $count += 1;
 
                     $price = $request_data['product_price'][$key];
-                    $net_price = $request_data['product_quantity'][$key] * $request_data['product_price'][$key];
-                    $admin_earn = round( ($admin_part/100) * $net_price );
-                    $supplier_earn = round( ($supplier_part/100) * $net_price );
+                    $prod_price = $request_data['product_quantity'][$key] * $request_data['product_price'][$key];
+                    $admin_earn = round( ($admin_part/100) * $prod_price );
+                    $supplier_earn = round( ($supplier_part/100) * $prod_price );
+                    $admin_after_reedem = 0;
+                    $supplier_after_reedem = 0;
 
-                    if ($request_data['product_type'][$key] == 'single') {
-                        OrderProduct::saveUpdateOrderProduct([
-                            'order_id' => $response->id,
-                            'product_id' => $request_data['product_id'][$key],
-                            'quantity' => $request_data['product_quantity'][$key],
-                            'price' => $request_data['product_price'][$key],
-                        ]);
-                    }
-                    else if ($request_data['product_type'][$key] == 'bulk') {
+                    $save_product_order['order_id'] = $response->id;
+                    $save_product_order['product_id'] = $request_data['product_id'][$key];
+                    $save_product_order['quantity'] = $request_data['product_quantity'][$key];
+                    $save_product_order['price'] = $request_data['product_price'][$key];
+                    $save_product_order['prod_price'] = $prod_price;
+                    $save_product_order['admin_earn'] = $admin_earn;
+                    $save_product_order['supplier_earn'] = $supplier_earn;
 
-                        if(isset($request_data['redeem_point'])){
-                            if(isset($PointCategorieDetail)){
-                                $discount = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
-                                $grand_total = $net_price - $discount;
-                                $admin_total = $admin_total - $discount;
-                                $supplier_total = $supplier_total - $discount;
-                                $update_data['discount'] = $discount;
-                                $update_data['redeem_point'] = $request_data['redeem_point'];
-                            }
-                        }
+                    // $save_product_order['adm_aftr_reedem'] = $admin_after_reedem;
+                    // $save_product_order['sup_aftr_reedem'] = $supplier_after_reedem;
 
-                        OrderProduct::saveUpdateOrderProduct([
-                            'order_id' => $response->id,
-                            'product_id' => $request_data['product_id'][$key],
-                            'quantity' => $request_data['product_quantity'][$key],
-                            'price' => $price,
-                            'discount' => $request_data['product_price'][$key],
-                            'net_price' => $net_price,
-                            'admin_earn' => $admin_earn,
-                            'supplier_earn' => $supplier_earn,
-                        ]);
+                    // if ($request_data['product_type'][$key] == 'single') {
+
+                        // OrderProduct::saveUpdateOrderProduct([
+                        //     'order_id' => $response->id,
+                        //     'product_id' => $request_data['product_id'][$key],
+                        //     'quantity' => $request_data['product_quantity'][$key],
+                        //     'price' => $request_data['product_price'][$key],
+                        // ]);
+                    // }
+                    // else if ($request_data['product_type'][$key] == 'bulk') {
+
+                    OrderProduct::saveUpdateOrderProduct($save_product_order);
+
+                    if ($request_data['product_type'][$key] == 'bulk') {
+
+                        // if(isset($request_data['redeem_point'])){
+                        //     if(isset($PointCategorieDetail)){
+
+                        //         if(isset($request_data['redeem_point'])){
+                        //             $admin_after_reedem = round( ($prod_price-100) * $prod_price );
+                        //             $supplier_after_reedem = round( ($supplier_part/100) * $prod_price );
+                        //         }
+
+                        //         $reedem_disc_total = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+
+                        //         $
+
+                        //         $grand_total = $prod_price - $reedem_disc_total;
+                        //         $admin_total = $admin_total - $reedem_disc_total;
+                        //         $supplier_total = $supplier_total - $reedem_disc_total;
+                        //         // $update_data['discount'] = $reedem_disc_total;
+                        //         // $update_data['redeem_point'] = $request_data['redeem_point'];
+                        //     }
+                        // }
+
+                        // OrderProduct::saveUpdateOrderProduct([
+                        //     'order_id' => $response->id,
+                        //     'product_id' => $request_data['product_id'][$key],
+                        //     'quantity' => $request_data['product_quantity'][$key],
+                        //     'price' => $price,
+                        //     'prod_price' => $prod_price,
+                        //     'admin_earn' => $admin_earn,
+                        //     'supplier_earn' => $supplier_earn,
+                        //     'adm_aftr_reedem' => $admin_after_reedem,
+                        //     'sup_aftr_reedem' => $supplier_after_reedem,
+                        // ]);
+
+                        
                         
                         $product = Product::find($request_data['product_id'][$key]);
                         $pre_qty = isset($product->consume_qty) && $product->consume_qty ? $product->consume_qty : 0;
@@ -293,16 +330,41 @@ class OrderController extends BaseController
                         $product->consume_qty = $new_qty;
                         $product->save();
                     }
-                    // $grand_total = $grand_total + $request_data['product_price'][$key] * $request_data['product_quantity'][$key];
-                    // $admin_total = $admin_total + $admin_earn;
-                    // $supplier_total = $supplier_total + $supplier_earn;
+                    $grand_total = $grand_total + ( $request_data['product_price'][$key] * $request_data['product_quantity'][$key] );
                 }
 
                 if(isset($request_data['redeem_point'])){
-                    $user = User::find($request_data['sender_id']);
-                    $user->increment('redeem_point',$request_data['redeem_point']);
-                    $user->decrement('remaining_point',$request_data['redeem_point']);
+                    if(isset($PointCategorieDetail)){
+
+                        $reedem_disc_total = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+
+                        $update_order_prod = array();
+                        
+                        $get_order_prod = OrderProduct::getOrderProduct(['order_id' => $response->id]);
+                        foreach ($get_order_prod as $key => $value) {
+                            $update_order_prod['update_id'] = $value->id;
+                            $update_order_prod['adm_aftr_reedem'] = round( (($grand_total - $reedem_disc_total) / $grand_total ) * $value['admin_earn'] );
+                            $update_order_prod['sup_aftr_reedem'] = round( (($grand_total - $reedem_disc_total) / $grand_total ) * $value['supplier_earn'] );
+                            $update_order_prod['reedem_disc'] = 2; // means True
+
+                            $admin_total += $update_order_prod['adm_aftr_reedem'];
+                            $supplier_total += $update_order_prod['sup_aftr_reedem'];
+
+                            OrderProduct::saveUpdateOrderProduct($update_order_prod);
+                        }
+
+                        // $admin_total = $admin_total - $reedem_disc_total;
+                        // $supplier_total = $supplier_total - $reedem_disc_total;
+                        // $update_data['discount'] = $reedem_disc_total;
+                        // $update_data['redeem_point'] = $request_data['redeem_point'];
+                    }
                 }
+
+                // if(isset($request_data['redeem_point'])){
+                //     $user = User::find($request_data['sender_id']);
+                //     $user->increment('redeem_point',$request_data['redeem_point']);
+                //     $user->decrement('remaining_point',$request_data['redeem_point']);
+                // }
             }
 
             if($request_data['order_type'] == 1 && isset($request_data['service_id'])){
@@ -326,18 +388,19 @@ class OrderController extends BaseController
                     'id' => 1,
                     'detail' => true,
                 ]);
+
                 if(isset($PointCategorieDetail)){
-                    $discount = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
-                    $grand_total = $grand_total - $discount;
-                    $admin_total = $admin_total - $discount;
-                    $supplier_total = $supplier_total - $discount;
-                    $update_data['discount'] = $discount;
+                    $reedem_disc_total = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+                    // $grand_total = $grand_total - $reedem_disc_total;
+                    // $admin_total = $admin_total - $reedem_disc_total;
+                    // $supplier_total = $supplier_total - $reedem_disc_total;
+                    // $update_data['discount'] = $reedem_disc_total;
                     $update_data['redeem_point'] = $request_data['redeem_point'];
                 }
 
-                $user = User::find($request_data['sender_id']);
-                $user->increment('redeem_point',$request_data['redeem_point']);
-                $user->decrement('remaining_point',$request_data['redeem_point']);
+                // $user = User::find($request_data['sender_id']);
+                // $user->increment('redeem_point',$request_data['redeem_point']);
+                // $user->decrement('remaining_point',$request_data['redeem_point']);
             }
 
             if( isset($request_data['user_delivery_option_id']) && $request_data['user_delivery_option_id'] ){
@@ -362,7 +425,12 @@ class OrderController extends BaseController
                 }
             }
 
+            $update_data['admin_avg'] = round($admin_avg / $count);
+            $update_data['supplier_avg'] = 100 - $update_data['admin_avg'];
+            $update_data['discount'] = $reedem_disc_total;
             $update_data['grand_total'] = $grand_total;
+            $update_data['admin_gross'] = $admin_total;
+            $update_data['supplier_gross'] = $supplier_total;
             $model_response = Order::saveUpdateOrder($update_data);
 
             $total_orders = Order::getOrder(['sender_id' => \Auth::user()->id, 'count' => true]);

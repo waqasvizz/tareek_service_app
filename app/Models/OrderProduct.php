@@ -78,20 +78,31 @@ class OrderProduct extends Model
         if (isset($posted_data['price'])) {
             $data->price = $posted_data['price'];
         }
-        if (isset($posted_data['discount'])) {
-            $data->discount = $posted_data['discount'];
-        }
-        if (isset($posted_data['net_price'])) {
-            $data->net_price = $posted_data['net_price'];
-        }
-        if (isset($posted_data['calculated'])) {
-            $data->calculated = $posted_data['calculated'];
+        if (isset($posted_data['prod_price'])) {
+            $data->prod_price = $posted_data['prod_price'];
         }
         if (isset($posted_data['admin_earn'])) {
             $data->admin_earn = $posted_data['admin_earn'];
         }
         if (isset($posted_data['supplier_earn'])) {
             $data->supplier_earn = $posted_data['supplier_earn'];
+        }
+        if (isset($posted_data['adm_aftr_reedem'])) {
+            $data->adm_aftr_reedem = $posted_data['adm_aftr_reedem'];
+        }
+        if (isset($posted_data['sup_aftr_reedem'])) {
+            $data->sup_aftr_reedem = $posted_data['sup_aftr_reedem'];
+        }
+        if (isset($posted_data['prod_disc'])) {
+            $data->prod_disc = $posted_data['prod_disc'];
+        }
+        if (isset($posted_data['reedem_disc'])) {
+            if ($posted_data['reedem_disc'] == 1) $posted_data['reedem_disc'] = 'False';
+            else if ($posted_data['reedem_disc'] == 2) $posted_data['reedem_disc'] = 'True';
+            $data->reedem_disc = $posted_data['reedem_disc'];
+        }
+        if (isset($posted_data['calculated'])) {
+            $data->calculated = $posted_data['calculated'];
         }
 
         $data->save();
