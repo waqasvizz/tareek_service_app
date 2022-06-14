@@ -39,6 +39,11 @@ class Order extends Model
         return $this->hasMany(OrderService::class)->with('service');
     }
 
+    public function clearence_documents()
+    {
+        return $this->hasMany(ClearenceService::class)->with('user_asset_data');
+    }
+
     public function senderDetails()
     {
         return $this->belongsTo('App\Models\User', 'sender_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
@@ -54,7 +59,15 @@ class Order extends Model
         $columns = ['orders.*'];
         $select_columns = array_merge($columns, []);
 
-        $query = Order::latest()->with('senderDetails')->with('receiverDetails')->with('user_multiple_address')->with('user_delivery_option')->with('user_card')->with('order_product')->with('order_service');
+        $query = Order::latest()
+            ->with('senderDetails')
+            ->with('receiverDetails')
+            ->with('user_multiple_address')
+            ->with('user_delivery_option')
+            ->with('user_card')
+            ->with('order_product')
+            ->with('order_service')
+            ->with('clearence_documents');
 
         if (isset($posted_data['without_with']) && $posted_data['without_with']) {
             $query = Order::latest();
@@ -166,6 +179,7 @@ class Order extends Model
             $columns = ['services.id AS ser_service_id', 'services.title AS ser_service_title'];
             $select_columns = array_merge($select_columns, $columns);
         }
+
         // $query->join('users', 'orders.id', '=', 'order_products.product_id');
         // $query->join('products', 'products.id', '=', 'order_products.product_id');
 

@@ -1,5 +1,11 @@
 <?php
 
+   /**
+    *  @author  DANISH HUSSAIN <danishhussain9525@hotmail.com>
+    *  @link    Author Website: https://danishhussain.w3spaces.com/
+    *  @since   2020-03-01
+   **/
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

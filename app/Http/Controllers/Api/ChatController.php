@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Models\Chat;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\EmailMessage;
+use App\Models\EmailLogs;
 use App\Models\FCM_Token;
 
 class ChatController extends BaseController
@@ -128,10 +130,33 @@ class ChatController extends BaseController
                 'text_line' => 'You have got a new chat message on '.config('app.name'),
             ];
 
+            // for new chat messages email template
+            $email_content = EmailMessage::getEmailMessage(['id' => 1, 'detail' => true]);
+            
+            $email_data = decodeShortCodesTemplate([
+                'subject' => $email_content->subject,
+                'body' => $email_content->body,
+                'email_message_id' => 1,
+                'sender_id' => $request_data['sender_id'],
+                'receiver_id' => $request_data['receiver_id'],
+            ]);
+
+            EmailLogs::saveUpdateEmailLogs([
+                'email_msg_id' => 1,
+                'sender_id' => $model_response['sender_details']['id'],
+                'receiver_id' => $model_response['receiver_details']['id'],
+                'email' => $model_response['receiver_details']['email'],
+                'subject' => $email_data['email_subject'],
+                'email_message' => $email_data['email_body'],
+                'send_email_after' => 1, // 1 = Daily Email
+            ]);
+
+            /*
             \Mail::send('emails.general_email', ['email_data' => $data], function($message) use ($data) {
                 $message->to($data['email'])
                         ->subject($data['subject']);
             });
+            */
         }
 
         return $this->sendResponse($model_response, 'Chat posted successfully.');

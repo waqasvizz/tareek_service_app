@@ -11,9 +11,13 @@ use App\Models\PointCategorie;
 use App\Models\UserPoint;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\EmailMessage;
+use App\Models\EmailLogs;
+use App\Models\Category;
 use App\Models\PaymentTransaction;
 use App\Models\UserDeliveryOption;
 use App\Models\FCM_Token;
+use App\Models\ClearenceService;
 use App\Models\Notification;
 use App\Models\UserStripeInformation;
 
@@ -200,8 +204,8 @@ class OrderController extends BaseController
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
-        }
-        
+        }       
+
         if(isset($request_data['order_type']) && $request_data['order_type'] == 1 )
             $request_data['order_products'] = 'Single';
         else if (isset($request_data['order_type']) && $request_data['order_type'] == 2 ) {
@@ -232,19 +236,56 @@ class OrderController extends BaseController
 
         if ( isset($response->id) ){
             $grand_total = 0;
+            $admin_total = 0;
+            $supplier_total = 0;
 
             if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
 
+                $PointCategorieDetail = PointCategorie::getPointCategorie(['id' => 1, 'detail' => true,]);
                 foreach ($request_data['product_id'] as $key => $item) {
-                    OrderProduct::saveUpdateOrderProduct([
-                        'order_id' => $response->id,
-                        'product_id' => $request_data['product_id'][$key],
-                        'quantity' => $request_data['product_quantity'][$key],
-                        'price' => $request_data['product_price'][$key],
-                    ]);
-                    $grand_total = $grand_total + $request_data['product_price'][$key] * $request_data['product_quantity'][$key];
-                    
-                    if ($request_data['product_type'][$key] == 'bulk') {
+
+                    $product_details = Product::getProducts(['id' => $request_data['product_id'][$key], 'detail' => true, 'with_data' => true]);
+
+                    $admin_part = isset($product_details->category->commission) ? $product_details->category->commission : 2000;
+                    $supplier_part = 100 - $admin_part;
+
+                    $price = $request_data['product_price'][$key];
+                    $net_price = $request_data['product_quantity'][$key] * $request_data['product_price'][$key];
+                    $admin_earn = round( ($admin_part/100) * $net_price );
+                    $supplier_earn = round( ($supplier_part/100) * $net_price );
+
+                    if ($request_data['product_type'][$key] == 'single') {
+                        OrderProduct::saveUpdateOrderProduct([
+                            'order_id' => $response->id,
+                            'product_id' => $request_data['product_id'][$key],
+                            'quantity' => $request_data['product_quantity'][$key],
+                            'price' => $request_data['product_price'][$key],
+                        ]);
+                    }
+                    else if ($request_data['product_type'][$key] == 'bulk') {
+
+                        if(isset($request_data['redeem_point'])){
+                            if(isset($PointCategorieDetail)){
+                                $discount = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+                                $grand_total = $net_price - $discount;
+                                $admin_total = $admin_total - $discount;
+                                $supplier_total = $supplier_total - $discount;
+                                $update_data['discount'] = $discount;
+                                $update_data['redeem_point'] = $request_data['redeem_point'];
+                            }
+                        }
+
+                        OrderProduct::saveUpdateOrderProduct([
+                            'order_id' => $response->id,
+                            'product_id' => $request_data['product_id'][$key],
+                            'quantity' => $request_data['product_quantity'][$key],
+                            'price' => $price,
+                            'discount' => $request_data['product_price'][$key],
+                            'net_price' => $net_price,
+                            'admin_earn' => $admin_earn,
+                            'supplier_earn' => $supplier_earn,
+                        ]);
+                        
                         $product = Product::find($request_data['product_id'][$key]);
                         $pre_qty = isset($product->consume_qty) && $product->consume_qty ? $product->consume_qty : 0;
                         $new_qty = $pre_qty + $request_data['product_quantity'][$key];
@@ -252,6 +293,15 @@ class OrderController extends BaseController
                         $product->consume_qty = $new_qty;
                         $product->save();
                     }
+                    // $grand_total = $grand_total + $request_data['product_price'][$key] * $request_data['product_quantity'][$key];
+                    // $admin_total = $admin_total + $admin_earn;
+                    // $supplier_total = $supplier_total + $supplier_earn;
+                }
+
+                if(isset($request_data['redeem_point'])){
+                    $user = User::find($request_data['sender_id']);
+                    $user->increment('redeem_point',$request_data['redeem_point']);
+                    $user->decrement('remaining_point',$request_data['redeem_point']);
                 }
             }
 
@@ -269,6 +319,7 @@ class OrderController extends BaseController
             $update_data = array();
             $update_data['update_id'] = $response->id;
             $update_data['total'] = $grand_total;
+            
             if(isset($request_data['redeem_point'])){
 
                 $PointCategorieDetail = PointCategorie::getPointCategorie([
@@ -278,6 +329,8 @@ class OrderController extends BaseController
                 if(isset($PointCategorieDetail)){
                     $discount = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
                     $grand_total = $grand_total - $discount;
+                    $admin_total = $admin_total - $discount;
+                    $supplier_total = $supplier_total - $discount;
                     $update_data['discount'] = $discount;
                     $update_data['redeem_point'] = $request_data['redeem_point'];
                 }
@@ -297,6 +350,15 @@ class OrderController extends BaseController
                 }
                 if ($delivery_data) {
                     $grand_total = $grand_total + $delivery_data->amount;
+                }
+            }
+
+            if( isset($request_data['user_docs']) && count($request_data['user_docs']) > 0 ) {
+                foreach ($request_data['user_docs'] as $key => $docs) {
+                    ClearenceService::saveUpdateClearenceService([
+                        'order_id' => $response->id,
+                        'user_asset_id' => $request_data['user_docs'][$key]
+                    ]);
                 }
             }
 
@@ -352,16 +414,66 @@ class OrderController extends BaseController
             }
             
             if (config('app.order_email')) {
+                /*
                 $data = [
                     'subject' => 'New Order - '.config('app.name'),
                     'name' => $model_response->receiverDetails->name,
                     'email' => $model_response->receiverDetails->email,
                 ];
+                */
 
+                $admin['id'] = 1;
+                $admin['detail'] = true;
+                $admin_data = $this->UserObj->getUser($admin);
+
+                // this email will sent to the newly registered user via mobile app
+                $email_content = EmailMessage::getEmailMessage(['id' => 9, 'detail' => true]);
+                    
+                $email_data = decodeShortCodesTemplate([
+                    'subject' => $email_content->subject,
+                    'body' => $email_content->body,
+                    'email_message_id' => 9,
+                    'sender_id' => $model_response->receiver_id,
+                    'receiver_id' => $admin_data->id,
+                ]);
+
+                EmailLogs::saveUpdateEmailLogs([
+                    'email_msg_id' => 9,
+                    'sender_id' => $model_response->receiver_id,
+                    'receiver_id' => $admin_data->id,
+                    'email' => $admin_data->email,
+                    'subject' => $email_data['email_subject'],
+                    'email_message' => $email_data['email_body'],
+                    'send_email_after' => 1, // 1 = Daily Email
+                ]);
+
+
+                // for new order received by the supplier
+                $email_content = EmailMessage::getEmailMessage(['id' => 3, 'detail' => true]);
+                    
+                $email_data = decodeShortCodesTemplate([
+                    'subject' => $email_content->subject,
+                    'body' => $email_content->body,
+                    'email_message_id' => 3,
+                    'user_id' => $model_response->receiver_id,
+                ]);
+
+                EmailLogs::saveUpdateEmailLogs([
+                    'email_msg_id' => 3,
+                    'sender_id' => $model_response->sender_id,
+                    'receiver_id' => $model_response->receiver_id,
+                    'email' => $model_response->receiverDetails->email,
+                    'subject' => $email_data['email_subject'],
+                    'email_message' => $email_data['email_body'],
+                    'send_email_after' => 1, // 1 = Daily Email
+                ]);
+
+                /*
                 \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
                     $message->to($data['email'])
                             ->subject($data['subject']);
                 });
+                */
             }
 
             return $this->sendResponse($model_response, 'Order is successfully created.');
@@ -411,6 +523,8 @@ class OrderController extends BaseController
         }
 
         // $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
+        // $category_data = Category::getCategories(['']);
+
 
         // echo '<pre>';
         // print_r($order_detail->ToArray());
@@ -592,10 +706,33 @@ class OrderController extends BaseController
                 'email' => $model_response->senderDetails->email,
             ];
 
+            // for order status updated by the supplier for customer
+            $email_content = EmailMessage::getEmailMessage(['id' => 4, 'detail' => true]);
+    
+            $email_data = decodeShortCodesTemplate([
+                'subject' => $email_content->subject,
+                'body' => $email_content->body,
+                'email_message_id' => 4,
+                'user_id' => $model_response->sender_id,
+            ]);
+
+            // here sender is the customer and receiver is the supplier
+            EmailLogs::saveUpdateEmailLogs([
+                'email_msg_id' => 4,
+                'sender_id' => $model_response->receiver_id,
+                'receiver_id' => $model_response->sender_id,
+                'email' => $model_response->senderDetails->email,
+                'subject' => $email_data['email_subject'],
+                'email_message' => $email_data['email_body'],
+                'send_email_after' => 1, // 1 = Daily Email
+            ]);
+
+            /*
             \Mail::send('emails.order_status', ['email_data' => $data], function($message) use ($data) {
                 $message->to($data['email'])
                         ->subject($data['subject']);
             });
+            */
         }
 
         if ( isset($model_response->id) ){

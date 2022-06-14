@@ -87,6 +87,10 @@ class User extends Authenticatable
                     ->with('userAssets')
                     ->with('userAddress')
                     ->with('fcm_tokens');
+                
+        if (isset($posted_data['without_with'])) {
+            $query = User::latest();
+        }
 
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);

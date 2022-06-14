@@ -78,6 +78,21 @@ class OrderProduct extends Model
         if (isset($posted_data['price'])) {
             $data->price = $posted_data['price'];
         }
+        if (isset($posted_data['discount'])) {
+            $data->discount = $posted_data['discount'];
+        }
+        if (isset($posted_data['net_price'])) {
+            $data->net_price = $posted_data['net_price'];
+        }
+        if (isset($posted_data['calculated'])) {
+            $data->calculated = $posted_data['calculated'];
+        }
+        if (isset($posted_data['admin_earn'])) {
+            $data->admin_earn = $posted_data['admin_earn'];
+        }
+        if (isset($posted_data['supplier_earn'])) {
+            $data->supplier_earn = $posted_data['supplier_earn'];
+        }
 
         $data->save();
         return $data;

@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Notification;
 use App\Models\FCM_Token;
+use App\Models\EmailLogs;
+use App\Models\EmailMessage;
 use App\Models\Order;
 use App\Models\OrderProduct;
 
@@ -41,7 +43,9 @@ class ProductController extends BaseController
             $posted_data['product_name'] = $params['product_name'];
         if (isset($params['product_type'])) {
             $posted_data['product_type'] = $params['product_type'];
-            $posted_data['orders_join'] = true;
+            if (isset($params['orders_exists'])) {
+                $posted_data['orders_join'] = true;
+            }
         }
         if (isset($params['orders_count']))
             $posted_data['orders_count'] = $params['orders_count'];
@@ -453,19 +457,50 @@ class ProductController extends BaseController
         }
         
         if (config('app.product_email')) {
+            $already_sent = [];
             foreach ($bulk_records as $key => $value) {
                 $user_data = User::getUser(['id' => $value['client_id'], 'detail' => true])->ToArray();
+
+                $supplier_id = $value['user_id'];
+                $receiver_id = $value['client_id'];
                 
-                $data = [
-                    'subject' => 'Order Status Updated - '.config('app.name'),
-                    'name' => $user_data['name'],
-                    'email' => $user_data['email'],
-                ];
+                // $data = [
+                //     'subject' => 'Order Status Updated - '.config('app.name'),
+                //     'name' => $user_data['name'],
+                //     'email' => $user_data['email'],
+                // ];
+
+                $exist = in_array($value['client_id'], $already_sent);
+                if(!$exist) {
+                    // for order status updated by the supplier for customer
+                    $email_content = EmailMessage::getEmailMessage(['id' => 4, 'detail' => true]);
+            
+                    $email_data = decodeShortCodesTemplate([
+                        'subject' => $email_content->subject,
+                        'body' => $email_content->body,
+                        'email_message_id' => 4,
+                        'user_id' => $receiver_id,
+                    ]);
+
+                    // here sender is the customer and receiver is the supplier
+                    EmailLogs::saveUpdateEmailLogs([
+                        'email_msg_id' => 4,
+                        'sender_id' => $supplier_id,
+                        'receiver_id' => $receiver_id,
+                        'email' => $user_data['email'],
+                        'subject' => $email_data['email_subject'],
+                        'email_message' => $email_data['email_body'],
+                        'send_email_after' => 1, // 1 = Daily Email
+                    ]);
+                }
+                $already_sent = array_merge($already_sent, $user_id_arr);
     
+                /*
                 \Mail::send('emails.order_status', ['email_data' => $data], function($message) use ($data) {
                     $message->to($data['email'])
                             ->subject($data['subject']);
                 });
+                */
             }
         }
 

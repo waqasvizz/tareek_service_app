@@ -103,7 +103,7 @@ Route::get('process_payments', [PaymentTransactionController::class, 'start_paym
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Auth::routes();
-// Route::get('/test-now', [UserController::class, 'testing']);
+Route::get('/test', [UserController::class, 'testing']);
 // Route::get('/', [UserController::class, 'welcome']);
 // Route::get('/login', [UserController::class, 'login'])->name('login');
 // Route::get('/logout', [UserController::class, 'logout']);

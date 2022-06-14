@@ -152,7 +152,8 @@ class UserAssetsController extends BaseController
         }
 
         if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 1 ) {
-            $allowedfileExtension = ['pdf','docx', 'docs'];
+            $allowedfileExtension = ['pdf','docx', 'docs','jpg','jpeg','png'];
+            $request_data['asset_view'] = 1;
         }
         else if( isset($request_data['asset_mimetype']) && $request_data['asset_mimetype'] == 2 ) {
             $allowedfileExtension = ['jpg','jpeg','png'];

@@ -163,3 +163,103 @@ if (! function_exists('getSpecificColumnsFromArray')) {
         }, $array);
     }
 }
+
+
+if (! function_exists('decodeShortCodesTemplate')) {
+    // function decodeShortCodesTemplate($html, $email_message_id='', $user_id='', $replace_ary = array()) {
+    function decodeShortCodesTemplate($posted_data = array()) {
+        
+        $email_subject = isset($posted_data['subject']) ? $posted_data['subject'] : '';
+        $email_body = isset($posted_data['body']) ? $posted_data['body'] : '';
+        $email_message_id = isset($posted_data['email_message_id']) ? $posted_data['email_message_id'] : 0;
+        $user_id = isset($posted_data['user_id']) ? $posted_data['user_id'] : 0;
+        $sender_id = isset($posted_data['sender_id']) ? $posted_data['sender_id'] : 0;
+        $receiver_id = isset($posted_data['receiver_id']) ? $posted_data['receiver_id'] : 0;
+        $new_password = isset($posted_data['new_password']) ? $posted_data['new_password'] : '[Something went wrong with server. Please request again]';
+        $verification_code = isset($posted_data['email_verification_url']) ? $posted_data['email_verification_url'] : '[Something went wrong with server. Please request again]';
+        
+        $ShortCodesObj = new \App\Models\ShortCodes;
+        $UserObj = new \App\Models\User;
+
+        $all_codes = $ShortCodesObj->getShortCodes();
+        
+        // echo "Line no beforeeee@"."<br>";
+        // echo "<pre>";
+        // print_r($email_html);
+        // echo "</pre>";
+
+        $user_data = $UserObj->getUser(['id' => $user_id, 'without_with' => true, 'detail' => true]);
+        foreach ($all_codes as $key => $code ) {
+
+            if ($code['title'] == '[user_name]') {
+                $search = $code['title'];
+                $replace = $user_data ? ucwords($user_data->name) : 'User';
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[user_email]') {
+                $search = $code['title'];
+                $replace = $user_data ? ucwords($user_data->email) : 'your email';
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[sender_name]') {
+                $search = $code['title'];
+                $data = $UserObj->getUser(['id' => $sender_id, 'without_with' => true, 'detail' => true]);
+                $replace = $data ? ucwords($data->name) : 'User';
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[receiver_name]') {
+                $search = $code['title'];
+                $data = $UserObj->getUser(['id' => $receiver_id, 'without_with' => true, 'detail' => true]);
+                $replace = $data ? ucwords($data->name) : 'User';
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[app_name]') {
+                $search = $code['title'];
+                $replace = config('app.name') ? config('app.name') : 'Application';
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[logo_url]') {
+                $search = $code['title'];
+                $replace = asset("storage/default-images/app-logo-email.png");
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[email_verification_url]') {
+                $token = $verification_code;
+                $search = $code['title'];
+                $replace = route('email_verify', $token);
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[email_background]') {
+                $search = $code['title'];
+                $replace = asset("storage/default-images/email-background.png");
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+            else if ($code['title'] == '[new_password]') {
+                $search = $code['title'];
+                $replace = $new_password;
+                $email_subject = stripcslashes(str_replace($search, $replace, $email_subject));
+                $email_body = stripcslashes(str_replace($search, $replace, $email_body));
+            }
+        }
+        
+        // echo "Line no afterrrr@"."<br>";
+        // echo "<pre>";
+        // print_r($email_html);
+        // echo "</pre>";
+        // exit("@@@@");
+
+        // $SettingObj = new Setting();
+        return $response = [
+            'email_subject' => $email_subject,
+            'email_body' => $email_body
+        ];
+    }
+}

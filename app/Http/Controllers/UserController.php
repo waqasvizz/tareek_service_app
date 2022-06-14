@@ -465,10 +465,61 @@ class UserController extends Controller
     
     public function testing() {
 
-        $base_url = public_path();
-        echo $base_url.'<br><br>';
+        // dd($route);
 
-        echo $_SERVER['DOCUMENT_ROOT'];
+        // exit(asset('storage/default-images/app-logo-email.png'));
+        
+        // exit($_SERVER['SERVER_NAME']);
+        // exit($_SERVER['SERVER_PORT']);
+        // exit($_SERVER['DOCUMENT_ROOT']);
+
+        // URL::to("/");
+
+        $posted_data = array();
+        $posted_data['status'] = 1;
+        $posted_data['send_email_after'] = 1;
+        $posted_data['paginate'] = 5;
+        $emailLogs = \App\Models\EmailLogs::getEmailLogs($posted_data)->ToArray();
+
+        echo "Line no @"."<br>";
+        echo "<pre>";
+        print_r($emailLogs);
+        echo "</pre>";
+        exit("@@@@");
+
+        exit('deee');
+
+        $data = [
+            'subject' => 'New Order - '.config('app.name'),
+            'name' => 'Danish Hussain',
+            'email' => 'danishhussain9525@gmail.com',
+        ];
+
+        \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
+            $message->to($data['email'])
+                    ->subject($data['subject']);
+        });
+
+        exit('aaaaa');
+
+        $html = decodeShortCodesTemplate([
+            'html' => '<b><p>Hi [receiver_name], How are you? [receiver_name] you are awesome from [sender_name], App name is [app_name], Logo link is [logo_url], Email verify with this link [email_verification_url]</p></b>',
+            'email_message_id' => 1,
+            'sender_id' => 1,
+            'receiver_id' => 10,
+        ]);
+
+        echo "Line no deee@"."<br>";
+        echo "<pre>";
+        print_r($html);
+        echo "</pre>";
+        exit("@@@@");
+
+
+        // $base_url = public_path();
+        // echo $base_url.'<br><br>';
+
+        // echo $_SERVER['DOCUMENT_ROOT'];
 
         exit('deedeeee');
         // $posted_data['id'] = Auth::user()->id;

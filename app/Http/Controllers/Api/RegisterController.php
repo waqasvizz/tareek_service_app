@@ -14,6 +14,8 @@ use App\Models\StorageAssets;
 use App\Models\UserAssets;
 use App\Models\Notification;
 use App\Models\FCM_Token;
+use App\Models\EmailMessage;
+use App\Models\EmailLogs;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -59,6 +61,11 @@ class RegisterController extends BaseController
             $register_data = array();
             $documents_arr = array();
 
+            if (!filter_var($posted_data['email'], FILTER_VALIDATE_EMAIL)) {
+                $error_message['error'] = 'Please eneter a valid email address.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
             if( $posted_data['role'] != 2 && $posted_data['role'] != 3 && $posted_data['role'] != 4 ){
                 $error_message['error'] = 'You entered the invalid role.';
                 return $this->sendError($error_message['error'], $error_message);  
@@ -99,7 +106,7 @@ class RegisterController extends BaseController
                 }
             }
             else {
-                if( isset($posted_data['user_type']) && ( $posted_data['user_type'] == 'facebook' || $posted_data['user_type'] == 'google' ) ){
+                if( isset($posted_data['user_type']) && ( $posted_data['user_type'] == 'facebook' || $posted_data['user_type'] == 'google' || $posted_data['user_type'] == 'apple') ){
 
                     $user_data = array();
                     $user_data['email'] = $posted_data['email'];
@@ -107,8 +114,8 @@ class RegisterController extends BaseController
                     $user_data = $this->UserObj->getUser($user_data);
 
                     if ( isset($user_data['id']) && isset($user_data['user_type']) ) {
-
-                        $user = User::where('email', $posted_data['email'])->first();    
+                        $user = User::where('email', $posted_data['email'])->first();
+                        $this->UserObj->saveUpdateUser(['update_id' => $user_data['id'], 'user_type' => $posted_data['user_type']]);
                         if (Auth::loginUsingId($user->id)){
                             $user = Auth::user();
                             $response =  $user;
@@ -139,8 +146,8 @@ class RegisterController extends BaseController
                         
                         if ($user_id) {
                             $response = $this->authorizeUser([
-                                'email' => $posted_data['email'],
-                                'password' => isset($posted_data['password']) ? $posted_data['password'] : '12345678@d'
+                                'email' => $user_data['email'],
+                                'password' => isset($user_data['password']) ? $user_data['password'] : '12345678@d'
                             ]);
 
                             $notification_text = "A new user has been register into the app.";
@@ -174,17 +181,65 @@ class RegisterController extends BaseController
                                 ]);
                             }
 
-                            $data = [
-                                'subject' => 'Welcome Email',
-                                'name' => $request->get('full_name'),
-                                'email' => $request->get('email'),
-                                'token' => '',
-                            ];
+                            $admin_data = $this->UserObj->getUser(['id' => 1, 'without_with' => true, 'detail' => true]);
 
+                            // $data = [
+                            //     'subject' => 'Welcome Email',
+                            //     'name' => $request->get('full_name'),
+                            //     'email' => $request->get('email'),
+                            //     'token' => '',
+                            // ];
+
+                            // this email will send to the admin to notify about newly registered user
+                            $email_content = EmailMessage::getEmailMessage(['id' => 2, 'detail' => true]);
+                    
+                            $email_data = decodeShortCodesTemplate([
+                                'subject' => $email_content->subject,
+                                'body' => $email_content->body,
+                                'email_message_id' => 2,
+                                'sender_id' => $user_id->id,
+                                'receiver_id' => $admin_data->id,
+                            ]);
+
+                            // here sender is the customer and receiver is the supplier
+                            EmailLogs::saveUpdateEmailLogs([
+                                'email_msg_id' => 2,
+                                'sender_id' => $user_id->id,
+                                'receiver_id' => $admin_data->id,
+                                'email' => $admin_data->email,
+                                'subject' => $email_data['email_subject'],
+                                'email_message' => $email_data['email_body'],
+                                'send_email_after' => 1, // 1 = Daily Email
+                            ]);
+
+
+                            // this email will send to the user who has successfully registered with social apps
+                            $email_content = EmailMessage::getEmailMessage(['id' => 5, 'detail' => true]);
+                    
+                            $email_data = decodeShortCodesTemplate([
+                                'subject' => $email_content->subject,
+                                'body' => $email_content->body,
+                                'email_message_id' => 5,
+                                'user_id' => $user_id->id,
+                            ]);
+
+                            // here sender is the customer and receiver is the supplier
+                            EmailLogs::saveUpdateEmailLogs([
+                                'email_msg_id' => 5,
+                                'sender_id' => $admin_data->id,
+                                'receiver_id' => $user_id->id,
+                                'email' => $user_id->email,
+                                'subject' => $email_data['email_subject'],
+                                'email_message' => $email_data['email_body'],
+                                'send_email_after' => 1, // 1 = Daily Email
+                            ]);
+
+                            /*
                             Mail::send('emails.welcome_social', ['email_data' => $data], function($message) use ($data) {
                                 $message->to($data['email'])
                                         ->subject($data['subject']);
                             });
+                            */
             
                             if ($response)
                                 return $this->sendResponse($response, 'User login successfully.');
@@ -327,34 +382,85 @@ class RegisterController extends BaseController
                     ]);
                 }
 
+                /*
                 $data = [
                     'subject' => 'Email Verification',
                     'name' => $request->get('full_name'),
                     'email' => $request->get('email'),
                     'token' => $token,
                 ];
+                */
 
-                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
-                    $message->to($data['email'])
-                            ->subject($data['subject']);
-                });
-                
                 $admin_data['id'] = 1;
                 $admin_data['detail'] = true;
                 $response = $this->UserObj->getUser($admin_data);
 
+                // this email will sent to the newly registered user via mobile app
+                $email_content = EmailMessage::getEmailMessage(['id' => 6, 'detail' => true]);
+                    
+                $email_data = decodeShortCodesTemplate([
+                    'subject' => $email_content->subject,
+                    'body' => $email_content->body,
+                    'email_message_id' => 6,
+                    'user_id' => $user_id,
+                    'email_verification_url' => $token,
+                ]);
+
+                EmailLogs::saveUpdateEmailLogs([
+                    'email_msg_id' => 6,
+                    'sender_id' => $response->id,
+                    'receiver_id' => $user_id,
+                    'email' => $request->get('email'),
+                    'subject' => $email_data['email_subject'],
+                    'email_message' => $email_data['email_body'],
+                    'send_email_after' => 1, // 1 = Daily Email
+                ]);
+
+                /*
+                Mail::send('emails.welcome_email', ['email_data' => $data], function($message) use ($data) {
+                    $message->to($data['email'])
+                            ->subject($data['subject']);
+                });
+                */
+                
                 if ($response) {
+
+                    /*
                     $data = [
                         'subject' => 'New User Registered',
                         'name' => $response->name,
                         'email' => $response->email,
                         'text_line' => "A new user ".$request->get('full_name')." has been registered on ".config('app.name'),
                     ];
+                    */
 
+                    // this email will sent to the admin on new user registeration
+                    $email_content = EmailMessage::getEmailMessage(['id' => 2, 'detail' => true]);
+                    
+                    $email_data = decodeShortCodesTemplate([
+                        'subject' => $email_content->subject,
+                        'body' => $email_content->body,
+                        'email_message_id' => 2,
+                        'sender_id' => $user_id,
+                        'receiver_id' => $response->id,
+                    ]);
+
+                    EmailLogs::saveUpdateEmailLogs([
+                        'email_msg_id' => 2,
+                        'sender_id' => $user_id,
+                        'receiver_id' => $response->id,
+                        'email' => $response->email,
+                        'subject' => $email_data['email_subject'],
+                        'email_message' => $email_data['email_body'],
+                        'send_email_after' => 1, // 1 = Daily Email
+                    ]);
+
+                    /*
                     Mail::send('emails.general_email', ['email_data' => $data], function($message) use ($data) {
                         $message->to($data['email'])
                                 ->subject($data['subject']);
                     });
+                    */
                 }
 
                 $user_detail['token'] = isset($login_response['token']) ? $login_response['token'] : '';
@@ -564,10 +670,41 @@ class RegisterController extends BaseController
                     'email' => $email
                 ];
 
+                $admin['id'] = 1;
+                $admin['detail'] = true;
+                $admin_data = $this->UserObj->getUser($admin);
+
+                if ($admin_data) {
+                    
+                    // this email will sent to the user who have requested to forget password
+                    $email_content = EmailMessage::getEmailMessage(['id' => 7, 'detail' => true]);
+                        
+                    $email_data = decodeShortCodesTemplate([
+                        'subject' => $email_content->subject,
+                        'body' => $email_content->body,
+                        'email_message_id' => 7,
+                        'user_id' => $users->id,
+                        'new_password' => $random_hash,
+                    ]);
+    
+                    EmailLogs::saveUpdateEmailLogs([
+                        'email_msg_id' => 7,
+                        'sender_id' => $admin_data->id,
+                        'receiver_id' => $users->id,
+                        'email' => $users->email,
+                        'subject' => $email_data['email_subject'],
+                        'email_message' => $email_data['email_body'],
+                        'send_email_after' => 1, // 1 = Daily Email
+                    ]);
+                }
+
+
+                /*
                 Mail::send('emails.reset_password', $data, function($message) use ($data) {
                     $message->to($data['email'])
                     ->subject($data['subject']);
                 });
+                */
 
                 return $this->sendResponse($data, 'Your password has been reset. Please check your email.');
 
@@ -590,13 +727,6 @@ class RegisterController extends BaseController
         if ($validator->fails()) {
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);     
         }
-
-        // $user_detail = $this->UserObj->getUser(['email' => $params['email'], 'detail' => true]);
-        // echo "Line no deee@"."<br>";
-        // echo "<pre>";
-        // print_r($user_detail);
-        // echo "</pre>";
-        // exit("@@@@");
 
         $response = $this->authorizeUser([
             'email' => $params['email'],
@@ -625,6 +755,35 @@ class RegisterController extends BaseController
             //     'subject' => 'Reset Password',
             //     'email' => $email
             // ];
+
+            $admin['id'] = 1;
+            $admin['detail'] = true;
+            $admin_data = $this->UserObj->getUser($admin);
+
+            $user_data = User::where('email', '=', $request->get('email'))->first();
+            if ($admin_data) {
+                
+                // this email will sent to the user who have requested to forget password
+                $email_content = EmailMessage::getEmailMessage(['id' => 8, 'detail' => true]);
+                    
+                $email_data = decodeShortCodesTemplate([
+                    'subject' => $email_content->subject,
+                    'body' => $email_content->body,
+                    'email_message_id' => 8,
+                    'user_id' => $user_data->id,
+                ]);
+
+                EmailLogs::saveUpdateEmailLogs([
+                    'email_msg_id' => 8,
+                    'sender_id' => $admin_data->id,
+                    'receiver_id' => $user_data->id,
+                    'email' => $user_data->email,
+                    'subject' => $email_data['email_subject'],
+                    'email_message' => $email_data['email_body'],
+                    'send_email_after' => 1, // 1 = Daily Email
+                ]);
+            }
+            
 
             // Mail::send('emails.reset_password', $data, function($message) use ($data) {
             //     $message->to($data['email'])
