@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -40,10 +41,20 @@ class RegisterController extends BaseController
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
             'company_number'    => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            // 'password'          => $posted_data['user_type'] == 'app' ? 'required|min:8' : '',
+            'password'          => $posted_data['user_type'] == 'app' ? 
+                                    [
+                                        'required', Password::min(8)
+                                            ->letters()
+                                            ->mixedCase()
+                                            ->numbers()
+                                            ->symbols()
+                                            ->uncompromised()
+                                    ] : '',
+
             /*
 
             'email'             => 'required|email|unique:users',
-            'password'          => 'required|min:8',
             'confirm_password'  => 'required|required_with:password|same:password'
             */
             
@@ -719,7 +730,15 @@ class RegisterController extends BaseController
         $rules = array(
             'email'             => 'required|email',
             'old_password'      => 'required',
-            'new_password'      => 'required|min:4',
+            // 'new_password'      => 'required|min:4',
+            'new_password'      => [
+                                        'required', Password::min(8)
+                                           ->letters()
+                                           ->mixedCase()
+                                           ->numbers()
+                                           ->symbols()
+                                           ->uncompromised()
+                                ],
             'confirm_password'  => 'required|required_with:new_password|same:new_password'
         );
         $validator = \Validator::make($request->all(), $rules);

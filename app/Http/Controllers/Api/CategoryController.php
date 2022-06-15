@@ -61,6 +61,11 @@ class CategoryController extends BaseController
             return $this->sendError($error_message['error'], $error_message);  
         }
 
+        if( isset($request_data['commission']) && $request_data['commission'] > 100 ){
+            $error_message['error'] = 'Admin commision must not be greater than 100%.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
+
         if (isset($request->category_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];

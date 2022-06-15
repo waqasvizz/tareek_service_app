@@ -302,8 +302,11 @@ class Order extends Model
         if (isset($posted_data['total'])) {
             $data->total = $posted_data['total'];
         }
-        if (isset($posted_data['discount'])) {
-            $data->discount = $posted_data['discount'];
+        if (isset($posted_data['discount_redeem'])) {
+            $data->discount_redeem = $posted_data['discount_redeem'];
+        }
+        if (isset($posted_data['discount_bulk'])) {
+            $data->discount_bulk = $posted_data['discount_bulk'];
         }
         if (isset($posted_data['grand_total'])) {
             $data->grand_total = $posted_data['grand_total'];

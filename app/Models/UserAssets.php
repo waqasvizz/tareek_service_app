@@ -32,8 +32,8 @@ class UserAssets extends Model
 
     public function asset_category()
     {
-        return $this->belongsTo('App\Models\AssetType', 'asset_type')
-            ->select(['id as asset_type_id', 'title', 'type', 'sides']);
+        return $this->belongsTo('App\Models\AssetType', 'asset_type');
+            // ->select(['user_assets_categories.title', 'user_assets_categories.type', 'user_assets_categories.sides']);
             // ->where('id', 10);
     }
     
