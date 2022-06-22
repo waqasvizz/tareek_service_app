@@ -97,6 +97,8 @@ Route::get('/', function () {
 Route::get('/fcm', [Controller::class, 'firebase']);
 Route::get('/send_notification', [Controller::class, 'sendNotification']);
 Route::get('process_payments', [PaymentTransactionController::class, 'start_payment_transaction']);
+Route::get('process_min_discounts', [Controller::class, 'calculate_orders_min_discounts']);
+Route::get('process_max_discounts', [Controller::class, 'calculate_orders_max_discounts']);
 
 // Auth::routes();
 

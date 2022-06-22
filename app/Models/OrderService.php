@@ -81,6 +81,26 @@ class OrderService extends Model
         if (isset($posted_data['service_price'])) {
             $data->service_price = $posted_data['service_price'];
         }
+        if (isset($posted_data['admin_earn'])) {
+            $data->admin_earn = $posted_data['admin_earn'];
+        }
+        if (isset($posted_data['supplier_earn'])) {
+            $data->supplier_earn = $posted_data['supplier_earn'];
+        }
+        if (isset($posted_data['adm_aftr_reedem'])) {
+            $data->adm_aftr_reedem = $posted_data['adm_aftr_reedem'];
+        }
+        if (isset($posted_data['sup_aftr_reedem'])) {
+            $data->sup_aftr_reedem = $posted_data['sup_aftr_reedem'];
+        }
+        if (isset($posted_data['reedem_disc'])) {
+            $data->reedem_disc = $posted_data['reedem_disc'];
+        }
+        if (isset($posted_data['reedem_disc'])) {
+            $data->reedem_disc = $posted_data['reedem_disc'];
+        }
+
+
 
         $data->save();
         return $data;

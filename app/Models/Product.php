@@ -51,8 +51,29 @@ class Product extends Model
         if (isset($posted_data['product_type'])) {
             $query = $query->where('products.product_type', $posted_data['product_type']);
         }
+        if (isset($posted_data['bulk_qty'])) {
+            $query = $query->where('products.bulk_qty', $posted_data['bulk_qty']);
+        }
+        if (isset($posted_data['consume_qty'])) {
+            $query = $query->where('products.consume_qty', $posted_data['consume_qty']);
+        }
+        if (isset($posted_data['min_qty'])) {
+            $query = $query->where('products.min_qty', $posted_data['min_qty']);
+        }
+        if (isset($posted_data['max_qty'])) {
+            $query = $query->where('products.max_qty', $posted_data['max_qty']);
+        }
+        if (isset($posted_data['min_disc_qualify'])) {
+            $query = $query->whereColumn('products.consume_qty', '>=', 'products.min_qty');
+        }
+        if (isset($posted_data['max_disc_qualify'])) {
+            $query = $query->whereColumn('products.consume_qty', '>=', 'products.max_qty');
+        }
         if (isset($posted_data['category_id'])) {
             $query = $query->where('products.category_id', $posted_data['category_id']);
+        }
+        if (isset($posted_data['within_time_limit'])) {
+            $query = $query->where('products.time_limit', '>=', $posted_data['within_time_limit']);
         }
         if (isset($posted_data['product_name'])) {
             $query = $query->where('products.title', 'like', '%' . $posted_data['product_name'] . '%');
@@ -60,13 +81,28 @@ class Product extends Model
 
         if(isset($posted_data['product_orders_join'])){
             $query->join('order_products', 'products.id', '=', 'order_products.product_id');
+            
             $columns = ['order_products.price as order_price', 'order_products.id as order_id', 'order_products.prod_price as total_orders'];
+
+            if (isset($posted_data['product_orders_join_all_columns'])) {
+                $columns = ['order_products.id as order_prod_id', 'order_products.product_id as order_prod_product_id', 'order_products.quantity as order_prod_quantity', 'order_products.price as order_prod_price', 'order_products.prod_price as order_prod_prod_price', 'order_products.discount as order_prod_discount', 'order_products.admin_earn as order_prod_admin_earn', 'order_products.supplier_earn as order_prod_supplier_earn', 'order_products.adm_aftr_reedem as order_prod_adm_aftr_reedem', 'order_products.sup_aftr_reedem as order_prod_sup_aftr_reedem', 'order_products.adm_aftr_disc as order_prod_adm_aftr_disc', 'order_products.sup_aftr_disc as order_prod_sup_aftr_disc', 'order_products.total_admin as order_prod_total_admin', 'order_products.total_supplier as order_prod_total_supplier', 'order_products.prod_disc as order_prod_prod_disc', 'order_products.reedem_disc as order_prod_reedem_disc', 'order_products.calculated as order_prod_calculated'];
+            }
+
+            if (isset($posted_data['prod_disc'])) {
+                $query = $query->where('order_products.prod_disc', $posted_data['prod_disc']);
+            }
+            if (isset($posted_data['order_id'])) {
+                $query = $query->where('order_products.order_id', $posted_data['order_id']);
+            }
+            if (isset($posted_data['product_id'])) {
+                $query = $query->where('order_products.product_id', $posted_data['product_id']);
+            }
             $select_columns = array_merge($select_columns, $columns);
         }
 
         if(isset($posted_data['orders_join'])){
             $query->join('orders', 'orders.id', '=', 'order_id');
-            $columns = ['orders.id as orders_id', 'orders.sender_id as client_id', 'orders.order_status as order_status', 'orders.order_products as orders_order_products', 'orders.receiver_id as orders_receiver_id', 'orders.user_multiple_address_id as orders_user_multiple_address_id', 'orders.user_card_id as orders_user_card_id', 'orders.total as orders_total', 'orders.discount_redeem as orders_discount_redeem', 'orders.discount_bulk as orders_discount_bulk','orders.grand_total as orders_grand_total', 'orders.redeem_point as orders_redeem_point', 'orders.calculated as orders_calculated', 'orders.payment_status as orders_payment'];
+            $columns = ['orders.id as orders_id', 'orders.order_status as order_status', 'orders.order_products as orders_order_products', 'orders.calculated as orders_calculated', 'orders.payment_status as orders_payment', 'orders.sender_id as client_id', 'orders.receiver_id as orders_receiver_id', 'orders.user_multiple_address_id as orders_user_multiple_address_id', 'orders.user_delivery_option_id as orders_user_delivery_option_id', 'orders.user_card_id as orders_user_card_id', 'orders.total as orders_total', 'orders.shipping_cost as orders_shipping_cost', 'orders.discount_redeem as orders_discount_redeem', 'orders.discount_bulk as orders_discount_bulk', 'orders.grand_total as orders_grand_total', 'orders.admin_avg as orders_admin_avg', 'orders.supplier_avg as orders_supplier_avg', 'orders.redeem_point as orders_redeem_point'];
 
             $select_columns = array_merge($select_columns, $columns);
         }
@@ -88,6 +124,8 @@ class Product extends Model
             $result = $query->toSql();
             echo "<pre>";
             print_r($result);
+            echo "<br>";
+            print_r($posted_data);
             echo "</pre>";
             exit("@@@@");
         }

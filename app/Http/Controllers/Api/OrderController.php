@@ -11,6 +11,7 @@ use App\Models\PointCategorie;
 use App\Models\UserPoint;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Service;
 use App\Models\EmailMessage;
 use App\Models\EmailLogs;
 use App\Models\Category;
@@ -219,6 +220,35 @@ class OrderController extends BaseController
             $error_message['error'] = 'Orders type must be a bulk or single.';
             return $this->sendError($error_message['error'], $error_message);
         }
+
+        $available_points = \Auth::user()->remaining_point;
+
+        if( isset($request_data['redeem_point']) && $request_data['redeem_point'] > 0 ){
+
+            if( $request_data['redeem_point'] > $available_points ){
+                $error_message['error'] = 'You have entered invalid redeem points.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
+            $total_amount = 0;
+            if( $request_data['order_type'] == 2 && isset($request_data['product_id']) ) {
+                foreach ($request_data['product_id'] as $key => $item) {
+                    $total_amount += ( $request_data['product_price'][$key] * $request_data['product_quantity'][$key] );
+                }
+            }
+            else if( $request_data['order_type'] == 1 && isset($request_data['service_id']) ){
+                $total_amount = $request_data['service_price'];
+            }
+            $half_total_amount = ceil($total_amount/2);
+            
+            $reedem_discount = $this->get_available_redeem_amount(['redeem_point' => $request_data['redeem_point']]);
+            $half_reedem_discount = floor( ($reedem_discount['total_points_worth']/$reedem_discount['each_point_worth'])/2 );
+
+            if ( $reedem_discount['total_points_worth'] > $half_total_amount ) {
+                $error_message['error'] = 'Sorry you can only redeem 50% order amount with maximum '.floor($half_total_amount/$reedem_discount['each_point_worth']).' points.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }
         
         $request_data['sender_id'] = \Auth::user()->id;
         $request_data['order_status'] = 1;
@@ -228,11 +258,6 @@ class OrderController extends BaseController
             'detail' => true,
             'id' => $request_data['sender_id']
         ]);
-
-        if(isset($request_data['redeem_point']) && ($request_data['redeem_point'] > $user_detail->remaining_point)){
-            $error_message['error'] = 'You have entered invalid redeem points.';
-            return $this->sendError($error_message['error'], $error_message);
-        }
 
         if ( isset($response->id) ){
             $grand_total = 0;
@@ -246,7 +271,6 @@ class OrderController extends BaseController
 
             if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
 
-                $PointCategorieDetail = PointCategorie::getPointCategorie(['id' => 1, 'detail' => true]);
                 foreach ($request_data['product_id'] as $key => $item) {
                     $save_product_order = array();
 
@@ -259,10 +283,10 @@ class OrderController extends BaseController
 
                     $price = $request_data['product_price'][$key];
                     $prod_price = $request_data['product_quantity'][$key] * $request_data['product_price'][$key];
-                    $admin_earn = round( ($admin_part/100) * $prod_price );
-                    $supplier_earn = round( ($supplier_part/100) * $prod_price );
-                    $admin_after_reedem = 0;
-                    $supplier_after_reedem = 0;
+                    $admin_earn = round( ($admin_part/100) * $prod_price, 2);
+                    $supplier_earn = round( ($supplier_part/100) * $prod_price, 2 );
+                    $tot_admin = 0;
+                    $tot_supplier = 0;
 
                     $save_product_order['order_id'] = $response->id;
                     $save_product_order['product_id'] = $request_data['product_id'][$key];
@@ -271,6 +295,8 @@ class OrderController extends BaseController
                     $save_product_order['prod_price'] = $prod_price;
                     $save_product_order['admin_earn'] = $admin_earn;
                     $save_product_order['supplier_earn'] = $supplier_earn;
+                    $save_product_order['total_admin'] = $admin_earn;
+                    $save_product_order['total_supplier'] = $supplier_earn;
 
                     OrderProduct::saveUpdateOrderProduct($save_product_order);
 
@@ -287,25 +313,28 @@ class OrderController extends BaseController
                     $grand_total = $grand_total + ( $request_data['product_price'][$key] * $request_data['product_quantity'][$key] );
                 }
 
+                $update_order_prod = array();
+                $get_order_prod = OrderProduct::getOrderProduct(['order_id' => $response->id]);
+
                 if(isset($request_data['redeem_point'])){
-                    if(isset($PointCategorieDetail)){
+                    $reedem_disc_total = $this->get_available_redeem_amount(['redeem_point' => $request_data['redeem_point']]);
+                    foreach ($get_order_prod as $key => $value) {
+                        $update_order_prod['update_id'] = $value->id;
+                        $update_order_prod['adm_aftr_reedem'] = round( (($grand_total - $reedem_disc_total['total_points_worth']) / $grand_total ) * $value['admin_earn'] , 2);
+                        $update_order_prod['sup_aftr_reedem'] = round( (($grand_total - $reedem_disc_total['total_points_worth']) / $grand_total ) * $value['supplier_earn'] , 2);
+                        $update_order_prod['total_admin'] = $update_order_prod['adm_aftr_reedem'];
+                        $update_order_prod['total_supplier'] = $update_order_prod['sup_aftr_reedem'];
+                        $update_order_prod['reedem_disc'] = 2; // means True
 
-                        $reedem_disc_total = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
-
-                        $update_order_prod = array();
-                        
-                        $get_order_prod = OrderProduct::getOrderProduct(['order_id' => $response->id]);
-                        foreach ($get_order_prod as $key => $value) {
-                            $update_order_prod['update_id'] = $value->id;
-                            $update_order_prod['adm_aftr_reedem'] = round( (($grand_total - $reedem_disc_total) / $grand_total ) * $value['admin_earn'] );
-                            $update_order_prod['sup_aftr_reedem'] = round( (($grand_total - $reedem_disc_total) / $grand_total ) * $value['supplier_earn'] );
-                            $update_order_prod['reedem_disc'] = 2; // means True
-
-                            $admin_total += $update_order_prod['adm_aftr_reedem'];
-                            $supplier_total += $update_order_prod['sup_aftr_reedem'];
-
-                            OrderProduct::saveUpdateOrderProduct($update_order_prod);
-                        }
+                        $admin_total += $update_order_prod['adm_aftr_reedem'];
+                        $supplier_total += $update_order_prod['sup_aftr_reedem'];
+                        OrderProduct::saveUpdateOrderProduct($update_order_prod);
+                    }
+                }
+                else {
+                    foreach ($get_order_prod as $key => $value) {
+                        $admin_total += $value['admin_earn'];
+                        $supplier_total += $value['supplier_earn'];
                     }
                 }
 
@@ -316,36 +345,60 @@ class OrderController extends BaseController
                 // }
             }
 
-            if($request_data['order_type'] == 1 && isset($request_data['service_id'])){
-                OrderService::saveUpdateOrderService([
-                    'order_id' => $response->id,
-                    'service_id' => $request_data['service_id'],
-                    'schedule_date' => $request_data['schedule_date'],
-                    'schedule_time' => $request_data['schedule_time'],
-                    'service_price' => $request_data['service_price'],
-                ]);
-                $grand_total = $request_data['service_price'];
-            }
-
             $update_data = array();
+            $save_service_order = array();
             $update_data['update_id'] = $response->id;
-            $update_data['total'] = $grand_total;
             
-            if(isset($request_data['redeem_point'])){
+            if($request_data['order_type'] == 1 && isset($request_data['service_id'])){
 
-                $PointCategorieDetail = PointCategorie::getPointCategorie([
-                    'id' => 1,
-                    'detail' => true,
-                ]);
+                $grand_total += $request_data['service_price'];
+                $service_details = Service::getServices(['id' => $request_data['service_id'], 'detail' => true, 'with_data' => true]);
+                $admin_part = isset($service_details->category->commission) ? $service_details->category->commission : 0;
+                $supplier_part = 100 - $admin_part;
+                $price = $request_data['service_price'];
+                $admin_earn = ceil( ($admin_part/100) * $price );
+                $supplier_earn = floor( ($supplier_part/100) * $price );
 
-                if(isset($PointCategorieDetail)){
-                    $reedem_disc_total = $request_data['redeem_point']*$PointCategorieDetail->per_point_value;
+                $admin_avg += isset($service_details->category->commission) ? $service_details->category->commission : 0;
+                $count += 1;
+                
+                // echo " grand_total ". $grand_total ."<br>";
+                // echo " admin_part ". $admin_part ."<br>";
+                // echo " supplier_part ". $supplier_part ."<br>";
+                // echo " price ". $price ."<br>";
+                // echo " admin_earn ". $admin_earn ."<br>";
+                // echo " supplier_earn ". $supplier_earn ."<br>";
+
+                // echo "Line no @"."<br>";
+                // echo "<pre>";
+                // print_r($service_details);
+                // echo "</pre>";
+                // exit("@@@@");
+
+                $save_service_order['order_id'] = $response->id;
+                $save_service_order['service_id'] = $request_data['service_id'];
+                $save_service_order['schedule_date'] = $request_data['schedule_date'];
+                $save_service_order['schedule_time'] = $request_data['schedule_time'];
+                $save_service_order['service_price'] = $request_data['service_price'];
+                $save_service_order['admin_earn'] = $admin_earn;
+                $save_service_order['supplier_earn'] = $supplier_earn;
+
+                if(isset($request_data['redeem_point'])){
+                    $reedem_disc_total = $this->get_available_redeem_amount(['redeem_point' => $request_data['redeem_point']]);
+
+                    $save_service_order['adm_aftr_reedem'] = round( (($grand_total - $reedem_disc_total['total_points_worth']) / $grand_total ) * $admin_earn , 2);
+                    $save_service_order['sup_aftr_reedem'] = round( (($grand_total - $reedem_disc_total['total_points_worth']) / $grand_total ) * $supplier_earn , 2);
+                    $save_service_order['reedem_disc'] = 2; // means True
                     $update_data['redeem_point'] = $request_data['redeem_point'];
-                }
 
-                // $user = User::find($request_data['sender_id']);
-                // $user->increment('redeem_point',$request_data['redeem_point']);
-                // $user->decrement('remaining_point',$request_data['redeem_point']);
+                    $admin_total += $save_service_order['adm_aftr_reedem'];
+                    $supplier_total += $save_service_order['sup_aftr_reedem'];
+                }
+                else {
+                    $admin_total += $admin_earn;
+                    $supplier_total += $supplier_earn;
+                }
+                OrderService::saveUpdateOrderService($save_service_order);
             }
 
             if( isset($request_data['user_delivery_option_id']) && $request_data['user_delivery_option_id'] ){
@@ -371,16 +424,18 @@ class OrderController extends BaseController
                 }
             }
 
-            $update_data['admin_avg'] = ($count > 0) ? round($admin_avg / $count) : 0;
+            $update_data['shipping_cost'] = $delivery_cost;
+            $update_data['total'] = $grand_total;
+            $update_data['admin_avg'] = ($count > 0) ? ceil($admin_avg / $count) : 0;
             $update_data['supplier_avg'] = 100 - $update_data['admin_avg'];
-            $update_data['discount_redeem'] = $reedem_disc_total;
-            $update_data['grand_total'] = $grand_total;
+            $update_data['discount_redeem'] = isset($reedem_discount['total_points_worth']) ? $reedem_discount['total_points_worth'] : 0;
+            $update_data['grand_total'] = $grand_total - ($update_data['discount_redeem'] + $delivery_cost);
 
-            $admin_delivery_earn = $delivery_cost > 0 ? round( ($update_data['admin_avg'] * $delivery_cost) / 100 ) : 0;
-            $supplier_delivery_earn = $delivery_cost > 0 ? round( ($update_data['supplier_avg'] * $delivery_cost) / 100 ) : 0;
+            $admin_delivery_earn = $delivery_cost > 0 ? round( ($update_data['admin_avg'] * $delivery_cost) / 100 , 2) : 0;
+            $supplier_delivery_earn = $delivery_cost > 0 ? round( ($update_data['supplier_avg'] * $delivery_cost) / 100 , 2) : 0;
 
-            $update_data['admin_gross'] = $admin_total + $admin_delivery_earn;
-            $update_data['supplier_gross'] = $supplier_total + $supplier_delivery_earn;
+            $update_data['admin_gross'] = round($admin_total + $admin_delivery_earn,2);
+            $update_data['supplier_gross'] = round($supplier_total + $supplier_delivery_earn,2);
 
             $model_response = Order::saveUpdateOrder($update_data);
 
@@ -681,6 +736,11 @@ class OrderController extends BaseController
 
         $model_response = Order::saveUpdateOrder($request_data);
 
+        if ($model_response) {
+            $this->calculate_orders_min_discounts($request, ['order_id' => $id]);
+            $this->calculate_orders_max_discounts($request, ['order_id' => $id]);
+        }
+
         $order_id = $model_response->id;
         $notification_text = "Your order status has been updated.";
 
@@ -778,5 +838,26 @@ class OrderController extends BaseController
             $error_message['error'] = 'Order already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
+    }
+
+    public function get_available_redeem_amount($posted_data = array()) {
+
+        $redeem_point = isset($posted_data['redeem_point']) ? $posted_data['redeem_point'] : 0;
+        $response = [
+            'total_points_worth' => 0,
+            'each_point_worth' => 0,
+        ];
+
+        $PointCategorieDetail = PointCategorie::getPointCategorie([
+            'id' => 1,
+            'detail' => true,
+        ]);
+
+        if( isset($PointCategorieDetail) ){
+            $response['total_points_worth'] = $redeem_point * $PointCategorieDetail->per_point_value;
+            $response['each_point_worth'] = $PointCategorieDetail->per_point_value;
+        }
+
+        return $response;
     }
 }

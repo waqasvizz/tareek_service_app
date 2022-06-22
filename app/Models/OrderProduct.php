@@ -81,6 +81,9 @@ class OrderProduct extends Model
         if (isset($posted_data['prod_price'])) {
             $data->prod_price = $posted_data['prod_price'];
         }
+        if (isset($posted_data['discount'])) {
+            $data->discount = $posted_data['discount'];
+        }
         if (isset($posted_data['admin_earn'])) {
             $data->admin_earn = $posted_data['admin_earn'];
         }
@@ -92,6 +95,18 @@ class OrderProduct extends Model
         }
         if (isset($posted_data['sup_aftr_reedem'])) {
             $data->sup_aftr_reedem = $posted_data['sup_aftr_reedem'];
+        }
+        if (isset($posted_data['adm_aftr_disc'])) {
+            $data->adm_aftr_disc = $posted_data['adm_aftr_disc'];
+        }
+        if (isset($posted_data['sup_aftr_disc'])) {
+            $data->sup_aftr_disc = $posted_data['sup_aftr_disc'];
+        }
+        if (isset($posted_data['total_admin'])) {
+            $data->total_admin = $posted_data['total_admin'];
+        }
+        if (isset($posted_data['total_supplier'])) {
+            $data->total_supplier = $posted_data['total_supplier'];
         }
         if (isset($posted_data['prod_disc'])) {
             $data->prod_disc = $posted_data['prod_disc'];

@@ -360,45 +360,73 @@ class ProductController extends BaseController
             unset($request_data['rejection_message']);
         }
 
-        $posted_data = array();
-        $posted_data['id'] = $request_data['product_id'];
-        $posted_data['product_orders_join'] = true;
-        $posted_data['orders_join'] = true;
-        $posted_data['to_array'] = true;
-        $posted_data['with_data'] = false;
-        $products = Product::getProducts($posted_data);
+        // $posted_data = array();
+        // $posted_data['id'] = $request_data['product_id'];
+        // $posted_data['product_orders_join'] = true;
+        // $posted_data['orders_join'] = true;
+        // $posted_data['to_array'] = true;
+        // $posted_data['with_data'] = false;
+        // $products = Product::getProducts($posted_data);
 
-        $discount_amount = 0;
-        foreach ($products as $key => $value) {
-            if ( isset($value['product_type']) && $value['product_type'] == 'bulk' ) {
+        // $discount_amount = 0;
+        // foreach ($products as $key => $value) {
+        //     if ( isset($value['product_type']) && $value['product_type'] == 'bulk' ) {
 
-                $product_data = OrderProduct::find($value['order_id']);
-                if ($product_data) {
-                    if ($value['consume_qty'] >= $value['max_qty']) {
-                        $discount_amount = floor( ($value['max_discount']/100) * $value['price'] );
-                    }
-                    else if ($value['consume_qty'] >= $value['min_qty']) {
-                        $discount_amount = floor( ($value['min_discount']/100) * $value['price'] );
-                    }
+        //         $product_data = OrderProduct::find($value['order_id']);
 
-                    $product_data->discount = $discount_amount;
-                    $product_data->net_price = $product_data->price - $discount_amount;
-                    $product_data->save();
-                }
+        //         if ($product_data) {
+        //             if ($value['consume_qty'] >= $value['max_qty']) {
+        //                 $discount_amount = floor( ($value['max_discount']/100) * $value['price'] );
+        //             }
+        //             else if ($value['consume_qty'] >= $value['min_qty']) {
+        //                 $discount_amount = floor( ($value['min_discount']/100) * $value['price'] );
+        //             }
 
-                $order_data = Order::find($value['orders_id']);
-                if ($order_data) {
-                    if ($order_data->calculated == 'False' && $order_data->order_status != 'Request accepted' ) {
-                        if ( isset($order_data->discount) && $order_data->discount )
-                            $discount_amount = $order_data->discount + $discount_amount;
+        //             // $product_data->prod_disc = $discount_amount;
+        //             // $product_data->prod_price = $product_data->price - $discount_amount;
+        //             $product_data->save();
+        //         }
+
+        //         $order_data = Order::find($value['orders_id']);
+        //         if ($order_data) {
+        //             if ($order_data->calculated == 'False' && $order_data->order_status != 'Request accepted' ) {
+        //                 if ( isset($order_data->discount) && $order_data->discount )
+        //                     $discount_amount = $order_data->discount + $discount_amount;
     
-                        $order_data->discount = $discount_amount;
-                        $order_data->grand_total = $order_data->grand_total - $discount_amount;
-                        $order_data->save();
-                    }
-                }
-            }
-        }
+        //                 // $order_data->discount = $discount_amount;
+        //                 $order_data->grand_total = $order_data->grand_total - $discount_amount;
+        //                 $order_data->save();
+        //             }
+        //         }
+        //     }
+        // }
+
+        // $order_ids = array_unique(array_column($products, 'orders_id'));
+        // $bulk_records = getSpecificColumnsFromArray($products, ['user_id', 'client_id', 'orders_id']);
+
+        // $orders_list = [];
+        // if ( count($order_ids) > 0 ) {
+        //     $orders_list = Order::saveUpdateOrder([
+        //         'update_bulk_statuses'  => $request_data['status'],
+        //         'order_ids'             => $order_ids,
+        //         'calculated'            => 'True',
+        //         'rejection_message'     => isset($request_data['rejection_message']) ? $request_data['rejection_message'] : NULL,
+        //     ]);
+        // }
+
+        $this->calculate_orders_min_discounts($request, ['product_id' => $request_data['product_id']]);
+        $this->calculate_orders_max_discounts($request, ['product_id' => $request_data['product_id']]);
+
+        $posted_data = array();
+        // $posted_data['min_disc_qualify'] = true; // means bulk products
+        // $posted_data['within_time_limit'] = date("Y-m-d");
+        $posted_data['product_type'] = 2; // means bulk products
+        $posted_data['orders_join'] = true;
+        $posted_data['with_data'] = true;
+        $posted_data['prod_disc'] = 1; // 1 equal to false, means no min and max apply yet now
+        $posted_data['product_orders_join'] = true;
+        $posted_data['product_orders_join_all_columns'] = true;
+        $products = Product::getProducts($posted_data)->ToArray();
 
         $order_ids = array_unique(array_column($products, 'orders_id'));
         $bulk_records = getSpecificColumnsFromArray($products, ['user_id', 'client_id', 'orders_id']);
@@ -412,7 +440,7 @@ class ProductController extends BaseController
                 'rejection_message'     => isset($request_data['rejection_message']) ? $request_data['rejection_message'] : NULL,
             ]);
         }
-
+        
         $notification_text = "You order status has been updated.";
         $already_sent = [];
         foreach ($bulk_records as $key => $value) {
@@ -463,12 +491,6 @@ class ProductController extends BaseController
 
                 $supplier_id = $value['user_id'];
                 $receiver_id = $value['client_id'];
-                
-                // $data = [
-                //     'subject' => 'Order Status Updated - '.config('app.name'),
-                //     'name' => $user_data['name'],
-                //     'email' => $user_data['email'],
-                // ];
 
                 $exist = in_array($value['client_id'], $already_sent);
                 if(!$exist) {
@@ -494,13 +516,6 @@ class ProductController extends BaseController
                     ]);
                 }
                 $already_sent = array_merge($already_sent, $user_id_arr);
-    
-                /*
-                \Mail::send('emails.order_status', ['email_data' => $data], function($message) use ($data) {
-                    $message->to($data['email'])
-                            ->subject($data['subject']);
-                });
-                */
             }
         }
 

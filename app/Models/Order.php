@@ -302,6 +302,9 @@ class Order extends Model
         if (isset($posted_data['total'])) {
             $data->total = $posted_data['total'];
         }
+        if (isset($posted_data['shipping_cost'])) {
+            $data->shipping_cost = $posted_data['shipping_cost'];
+        }
         if (isset($posted_data['discount_redeem'])) {
             $data->discount_redeem = $posted_data['discount_redeem'];
         }

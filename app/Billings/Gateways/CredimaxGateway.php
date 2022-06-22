@@ -3,9 +3,8 @@ namespace App\Billings\Gateways;
 
 use App\Billings\PaymentGatewayInterface;
 use Illuminate\Http\Request;
-use Srmklive\PayPal\Services\ExpressCheckout;
 
-class PaypalGateway implements PaymentGatewayInterface
+class CredimaxGateway implements PaymentGatewayInterface
 {
 
     public function process(Request $request)
@@ -36,7 +35,19 @@ class PaypalGateway implements PaymentGatewayInterface
     }
 
     public function createConnection(Request $request){
-        // some code here...
+        if ( !empty($posted_data) ) {
+
+            $cURLConnection = curl_init();
+
+            curl_setopt($cURLConnection, CURLOPT_URL, 'https://credimax.gateway.mastercard.com/api/rest/version/1/information');
+            curl_setopt($cURLConnection, CURLOPT_RETURNTRANSFER, true);
+            
+            $response = curl_exec($cURLConnection);
+            curl_close($cURLConnection);
+            
+            $response = json_decode($response, true);
+            return $response;
+        }
     }
 
     public function payerDetails(Request $request){
@@ -50,5 +61,4 @@ class PaypalGateway implements PaymentGatewayInterface
     public function transactionDetails(Request $request){
         // some code here...
     }
-    
 }
