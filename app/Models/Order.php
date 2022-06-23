@@ -332,6 +332,9 @@ class Order extends Model
         if (isset($posted_data['rejection_message'])) {
             $data->rejection_message = $posted_data['rejection_message'];
         }
+        if (isset($posted_data['points_earn'])) {
+            $data->points_earn = $posted_data['points_earn'];
+        }
         
         $data->save();
         $data = Order::getOrder([

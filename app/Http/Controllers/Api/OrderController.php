@@ -268,6 +268,7 @@ class OrderController extends BaseController
             $supplier_avg = 0;
             $reedem_disc_total = 0;
             $delivery_cost = 0;
+            $points = 0;
 
             if($request_data['order_type'] == 2 && isset($request_data['product_id'])){
 
@@ -338,11 +339,11 @@ class OrderController extends BaseController
                     }
                 }
 
-                // if(isset($request_data['redeem_point'])){
-                //     $user = User::find($request_data['sender_id']);
-                //     $user->increment('redeem_point',$request_data['redeem_point']);
-                //     $user->decrement('remaining_point',$request_data['redeem_point']);
-                // }
+                if(isset($request_data['redeem_point'])){
+                    $user = User::find($request_data['sender_id']);
+                    $user->increment('redeem_point',$request_data['redeem_point']);
+                    $user->decrement('remaining_point',$request_data['redeem_point']);
+                }
             }
 
             $update_data = array();
@@ -361,19 +362,6 @@ class OrderController extends BaseController
 
                 $admin_avg += isset($service_details->category->commission) ? $service_details->category->commission : 0;
                 $count += 1;
-                
-                // echo " grand_total ". $grand_total ."<br>";
-                // echo " admin_part ". $admin_part ."<br>";
-                // echo " supplier_part ". $supplier_part ."<br>";
-                // echo " price ". $price ."<br>";
-                // echo " admin_earn ". $admin_earn ."<br>";
-                // echo " supplier_earn ". $supplier_earn ."<br>";
-
-                // echo "Line no @"."<br>";
-                // echo "<pre>";
-                // print_r($service_details);
-                // echo "</pre>";
-                // exit("@@@@");
 
                 $save_service_order['order_id'] = $response->id;
                 $save_service_order['service_id'] = $request_data['service_id'];
@@ -399,6 +387,12 @@ class OrderController extends BaseController
                     $supplier_total += $supplier_earn;
                 }
                 OrderService::saveUpdateOrderService($save_service_order);
+
+                if(isset($request_data['redeem_point'])){
+                    $user = User::find($request_data['sender_id']);
+                    $user->increment('redeem_point',$request_data['redeem_point']);
+                    $user->decrement('remaining_point',$request_data['redeem_point']);
+                }
             }
 
             if( isset($request_data['user_delivery_option_id']) && $request_data['user_delivery_option_id'] ){
@@ -437,14 +431,16 @@ class OrderController extends BaseController
             $update_data['admin_gross'] = round($admin_total + $admin_delivery_earn,2);
             $update_data['supplier_gross'] = round($supplier_total + $supplier_delivery_earn,2);
 
-            $model_response = Order::saveUpdateOrder($update_data);
+            // $total_orders = Order::getOrder(['sender_id' => \Auth::user()->id, 'count' => true]);
 
-            $total_orders = Order::getOrder(['sender_id' => \Auth::user()->id, 'count' => true]);
-
-            UserPoint::assignUserPoint([
+            $points = UserPoint::assignUserPoint([
                 'point_categorie_id' => 1,
-                'totalorder' => $total_orders,
+                'totalprice' => $update_data['grand_total'],
             ]);
+
+            $update_data['points_earn'] = isset($points) ? $points : 0;
+
+            $model_response = Order::saveUpdateOrder($update_data);
 
             ///////////////////////////////////////////////////////////////////
             ///////////////////*     USER NOTIFICATION     */
