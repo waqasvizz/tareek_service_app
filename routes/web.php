@@ -106,6 +106,8 @@ Route::get('process_max_discounts', [Controller::class, 'calculate_orders_max_di
 
 // Auth::routes();
 Route::get('/test', [UserController::class, 'testing']);
+Route::get('/response', [UserController::class, 'response']);
+Route::get('/error', [UserController::class, 'error']);
 // Route::get('/', [UserController::class, 'welcome']);
 // Route::get('/login', [UserController::class, 'login'])->name('login');
 // Route::get('/logout', [UserController::class, 'logout']);
