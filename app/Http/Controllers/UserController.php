@@ -480,16 +480,36 @@ class UserController extends Controller
         $benefit_gateway = new BenefitPaymentGateway();
         
         // modify the following to reflect your "Tranportal ID", "Tranportal Password ", "Terminal Resourcekey"
-        // $benefit_gateway->setResourcePath(asset('storage/key_files/resource.cgn'));
-        // $benefit_gateway->setKeystorePath(asset('storage/key_files/keystore.bin'));
-        $benefit_gateway->setkey("21715115560721715115560721715115");
-        $benefit_gateway->setid("18009950");
-        $benefit_gateway->setpassword("18009950");
+        
+        $benefit_gateway->setAction("1");
+        $benefit_gateway->setCurrency("048");
+        $benefit_gateway->setLanguage("USA");
+        $benefit_gateway->setType("D");
+
+        $benefit_gateway->setAlias("test18009950");
+
+        $key_full_url = public_path().'/storage/key_files/keystore/';
+        $resource_full_url = public_path().'/storage/key_files/resource/';
+
+        // $benefit_gateway->setResourcePath("resource/"); //only the path that contains the file; do not write the file name
+        // $benefit_gateway->setKeystorePath("resource/"); //only the path that contains the file; do not write the file name
+        $benefit_gateway->setResourcePath($resource_full_url);
+        $benefit_gateway->setKeystorePath($key_full_url);
+
+
+        // if (file_exists($key_full_url))
+        //     return config('app.url').'/'.$image_path;
+        // else
+        //     return config('app.url').'/storage/defaults/user.jpg';
+        
+        // $benefit_gateway->setkey("21715115560721715115560721715115");
+        // $benefit_gateway->setid("18009950");
+        // $benefit_gateway->setpassword("18009950");
         
         // Do NOT change the values of the following parameters at all.
-        $benefit_gateway->setaction("1");
-        $benefit_gateway->setcardType("D");
-        $benefit_gateway->setcurrencyCode("048");
+        // $benefit_gateway->setaction("1");
+        // $benefit_gateway->setcardType("D");
+        // $benefit_gateway->setcurrencyCode("048");
 
         // modify the following to reflect your pages URLs
         // $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
@@ -498,10 +518,8 @@ class UserController extends Controller
         
         // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/payment_response/response.php");
         // $benefit_gateway->seterrorURL("https://tareek.go-demo.com/payment_response/error.php");
-        // $benefit_gateway->setresponseURL("http://localhost:8000/payment_response/response.php");
-        // $benefit_gateway->seterrorURL("http://localhost:8000/payment_response/error.php");
-        $benefit_gateway->setresponseURL("http://localhost:8000/response");
-        $benefit_gateway->seterrorURL("http://localhost:8000/error");
+        $benefit_gateway->setresponseURL("https://tareek.go-demo.com/response");
+        $benefit_gateway->seterrorURL("https://tareek.go-demo.com/error");
 
         
 
@@ -533,8 +551,8 @@ class UserController extends Controller
                         // $benefit_gateway->setcardNo('4600410123456789');
         // $benefit_gateway->setcardType($val);
 
-        $date = date('Y-m-d h:i:s');
-        $benefit_gateway->setpaymentData($date);
+        // $date = date('Y-m-d h:i:s');
+        // $benefit_gateway->setpaymentData($date);
 
                         // $benefit_gateway->setpaymentMethod($val);
                         // $benefit_gateway->settransactionIdentifier($val);
@@ -544,9 +562,30 @@ class UserController extends Controller
                         // $benefit_gateway->setpin($val);
                         // $benefit_gateway->setticketNo($val);
                         // $benefit_gateway->setbookingId($val);
-        $benefit_gateway->settransactionDate($date);
+        // $benefit_gateway->settransactionDate($date);
 
-        $isSuccess = $benefit_gateway->performeTransaction();
+        // $isSuccess = $benefit_gateway->performeTransaction();
+        // if($isSuccess==1){
+        //     header('location:'.$benefit_gateway->getresult());
+        // }
+        // else{
+        //     echo 'Error: '.$benefit_gateway->geterror().'<br />Error Text: '.$benefit_gateway->geterrorText();
+        // }
+
+        
+        if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0) {
+            echo("ERROR OCCURED! SEE CONSOLE FOR MORE DETAILS");
+            return;
+        }
+        else {
+            $url=$benefit_gateway->getwebAddress();
+            echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        }
+        
+
+        /*
+        $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
         if($isSuccess==1){
             echo "Okaaa";
             // header('location:'.$benefit_gateway->getresult());
@@ -555,6 +594,7 @@ class UserController extends Controller
         else{
             echo 'Error: '.$benefit_gateway->geterror().'<br />Error Text: '.$benefit_gateway->geterrorText();
         }
+        */
 
         // if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0)
         // {
@@ -567,11 +607,11 @@ class UserController extends Controller
         //     echo "<meta http-equiv='refresh' content='0;url=$url'>";
         // }
         
-        // echo "Line no @"."<br>";
-        // echo "<pre>";
-        // print_r($benefit_gateway);
-        // echo "</pre>";
-        // exit("@@@@");
+        echo "Line no @"."<br>";
+        echo "<pre>";
+        print_r($benefit_gateway);
+        echo "</pre>";
+        exit("@@@@");
 
         echo "OUTSIDE";
         exit("@@@@");

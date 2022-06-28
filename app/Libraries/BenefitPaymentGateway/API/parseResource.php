@@ -50,7 +50,7 @@ function readZip() {
 		$filenameInput = $this->getResourcePath () . "resource.cgz";
 		$zipentry=null;
 		$i = 0;
-		$zip = new ZipArchive ();
+		$zip = new \ZipArchive ();
 		$zp = $zip->open($filenameInput);
 		if ($zp === TRUE) {
 			$zip->extractTo ( $this->resourcePath );
