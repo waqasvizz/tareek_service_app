@@ -295,4 +295,57 @@ class UserController extends BaseController
         
         return $this->sendResponse($data, 'Dashboard items successfully fetched.');
     }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function get_revenue_stats(Request $request)
+    {
+        $stats = array();
+        $request_data = $request->all();
+   
+        $validator = \Validator::make($request_data, [
+            'user_id'      => 'required|in:1',
+            'result_by'    => 'required|in:gross,order,supplier',
+        ],[
+            'user_id.in' => 'Sorry, only admin have rights to access this info.'
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
+        }
+        
+        $posted_data = array();
+        // $posted_data['print_query'] = true;
+        if ($request_data['result_by'] == 'gross') {
+            $posted_data['without_with'] = true;
+            $posted_data['order_status_not_in'] = [1,3,4,5,6]; // means only order 2 status will be fetched which are accepted
+            $posted_data['show_only_sums'] = true;
+            $posted_data['sumBy_multiple_column'] = true;
+            $posted_data['sumBy_multiple_columnNames'] = ['admin_gross' => 'admin_gross_sum', 'supplier_gross' => 'supplier_gross_sum'];
+        }
+        else if ($request_data['result_by'] == 'supplier') {
+            $posted_data['without_with'] = true;
+            $posted_data['show_only_sums'] = true;
+            $posted_data['groupBy_value'] = 'orders.receiver_id';
+            $posted_data['groupBy_with_sum'] = ['admin_gross' => 'admin_gross_sum', 'supplier_gross' => 'supplier_gross_sum'];
+        }
+        else if ($request_data['result_by'] == 'order') {
+            // $posted_data['without_with'] = true;
+            $posted_data['paginate'] = 10;
+        }
+
+        if ($request_data['result_by'] != 'order')
+            $stats['revenue']['data'] = Order::getOrder($posted_data);
+        else 
+            $stats['revenue'] = Order::getOrder($posted_data);
+
+
+        // $data['revenue'] = Order::getOrder($posted_data);
+
+        return $this->sendResponse($stats, 'Revenue analytics are fetched successfully.');
+    }
 }

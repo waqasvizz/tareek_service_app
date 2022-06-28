@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use DB;
 
 class Order extends Model
 {
@@ -120,6 +121,9 @@ class Order extends Model
             });
         }
 
+        if (isset($posted_data['order_status_not_in'])) {
+            $query = $query->whereNotIn('orders.order_status', $posted_data['order_status_not_in']);
+        }
         if (isset($posted_data['order_status'])) {
             if ($posted_data['order_status'] == 1) $posted_data['order_status'] = 'Pending';
             else if ($posted_data['order_status'] == 2) $posted_data['order_status'] = 'Request accepted';
@@ -180,6 +184,24 @@ class Order extends Model
             $select_columns = array_merge($select_columns, $columns);
         }
 
+        if(isset($posted_data['sumBy_multiple_column'])) {
+            $sum_cols_query = "";
+            foreach ($posted_data['sumBy_multiple_columnNames'] as $key => $item) {
+                $sum_cols_query .= "sum({$key}) AS {$item}, ";
+            }
+
+            // this code will remove the last two characters from the string
+            $sum_cols_query = substr($sum_cols_query, 0, -2);
+
+            // $columns = [DB::raw('sum(admin_gross) AS admin_gross_sum')];
+
+            if ($posted_data['show_only_sums'] == true)
+                $select_columns = [];
+
+            $columns = [DB::raw("{$sum_cols_query}")];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
         // $query->join('users', 'orders.id', '=', 'order_products.product_id');
         // $query->join('products', 'products.id', '=', 'order_products.product_id');
 
@@ -193,23 +215,48 @@ class Order extends Model
             // $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
         // }
         
-        if (isset($posted_data['print_query'])) {
-            $result = $query->toSql();
-            echo "Line no @"."<br>";
-            echo "<pre>";
-            print_r($result);
-            echo "</pre>";
-            exit("@@@@");
-        }
 
         // echo "Line no deee@d"."<br>";
         // echo "<pre>";
         // print_r($select_columns);
         // echo "</pre>";
         // exit("@@@@");
+        // $query->select('orders.*');
+
+        if (isset($posted_data['groupBy_value'])) {
+            $query->groupBy($posted_data['groupBy_value']);
+
+            if (isset($posted_data['groupBy_with_sum'])) {
+
+                $sum_cols_query = "";
+                foreach ($posted_data['groupBy_with_sum'] as $key => $item) {
+                    $sum_cols_query .= "sum({$key}) AS {$item}, ";
+                }
+    
+                // this code will remove the last two characters from the string
+                $sum_cols_query = substr($sum_cols_query, 0, -2);
+    
+                // if ($posted_data['show_only_sums'] == true)
+                //     $select_columns = [];
+    
+                $columns = [DB::raw("{$sum_cols_query}")];
+                $select_columns = array_merge($select_columns, $columns);
+
+                // $query->selectRaw('sum(admin_gross) as admin_gross_sum')
+                //     ->pluck('admin_gross_sum');
+
+                // $columns = [DB::raw("{$sum_cols_query}")];
+                // $select_columns = array_merge($select_columns, $columns);
+            }
+            // $query = $query->pluck('admin_gross_sum');
+        }
 
         $query->select($select_columns);
-        // $query->select('orders.*');
+        // else if (isset($posted_data['groupBy_with_sum'])) {
+        //     // Document::groupBy('users_editor_id')
+        //         ->selectRaw('sum(admin_gross) as sum, admin_gross_sum')
+        //         ->pluck('sum','users_editor_id');
+        // }
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
@@ -232,13 +279,21 @@ class Order extends Model
             }
         }
         
+        if (isset($posted_data['print_query'])) {
+            $result = $query->toSql();
+            echo "Line no @"."<br>";
+            echo "<pre>";
+            print_r($result);
+            echo "</pre>";
+            exit("@@@@");
+        }
+
         if (isset($posted_data['sumBy_column'])) {
             $result = $result->sum($posted_data['sumBy_columnName']);
         }
 
         return $result;
     }
-
 
 
     public function saveUpdateOrder($posted_data = array())
