@@ -223,7 +223,7 @@ class UserController extends BaseController
         }
         
         $data = array();
-
+        // my model
         $posted_data = array();
         $posted_data['id'] = $request_data['user_id'];
         $posted_data['detail'] = true;
