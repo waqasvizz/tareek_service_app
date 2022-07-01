@@ -19,27 +19,63 @@ class PaymentTransaction extends Model
         return $this->belongsTo(Service::class)->with('category');
     }
 
+    public function orders_user_card_id()
+    {
+        return $this->belongsTo(UserCard::class, 'orders_user_card_id');
+    }
+
     public function getPaymentTransaction($posted_data = array())
     {
-        $query = PaymentTransaction::latest()->with('order')->with('service');
+        $columns = ['payment_transactions.*'];
+        $select_columns = array_merge($columns, []);
+
+        $query = PaymentTransaction::latest()
+            // ->with('order')->with('service');
+            ->with('orders_user_card_id');
 
         if (isset($posted_data['id'])) {
-            $query = $query->where('id', $posted_data['id']);
+            $query = $query->where('payment_transactions.id', $posted_data['id']);
         }
         if (isset($posted_data['order_id'])) {
-            $query = $query->where('order_id', $posted_data['order_id']);
+            $query = $query->where('payment_transactions.order_id', $posted_data['order_id']);
         }
         if (isset($posted_data['sender_user_id'])) {
-            $query = $query->where('sender_user_id', $posted_data['sender_user_id']);
+            $query = $query->where('payment_transactions.sender_user_id', $posted_data['sender_user_id']);
         }
         if (isset($posted_data['receiver_user_id'])) {
-            $query = $query->where('receiver_user_id', $posted_data['receiver_user_id']);
+            $query = $query->where('payment_transactions.receiver_user_id', $posted_data['receiver_user_id']);
         }
         if(isset($posted_data['filter_by_date'])){
-            $query = $query->where('created_at', '>=' ,$posted_data['filter_by_date']);
+            $query = $query->where('payment_transactions.created_at', '>=' ,$posted_data['filter_by_date']);
+        }
+        if(isset($posted_data['order_status'])){
+            $query = $query->where('orders.order_status', $posted_data['order_status']);
+        }
+        if(isset($posted_data['order_type'])){
+            $query = $query->where('orders.order_type', $posted_data['order_type']);
+        }
+        if(isset($posted_data['order_products'])){
+            $query = $query->where('orders.order_products', $posted_data['order_products']);
         }
 
-        $query->select('*');
+        if(isset($posted_data['orders_join'])){
+            $query->rightjoin('orders', 'orders.id', '=', 'payment_transactions.order_id');
+            
+            $columns = ['orders.id as orders_id', 'orders.order_status as orders_order_status', 'orders.order_products as orders_order_products', 'orders.sender_id as orders_sender_id', 'orders.receiver_id as orders_receiver_id', 'orders.user_multiple_address_id as orders_user_multiple_address_id', 'orders.user_card_id as orders_user_card_id', 'orders.total as orders_total', 'orders.discount as orders_discount', 'orders.grand_total as orders_grand_total', 'orders.redeem_point as orders_redeem_point'];
+
+            // $columns = ['orders.id as orders_id', 'orders.order_type as orders_order_type', 'orders.order_status as orders_order_status', 'orders.sender_id as orders_sender_id', 'orders.receiver_id as orders_receiver_id', 'orders.user_multiple_address_id as orders_user_multiple_address_id', 'orders.user_delivery_option_id as orders_user_delivery_option_id', 'orders.user_card_id as orders_user_card_id', 'orders.total as orders_total', 'orders.discount as orders_discount', 'orders.grand_total as orders_grand_total', 'orders.redeem_point as orders_redeem_point'];
+            // $columns = ['orders.*'];
+
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        if(isset($posted_data['product_orders_join'])){
+            $query->join('order_products', 'order_products.order_id', '=', 'orders.id');
+            $columns = ['order_products.price as order_products_price', 'order_products.net_price as order_products_net_price'];
+            $select_columns = array_merge($select_columns, $columns);
+        }
+
+        $query->select($select_columns);
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {

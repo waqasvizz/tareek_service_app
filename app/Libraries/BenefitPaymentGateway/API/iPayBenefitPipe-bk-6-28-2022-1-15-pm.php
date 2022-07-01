@@ -720,7 +720,7 @@ class iPayBenefitPipe {
 		$requestbuffer = null;
 		$xmlData = null;
 		try {
-		
+
 		    $keyParser = new KeyStore();
 			$this->key = $keyParser->parseKeyStore ($this->keystorePath);
 						//echo $this->resourcePath;
@@ -825,6 +825,7 @@ class iPayBenefitPipe {
 			$parseResouce->setAlias ( $alias );
 			$parseResouce->createCGZFromCGN ();
 			$xmlData = $parseResouce->readZip ();
+
 			return $xmlData;
 		} catch ( Exception $e ) {
 			return null;
@@ -1135,114 +1136,102 @@ class iPayBenefitPipe {
 	}
 	
 	//FOR 24 bit length key
-function encryptAESold($str,$key) {
-$str = $this->pkcs5_pad($str);
-$ivlen = openssl_cipher_iv_length($cipher="aes-192-cbc");
-//$key=substr($key,0,16);
-//echo $key;
-//die();
-$iv="PGKEYENCDECIVSPC";
-$encrypted = openssl_encrypt($str, "aes-192-cbc",$key, OPENSSL_ZERO_PADDING, $iv);
-$encrypted = base64_decode($encrypted);
-$encrypted=unpack('C*', ($encrypted));
-$encrypted=$this->byteArray2Hex($encrypted);
-$encrypted = urlencode($encrypted);
-return $encrypted;
-}
-
-//done for 32 length key
-
-function encryptAES($str,$key) {
-	//echo $this->$str;
-	//die();
-	//$key="01922918104401922918104401922918";
-	$iv = 'PGKEYENCDECIVSPC';
-	$encrypted = openssl_encrypt($str, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-	$encrypted=unpack('C*', ($encrypted));
-	$encrypted=$this->byteArray2Hex($encrypted);
-	$encrypted  = urlencode($encrypted);
-  return $encrypted;
-}
-
-
-
-
-
- function pkcs5_pad ($text) {
-	  $blocksize = 16;
-	 // $blocksize = 8;
-	  $pad = $blocksize - (strlen($text) % $blocksize);
-	  return $text . str_repeat(chr($pad), $pad);
-    }
-function byteArray2Hexold($byteArray) {
-  $chars = array_map("chr", $byteArray);
-  $bin = join($chars);
-  return bin2hex($bin);
-}
-
-
-function byteArray2Hex($byteArray) {
-    $result = '';
-    $HEX_DIGITS = "0123456789abcdef";
-    foreach ($byteArray as $value) {
-    $result.= $HEX_DIGITS[$value >> 4];
-    $result.= $HEX_DIGITS[$value& 0xf];
-}
-
-    return $result;
-}
-
-
-//for 24 bit length key
-function decryptDataold($code,$key) { 
-
-	 $code =  $this->hex2ByteArray(trim($code));
-	  $code=$this->byteArray2String($code);
-	  $iv = "PGKEYENCDECIVSPC"; 
-	  $code = base64_encode($code);
-	  $decrypted = openssl_decrypt($code, 'AES-192-CBC', $key, OPENSSL_ZERO_PADDING, $iv);
-	  return $this->pkcs5_unpad($decrypted);
+	function encryptAESold($str,$key) {
+		$str = $this->pkcs5_pad($str);
+		$ivlen = openssl_cipher_iv_length($cipher="aes-192-cbc");
+		//$key=substr($key,0,16);
+		//echo $key;
+		//die();
+		$iv="PGKEYENCDECIVSPC";
+		$encrypted = openssl_encrypt($str, "aes-192-cbc",$key, OPENSSL_ZERO_PADDING, $iv);
+		$encrypted = base64_decode($encrypted);
+		$encrypted=unpack('C*', ($encrypted));
+		$encrypted=$this->byteArray2Hex($encrypted);
+		$encrypted = urlencode($encrypted);
+		return $encrypted;
 	}
-//for 32 bit length key
+
+	//done for 32 length key
+	function encryptAES($str,$key) {
+		//echo $this->$str;
+		//die();
+		//$key="01922918104401922918104401922918";
+		$iv = 'PGKEYENCDECIVSPC';
+		$encrypted = openssl_encrypt($str, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+		$encrypted=unpack('C*', ($encrypted));
+		$encrypted=$this->byteArray2Hex($encrypted);
+		$encrypted  = urlencode($encrypted);
+	return $encrypted;
+	}
+
+	function pkcs5_pad ($text) {
+		$blocksize = 16;
+		// $blocksize = 8;
+		$pad = $blocksize - (strlen($text) % $blocksize);
+		return $text . str_repeat(chr($pad), $pad);
+	}
+
+	function byteArray2Hexold($byteArray) {
+		$chars = array_map("chr", $byteArray);
+		$bin = join($chars);
+		return bin2hex($bin);
+	}
+
+	function byteArray2Hex($byteArray) {
+		$result = '';
+		$HEX_DIGITS = "0123456789abcdef";
+		foreach ($byteArray as $value) {
+			$result.= $HEX_DIGITS[$value >> 4];
+			$result.= $HEX_DIGITS[$value& 0xf];
+		}
+		return $result;
+	}
+
+	//for 24 bit length key
+	function decryptDataold($code,$key) { 
+		
+		$code =  $this->hex2ByteArray(trim($code));
+		$code=$this->byteArray2String($code);
+		$iv = "PGKEYENCDECIVSPC"; 
+		$code = base64_encode($code);
+		$decrypted = openssl_decrypt($code, 'AES-192-CBC', $key, OPENSSL_ZERO_PADDING, $iv);
+		return $this->pkcs5_unpad($decrypted);
+	}
+	//for 32 bit length key
 	function decryptData($code,$key) {
-      
-	  $code =  $this->hex2ByteArray(trim($code));
-	  $code=$this->byteArray2String($code);
-	  $iv = 'PGKEYENCDECIVSPC';
-	  $code = base64_encode($code);
-	  $decrypted = openssl_decrypt($code, 'AES-256-CBC', $key, OPENSSL_ZERO_PADDING, $iv);
-	  
-	  //echo "hii";
-	  //echo $decrypted;
-	 /// die();
-	 //return $this->$decrypted;
-	 return $this->pkcs5_unpad($decrypted);
+		$code =  $this->hex2ByteArray(trim($code));
+		$code=$this->byteArray2String($code);
+		$iv = 'PGKEYENCDECIVSPC';
+		$code = base64_encode($code);
+		$decrypted = openssl_decrypt($code, 'AES-256-CBC', $key, OPENSSL_ZERO_PADDING, $iv);
+		
+		//echo "hii";
+		//echo $decrypted;
+	   /// die();
+	   //return $this->$decrypted;
+	   return $this->pkcs5_unpad($decrypted);
+	}
+	
+	function hex2ByteArray($hexString) {
+		$string = hex2bin($hexString);
+		return unpack('C*', $string);
 	}
 
-	
-function hex2ByteArray($hexString) {
-  $string = hex2bin($hexString);
-  return unpack('C*', $string);
-}
+	function byteArray2String($byteArray) {
+		$chars = array_map("chr", $byteArray);
+		return join($chars);
+	}
 
-
-function byteArray2String($byteArray) {
-  $chars = array_map("chr", $byteArray);
-  return join($chars);
-}
-
-
- function pkcs5_unpad($text) {
-	  $pad = ord($text{strlen($text)-1});
-	  if ($pad > strlen($text)) {
-	      return false;	
-	  }
-	  if (strspn($text, chr($pad), strlen($text) - $pad) != $pad) {
-	      return false;
-	  }
-	  return substr($text, 0, -1 * $pad);
-    }
-	
+	function pkcs5_unpad($text) {
+		$pad = ord($text{strlen($text)-1});
+		if ($pad > strlen($text)) {
+			return false;	
+		}
+		if (strspn($text, chr($pad), strlen($text) - $pad) != $pad) {
+			return false;
+		}
+		return substr($text, 0, -1 * $pad);
+	}	
 	
 	function performTransaction() {
 		$xmlData = null;
@@ -1349,4 +1338,5 @@ function byteArray2String($byteArray) {
 		}
 	}
 }
+
 ?>

@@ -592,150 +592,163 @@ class OrderController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
-        // $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
         // $category_data = Category::getCategories(['']);
-
 
         // echo '<pre>';
         // print_r($order_detail->ToArray());
         // print_r($order_detail);
         // exit;
 
-        /*
+        // $model_response = Order::saveUpdateOrder($request_data);
+
+        // if ($model_response) {
+        $this->calculate_orders_min_discounts($request, ['order_id' => $id]);
+        $this->calculate_orders_max_discounts($request, ['order_id' => $id]);
+
+        // }
+
+        $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
         if($request_data['order_status'] == 2){
-            $payment_transactions = array();  
-            try {
-                $currency = 'USD';
-                $total_amount_captured = $order_detail->grand_total;
 
-                $admin_amount_captured = $order_detail->grand_total * .10; // 10% ammount to admin;
-                $provider_amount_captured = $order_detail->grand_total * .90; // 90% ammount to supplier;
+            if ( isset($order_detail) && $order_detail->payment_status == 'False' ) { // False means no payment done yet now against this order.
+                $payment_transactions = array();
+                try {
+                    $currency = 'USD';
+                    $total_amount_captured = $order_detail->grand_total + $order_detail->shipping_cost;
+    
+                    $admin_amount_captured = $order_detail->admin_gross * 100;
+                    $provider_amount_captured = $order_detail->supplier_gross * 100;
+    
+                    $admin_amount_captured += $provider_amount_captured;
+    
+                    $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+                        'user_id' => 1,
+                        'detail' => true
+                    ]);
+    
+                    if(!$check_admin_stripe_info){
+                        $error_message['error'] = 'Something went wrong please contact with support.';
+                        return $this->sendError($error_message['error'], $error_message);  
+                    }
+    
+                    $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
+                        'user_id' => \Auth::user()->id,
+                        'detail' => true
+                    ]);
+    
+                    if(!$check_provider_stripe_info){
+                        $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
+                        return $this->sendError($error_message['error'], $error_message);  
+                    }
+    
+                    // exit($check_admin_stripe_info->sk_test);
+    
+                    // send commission to the admin
+                    // start
+                    // ***********************************************************
+                    if($check_admin_stripe_info->stripe_mode == 'Test'){
+                        $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
+                    }else{
+                        $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
+                    }
+    
+                    $create_token_res = $admin_stripe->tokens->create([
+                        'card' => [
+                            'number' => $order_detail->user_card->card_number,
+                            'exp_month' => $order_detail->user_card->exp_month,
+                            'exp_year' => $order_detail->user_card->exp_year,
+                            'cvc' => $order_detail->user_card->cvc_number
+                        ],
+                    ]);
+                    $card_tok = $create_token_res->id;
+    
+                    $admin_charge_res = $admin_stripe->charges->create([
+                        'amount' => $admin_amount_captured,
+                        'currency' => $currency,
+                        'source' => $card_tok,
+                        'description' => 'My First Test Charge (created for API docs)',
+                    ]);
+    
+                    // $payment_transactions['admin_response_object'] = $admin_charge_res;
+                    // $payment_transactions['admin_amount_captured'] = $admin_amount_captured;
+    
+                    /*
+                    if($check_provider_stripe_info->stripe_mode == 'Test'){
+                        $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_test);
+                    }else{
+                        $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_live);
+                    }
+    
+                    $create_token_res = $provider_stripe->tokens->create([
+                        'card' => [
+                            'number' => $order_detail->user_card->card_number,
+                            'exp_month' => $order_detail->user_card->exp_month,
+                            'exp_year' => $order_detail->user_card->exp_year,
+                            'cvc' => $order_detail->user_card->cvc_number
+                        ],
+                    ]);
+                    $card_tok = $create_token_res->id;
+    
+                    $provider_charge_res = $provider_stripe->charges->create([
+                        'amount' => $provider_amount_captured,
+                        'currency' => $currency,
+                        'source' => $card_tok,
+                        'description' => 'My First Test Charge (created for API docs)',
+                    ]);
+                    */
+    
+                    // $payment_transactions['provider_response_object'] = $admin_charge_res;
+                    // $payment_transactions['provider_amount_captured'] = $provider_amount_captured;
+                    // end
+                    // ***********************************************************
+                    // $payment_transactions['total_amount_captured'] = $total_amount_captured;
+                    // $payment_transactions['currency'] = $currency;
+    
+    
+                    PaymentTransaction::saveUpdatePaymentTransaction([
+                        'order_id' => $request_data['update_id'],
+                        'sender_user_id' => $order_detail->senderDetails->id,
+                        'receiver_user_id' => $order_detail->receiverDetails->id,
+                        'currency' => 'USD',
+                        'total_amount_captured' => $total_amount_captured,
+                        'admin_amount_captured' => ($admin_amount_captured / 100),
+                        'provider_amount_captured' => ($provider_amount_captured / 100),
+                        'admin_response_object' => $admin_charge_res,
+                        'provider_response_object' => NULL, //$provider_charge_res,
+                    ]);
 
-                $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
-                    'user_id' => 1,
-                    'detail' => true
-                ]);
+                    $order_obj = Order::find($id);
 
-                if(!$check_admin_stripe_info){
-                    $error_message['error'] = 'Something went wrong please contact with support.';
-                    return $this->sendError($error_message['error'], $error_message);  
+                    if ($order_obj) {
+                        $order_obj->payment_status = 2; // means
+                        $order_obj->save(); // means
+                    }
+    
+                    // end
+                    // ***********************************************************
+    
+                    /*
+    
+                    // send remaining amount to the provider
+                    // start
+                    // ***********************************************************
+                    
+                    */
+    
+                } catch (\Throwable $th) {
+                    $error_message['error'] = $th->getMessage();
+                    return $this->sendError($error_message['error'], $error_message);
                 }
-
-                $check_provider_stripe_info = UserStripeInformation::getUserStripeInformation([
-                    'user_id' => \Auth::user()->id,
-                    'detail' => true
-                ]);
-
-                if(!$check_provider_stripe_info){
-                    $error_message['error'] = 'Your stripe information is missing, Please enter your stripe information.';
-                    return $this->sendError($error_message['error'], $error_message);  
-                }
-
-                // exit($check_admin_stripe_info->sk_test);
-
-                // send commission to the admin
-                // start
-                // ***********************************************************
-                if($check_admin_stripe_info->stripe_mode == 'Test'){
-                    $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
-                }else{
-                    $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
-                }
-
-                $create_token_res = $admin_stripe->tokens->create([
-                    'card' => [
-                        'number' => $order_detail->user_card->card_number,
-                        'exp_month' => $order_detail->user_card->exp_month,
-                        'exp_year' => $order_detail->user_card->exp_year,
-                        'cvc' => $order_detail->user_card->cvc_number
-                    ],
-                ]);
-                $card_tok = $create_token_res->id;
-
-                $admin_charge_res = $admin_stripe->charges->create([
-                    'amount' => $admin_amount_captured * 100,
-                    'currency' => $currency,
-                    'source' => $card_tok,
-                    'description' => 'My First Test Charge (created for API docs)',
-                ]);
-
-                // $payment_transactions['admin_response_object'] = $admin_charge_res;
-                // $payment_transactions['admin_amount_captured'] = $admin_amount_captured;
-
-                
-                if($check_provider_stripe_info->stripe_mode == 'Test'){
-                    $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_test);
-                }else{
-                    $provider_stripe = new \Stripe\StripeClient($check_provider_stripe_info->sk_live);
-                }
-
-                $create_token_res = $provider_stripe->tokens->create([
-                    'card' => [
-                        'number' => $order_detail->user_card->card_number,
-                        'exp_month' => $order_detail->user_card->exp_month,
-                        'exp_year' => $order_detail->user_card->exp_year,
-                        'cvc' => $order_detail->user_card->cvc_number
-                    ],
-                ]);
-                $card_tok = $create_token_res->id;
-
-                $provider_charge_res = $provider_stripe->charges->create([
-                    'amount' => $provider_amount_captured * 100,
-                    'currency' => $currency,
-                    'source' => $card_tok,
-                    'description' => 'My First Test Charge (created for API docs)',
-                ]);
-
-                // $payment_transactions['provider_response_object'] = $admin_charge_res;
-                // $payment_transactions['provider_amount_captured'] = $provider_amount_captured;
-                // end
-                // ***********************************************************
-                // $payment_transactions['total_amount_captured'] = $total_amount_captured;
-                // $payment_transactions['currency'] = $currency;
-
-
-
-
-
-                PaymentTransaction::saveUpdatePaymentTransaction([
-                    'order_id' => $request_data['update_id'],
-                    'sender_user_id' => $order_detail->senderDetails->id,
-                    'receiver_user_id' => $order_detail->receiverDetails->id,
-                    'currency' => 'USD',
-                    'total_amount_captured' => $total_amount_captured,
-                    'admin_amount_captured' => $admin_amount_captured,
-                    'provider_amount_captured' => $provider_amount_captured,
-                    'admin_response_object' => $admin_charge_res,
-                    'provider_response_object' => $provider_charge_res,
-                ]);
-
-
-                // end
-                // ***********************************************************
-        */
-
-                /*
-
-                // send remaining amount to the provider
-                // start
-                // ***********************************************************
-                
-                */
-        /*
-
-            } catch (\Throwable $th) {
-                $error_message['error'] = $th->getMessage();
-                return $this->sendError($error_message['error'], $error_message);
             }
+
         }
-        */
 
         $model_response = Order::saveUpdateOrder($request_data);
 
-        if ($model_response) {
-            $this->calculate_orders_min_discounts($request, ['order_id' => $id]);
-            $this->calculate_orders_max_discounts($request, ['order_id' => $id]);
-        }
+        // if ($model_response) {
+        //     $this->calculate_orders_min_discounts($request, ['order_id' => $id]);
+        //     $this->calculate_orders_max_discounts($request, ['order_id' => $id]);
+        // }
 
         $order_id = $model_response->id;
         $notification_text = "Your order status has been updated.";
@@ -775,11 +788,11 @@ class OrderController extends BaseController
         }
         
         if (config('app.order_email')) {
-            $data = [
-                'subject' => 'Order Status Updated - '.config('app.name'),
-                'name' => $model_response->senderDetails->name,
-                'email' => $model_response->senderDetails->email,
-            ];
+            // $data = [
+            //     'subject' => 'Order Status Updated - ',/*.config('app.name'),*/
+            //     'name' => $model_response->senderDetails->name,
+            //     'email' => $model_response->senderDetails->email,
+            // ];
 
             // for order status updated by the supplier for customer
             $email_content = EmailMessage::getEmailMessage(['id' => 4, 'detail' => true]);

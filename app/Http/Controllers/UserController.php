@@ -9,6 +9,7 @@ use App\Models\AssignService;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Service;
+use App\Models\UserStripeInformation;
 use BenefitPaymentGateway;
 use Validator;
 use Session;
@@ -464,7 +465,102 @@ class UserController extends Controller
         // return redirect()->back();
     }
     
-    public function testing() {
+    public function testing()
+    {
+        $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+            'user_id' => 1,
+            'detail' => true
+        ]);
+ 
+
+        if($check_admin_stripe_info->stripe_mode == 'Test'){
+            $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
+        }else{
+            $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
+        }
+
+        // $stripe = new \Stripe\StripeClient(
+        //     'sk_test_51KqDTlGLDz2RvoIA2NcYVf99vTvpcElhoPotX7G8lu0kEsVSONC2mItT8P4pTMx3gUmuQAK1DToNsrZjwMKix0Kd00tmz8yEES'
+        //   );
+
+        $response = $admin_stripe->accounts->update(
+            'acct_1LGKKQ4cJ1PGcErj',
+            ['tos_acceptance' => ['date' => 1609798905, 'ip' => '8.8.8.8']]
+          );
+
+        $response = $admin_stripe->accounts->create([
+            'type' => 'custom',
+            'country' => 'US',
+            'email' => 'waqas.vizz86@gmail.com',
+            'capabilities' => [
+              'card_payments' => ['requested' => true],
+              'transfers' => ['requested' => true],
+            ],
+          ]);
+
+          echo "Line noqaqqqqq @"."<br>";
+          echo "<pre>";
+          print_r($response);
+          echo "</pre>";
+          exit("@@@@");
+
+
+        // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
+        // $Pipe = new BenefitPaymentGateway();
+        
+        // // modify the following to reflect your "Tranportal ID", "Tranportal Password ", "Terminal Resourcekey"
+        // $Pipe->setkey("21715115560721715115560721715115");
+        // $Pipe->setid("18009950");
+        // $Pipe->setpassword("18009950");
+        
+        // // Do NOT change the values of the following parameters at all.
+        // $Pipe->setaction("1");
+        // $Pipe->setcardType("D");
+        // $Pipe->setcurrencyCode("048");
+        
+        // // modify the following to reflect your pages URLs
+        // $Pipe->setresponseURL("https://tareek.go-demo.com/response");
+        // $Pipe->seterrorURL("https://tareek.go-demo.com/error");
+
+        // // set a unique track ID for each transaction so you can use it later to match transaction response and identify transactions in your system and “BENEFIT Payment Gateway” portal.
+        // $Pipe->settrackId(date('Ymdhis'));
+        
+        // // set transaction amount
+        // $Pipe->setamt("15.950");
+        
+        // // The following user-defined fields (UDF1, UDF2, UDF3, UDF4, UDF5) are optional fields.
+        // // However, we recommend setting theses optional fields with invoice/product/customer identification information as they will be reflected in “BENEFIT Payment Gateway” portal where you will be able to link transactions to respective customers. This is helpful for dispute cases. 
+        // $Pipe->setudf1("set value 1");
+        // $Pipe->setudf2("set value 2");
+        // $Pipe->setudf3("set value 3");
+        // $Pipe->setudf4("set value 4");
+        // $Pipe->setudf5("set value 5");
+
+        // $isSuccess = $Pipe->performeTransaction();
+        // // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        // if($isSuccess==1){
+        //     echo "Okaaa";
+        //     // header('location:'.$benefit_gateway->getresult());
+        //     echo 'Success: '.$Pipe->getresult();
+        // }
+        // else{
+        //     echo 'Error: '.$Pipe->geterror().'<br />Error Text: '.$Pipe->geterrorText();
+        // }
+
+        
+        // // $isSuccess = $Pipe->performeTransaction();
+        // // if($isSuccess==1){
+        // //     header('location:'.$Pipe->getresult());
+        // // }
+        // // else{
+        // //     echo 'Error: '.$Pipe->geterror().'<br />Error Text: '.$Pipe->geterrorText();
+        // // }
+        // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
+        // exit('deeeee');
+
+
+
+
 
         // dd($route);
 
@@ -579,7 +675,7 @@ class UserController extends Controller
         }
         else {
             $url=$benefit_gateway->getwebAddress();
-            echo "<meta http-equiv='refresh' content='0;url=$url'>";
+            // echo "<meta http-equiv='refresh' content='0;url=$url'>";
         }
         
 
@@ -881,11 +977,187 @@ class UserController extends Controller
     }
 
     public function error(Request $request) {
+
+        $response_data = $request->all();
+
         echo "Line no nowwww@"."<br>";
         echo "<pre>";
         print_r($request->all());
         echo "</pre>";
-        exit("@@@@");        
+        // exit("@@@@");
+        
+        $myObj = new BenefitPaymentGateway();
+
+        // $myObj = new iPayBenefitPipe(); 
+
+        $myObj->setAlias("test18009950");
+
+        $key_full_url = public_path().'/storage/key_files/keystore/';
+        $resource_full_url = public_path().'/storage/key_files/resource/';
+
+        $myObj->setResourcePath($resource_full_url);
+        $myObj->setKeystorePath($key_full_url);
+
+        $trandata = "";
+        $paymentID = "";
+        $result = "";
+        $responseCode = "";
+        $response = "";
+        $transactionID = "";
+        $referenceID = "";
+        $trackID = "";
+        $amount = "";
+        $UDF1 = "";
+        $UDF2 = "";
+        $UDF3 = "";
+        $UDF4 = "";
+        $UDF5 = "";
+        $authCode = "";
+        $postDate = "";
+        $errorCode = "";
+        $errorText = "";
+        
+        $trandata = isset($response_data["trandata"]) ? $response_data["trandata"] : "";
+        
+        if ($trandata != "")
+        {
+            $returnValue = $myObj->parseEncryptedRequest($trandata);
+
+            echo "Line no returnValue@"."<br>";
+            echo "<pre>";
+            print_r($returnValue);
+            echo "</pre>";
+
+            if ($returnValue == 0)
+            {
+                $paymentID = $myObj->getPaymentId();
+                $result = $myObj->getresult();
+                $responseCode = $myObj->getAuthRespCode();
+                $transactionID = $myObj->getTransId();
+                $referenceID = $myObj->getRef();
+                $trackID = $myObj->getTrackId();
+                $amount = $myObj->getAmt();
+                $UDF1 = $myObj->getUdf1();
+                $UDF2 = $myObj->getUdf2();
+                $UDF3 = $myObj->getUdf3();
+                $UDF4 = $myObj->getUdf4();
+                $UDF5 = $myObj->getUdf5();
+                $authCode = $myObj->getAuth();
+                $postDate = $myObj->getDate();
+                $errorCode = $myObj->getError();
+                $errorText = $myObj->getError_text();
+    
+            }
+            else
+            {
+                $errorText = $myObj->getError_text();
+            }
+        }
+        else if (isset($response_data["ErrorText"]))
+        {
+            echo "Line no errorrrrr@"."<br>";
+            echo "<pre>";
+            print_r($response_data["ErrorText"]);
+            echo "</pre>";
+
+            $paymentID = $response_data["paymentid"];
+            $trackID = $response_data["trackid"];
+            $amount = $response_data["amt"];
+            $UDF1 = $response_data["udf1"];
+            $UDF2 = $response_data["udf2"];
+            $UDF3 = $response_data["udf3"];
+            $UDF4 = $response_data["udf4"];
+            $UDF5 = $response_data["udf5"];
+            $errorText = $response_data["ErrorText"];
+        }
+        else
+        {
+            $errorText = "Unknown Exception";
+        }
+        
+    
+        // Remove any HTML/CSS/javascrip from the page. Also, you MUST NOT write anything on the page EXCEPT the word "REDIRECT=" (in upper-case only) followed by a URL.
+        // If anything else is written on the page then you will not be able to complete the process.
+        if ($myObj->getResult() == "CAPTURED")
+        {
+            echo("REDIRECT=https://www.yourWebsite.com/PG/approved.php");
+        }
+        else if ($myObj->getResult() == "NOT CAPTURED" || $myObj->getResult() == "CANCELED" || $myObj->getResult() == "DENIED BY RISK" || $myObj->getResult() == "HOST TIMEOUT")
+        {
+            if ($myObj->getResult() == "NOT CAPTURED")
+            {
+                switch ($myObj->getAuthRespCode())
+                {
+                    case "05":
+                        $response = "Please contact issuer";
+                        break;
+                    case "14":
+                        $response = "Invalid card number";
+                        break;
+                    case "33":
+                        $response = "Expired card";
+                        break;
+                    case "36":
+                        $response = "Restricted card";
+                        break;
+                    case "38":
+                        $response = "Allowable PIN tries exceeded";
+                        break;
+                    case "51":
+                        $response = "Insufficient funds";
+                        break;
+                    case "54":
+                        $response = "Expired card";
+                        break;
+                    case "55":
+                        $response = "Incorrect PIN";
+                        break;
+                    case "61":
+                        $response = "Exceeds withdrawal amount limit";
+                        break;
+                    case "62":
+                        $response = "Restricted Card";
+                        break;
+                    case "65":
+                        $response = "Exceeds withdrawal frequency limit";
+                        break;
+                    case "75":
+                        $response = "Allowable number PIN tries exceeded";
+                        break;
+                    case "76":
+                        $response = "Ineligible account";
+                        break;
+                    case "78":
+                        $response = "Refer to Issuer";
+                        break;
+                    case "91":
+                        $response = "Issuer is inoperative";
+                        break;
+                    default:
+                        // for unlisted values, please generate a proper user-friendly message
+                        $response = "Unable to process transaction temporarily. Try again later or try using another card.";
+                        break;
+                }
+            }
+            else if ($myObj->getResult() == "CANCELED")
+            {
+                $response = "Transaction was canceled by user.";
+            }
+            else if ($myObj->getResult() == "DENIED BY RISK")
+            {
+                $response = "Maximum number of transactions has exceeded the daily limit.";
+            }
+            else if ($myObj->getResult() == "HOST TIMEOUT")
+            {
+                $response = "Unable to process transaction temporarily. Try again later.";
+            }
+            echo "REDIRECT=https://www.yourWebsite.com/PG/declined.php";
+        }
+        else
+        {
+            //Unable to process transaction temporarily. Try again later or try using another card.
+            echo "REDIRECT=https://www.yourWebsite.com/PG/err-response.php";
+        }
     }
 
     public function accountLogin(Request $request)
