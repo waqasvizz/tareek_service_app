@@ -100,6 +100,24 @@ class ProductController extends BaseController
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);    
         }
+
+        if (isset($request_data['product_type']) && $request_data['product_type'] == 'bulk') {
+
+            if (isset($request_data['bulk_qty']) && $request_data['bulk_qty'] < 0) {
+                $error_message['error'] = 'Bulk quantity must be greater than zero.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
+            if ($request_data['max_qty'] <= $request_data['min_qty']) {
+                $error_message['error'] = 'Maximum quantity must be greater than minimum quantity.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+
+            if ($request_data['max_discount'] <= $request_data['min_discount']) {
+                $error_message['error'] = 'Maximum discount must be greater than minimum discount.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }
         
         $img_data = array();
         if (isset($request->product_image)) {
