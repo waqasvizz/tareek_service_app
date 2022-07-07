@@ -48,7 +48,7 @@ class UserBankController extends BaseController
         if ( !(isset($request_data['user_id']) && $request_data['user_id']) )
             $request_data['user_id'] = \Auth::user()->id;
         else
-            $request_data['user_id'] = $id;
+            $request_data['user_id'] = $request_data['user_id'];
 
         $response = UserBank::saveUpdateUserBank($request_data);
 
