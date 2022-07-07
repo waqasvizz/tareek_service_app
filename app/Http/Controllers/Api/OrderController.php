@@ -64,6 +64,27 @@ class OrderController extends BaseController
             }
             $data['search_filter'] = $request_data['search_filter'];
         }
+        if (isset($request_data['supplier_payment'])) {
+            if (! (($request_data['supplier_payment'] == 'yes') || ($request_data['supplier_payment'] == 'no')) ) {
+                $error_message['error'] = 'Please select a valid key yes / no for search filter.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+            $data['supplier_payment'] = $request_data['supplier_payment'];
+        }
+        if (isset($request_data['refund_requests'])) {
+            if (! (($request_data['refund_requests'] == 'yes') || ($request_data['refund_requests'] == 'no')) ) {
+                $error_message['error'] = 'Please select a valid key yes / no for search filter.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+            $data['refund_req'] = $data['refund_requests'];
+        }
+        if (isset($request_data['refund_status'])) {
+            if (! (($request_data['refund_status'] == 2) || ($request_data['refund_status'] == 3) || ($request_data['refund_status'] == 4)) ) {
+                $error_message['error'] = 'Please select a valid refund status for search filter.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+            $data['refund_status'] = $request_data['refund_status'];
+        }
         if (isset($request_data['service_id']))
             $data['service_id'] = $request_data['service_id'];
         if (isset($request_data['per_page']))
@@ -71,6 +92,7 @@ class OrderController extends BaseController
 
         $data['sender_users_join'] = true;
         $data['receiver_users_join'] = true;
+        // $data['print_query'] = true;
 
         // echo "Line no deee@"."<br>";
         // echo "<pre>";
@@ -849,8 +871,8 @@ class OrderController extends BaseController
         }
     }
 
-    public function get_available_redeem_amount($posted_data = array()) {
-
+    public function get_available_redeem_amount($posted_data = array())
+    {
         $redeem_point = isset($posted_data['redeem_point']) ? $posted_data['redeem_point'] : 0;
         $response = [
             'total_points_worth' => 0,
@@ -868,5 +890,163 @@ class OrderController extends BaseController
         }
 
         return $response;
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function mark_paid(Request $request)
+    {
+        $request_data = $request->all();
+   
+        $validator = \Validator::make($request_data, [
+            'order_id' => 'required|exists:orders,id',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+        }
+
+        $data['supplier_payment'] = 2; // 2 means paid
+        $data['update_id'] = $request_data['order_id'];
+        $response = Order::saveUpdateOrder($data);
+
+        $message = ($response->id) ? 'Supplier payment marked successfully.' : 'Something went wrong with your query.';
+        return $this->sendResponse($response, $message);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function refund_process(Request $request)
+    {
+        $request_data = $request->all();
+   
+        $validator = \Validator::make($request_data, [
+            'order_id' => 'required|exists:orders,id',
+            'refund_status' => 'required',
+            'notes' => 'required|min:10',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+        }
+
+        if (isset($request_data['refund_status'])) {
+            if (! (($request_data['refund_status'] == 3) || ($request_data['refund_status'] == 4)) ) {
+                $error_message['error'] = 'Please select a valid refund status for search filter.';
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }        
+
+        $data = array();
+        $data['id'] = $request_data['order_id'];
+        $data['refund_req'] = 'yes';
+        // $data['refund_status'] = 2; // means refund is requested.
+        $data['detail'] = true;
+        $response = Order::getOrder($data);
+
+        $message = 'You have never requested for the refund.';
+        
+        if ( isset($response->refund_status) && $response->refund_status == 'Not-Requested') 
+            $message = 'You have never requested for the refund.';
+        else if ( isset($response->refund_status) && $response->refund_status == 'Requested') 
+            $message = 'Refund request is successfully processed.';
+        else if ( isset($response->refund_status) && $response->refund_status == 'Approve') 
+            $message = 'Your refund request is already approved.';
+        else if ( isset($response->refund_status) && $response->refund_status == 'Rejected') 
+            $message = 'Your refund request is already rejected.';
+
+        if ($response) {
+
+            if ($response->refund_status == 'Requested') {
+                $data = array();
+                $data['update_id'] = $request_data['order_id'];
+                $data['refund_status'] = $request_data['refund_status']; // means refund is requested.
+                $data['refund_status_reason'] = $request_data['notes'];
+                $response = Order::saveUpdateOrder($data);
+    
+                $message = ($response->id) ? 'Refund request is successfully processed.' : 'Something went wrong with your query.';
+                return $this->sendResponse($response, $message);
+            }
+            else {
+                $error_message['error'] = $message;
+                return $this->sendError($error_message['error'], $error_message);
+            }
+        }
+        else {
+            $error_message['error'] = $message;
+            return $this->sendError($error_message['error'], $error_message);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function refund_requests(Request $request)
+    {
+        $request_data = $request->all();
+   
+        $validator = \Validator::make($request_data, [
+            'order_id' => 'required|exists:orders,id',
+            'refund_reason' => 'required|min:10',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+        }
+
+        $data = array();
+        $data['id'] = $request_data['order_id'];
+        $data['refund_req'] = 'no';
+        $data['detail'] = true;
+        $response = Order::getOrder($data);
+
+        if (!$response)
+            return $this->sendResponse([], 'Your refund request is already in progress.');
+        else {
+            $data = array();
+            $data['update_id'] = $request_data['order_id'];
+            $data['refund_req'] = 'yes';
+            $data['refund_status'] = '2'; // means refund is requested.
+            $data['refund_req_reason'] = $request_data['refund_reason'];
+            $response = Order::saveUpdateOrder($data);
+
+            $message = ($response->id) ? 'Refund payment requested successfully.' : 'Something went wrong with your query.';
+            return $this->sendResponse($response, $message);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function get_pending(Request $request)
+    {
+        $data = array();
+        $request_data =  $request->all();
+
+        $data['supplier_payment'] = 1; // 1 means pending
+        $data['without_with'] = true;
+        $data['paginate'] = 10;
+        if ( isset($request_data['page']) && $request_data['page'] ) {
+            $data['page'] = $request_data['page'];
+        }
+
+        $response = Order::getOrder($data);
+        $message = count($response) > 0 ? 'Pending orders retrieved successfully.' : 'No data found against your query.';
+
+        return $this->sendResponse($response, $message);
     }
 }

@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\OrderProduct;
+use App\Models\OrderService;
 use Illuminate\Http\Request;
 use App\Models\PaymentTransaction;
 
@@ -119,5 +123,32 @@ class PaymentTransactionController extends BaseController
             $error_message['error'] = 'Payment transaction already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function start_payment_transaction()
+    {
+        $posted_data = array();
+        $posted_data['orders_join'] = true;
+        // $posted_data['product_orders_join'] = true;
+        $posted_data['order_type'] = 'Product'; // Product or Service.
+        // $posted_data['order_products'] = 'Bulk'; // Single or Bulk.
+        $posted_data['order_status'] = 2; // all pending orders.
+        $posted_data['to_array'] = true;
+        $posted_data['with'] = true;
+        // $posted_data['to_sql'] = true;
+        // $posted_data['paginate'] = 5;
+        $response = PaymentTransaction::getPaymentTransaction($posted_data);
+
+        echo "Line no deeee@"."<br>";
+        echo "<pre>";
+        print_r($response);
+        echo "</pre>";
+        exit("@@@@");
     }
 }

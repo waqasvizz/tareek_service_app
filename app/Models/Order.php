@@ -101,6 +101,34 @@ class Order extends Model
         if (isset($posted_data['order_type'])) {
             $query = $query->where('orders.order_type', $posted_data['order_type']);
         }
+        if (isset($posted_data['supplier_payment'])) {
+            if ($posted_data['supplier_payment'] == 'no') $posted_data['supplier_payment'] = 'Pending';
+            else if ($posted_data['supplier_payment'] == 'yes') $posted_data['supplier_payment'] = 'Paid';
+            $query = $query->where('orders.supplier_payment', $posted_data['supplier_payment']);
+        }
+        if (isset($posted_data['refund_req'])) {
+            if ($posted_data['refund_req'] == 'no') $posted_data['refund_req'] = 'No';
+            else if ($posted_data['refund_req'] == 'yes') $posted_data['refund_req'] = 'Yes';
+            $query = $query->where('orders.refund_req', $posted_data['refund_req']);
+        }
+        if (isset($posted_data['refund_status'])) {
+            if ($posted_data['refund_status'] == 1) $posted_data['refund_status'] = 'Not-Requested';
+            else if ($posted_data['refund_status'] == 2) $posted_data['refund_status'] = 'Requested';
+            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Approve';
+            else if ($posted_data['refund_status'] == 4) $posted_data['refund_status'] = 'Rejected';
+            $query = $query->where('orders.refund_status', $posted_data['refund_status']);
+        }
+
+        /*
+        if (isset($posted_data['refund_req_reason'])) {
+            $data->refund_req_reason = $posted_data['refund_req_reason'];
+        }
+        if (isset($posted_data['refund_status_reason'])) {
+            $data->refund_status_reason = $posted_data['refund_status_reason'];
+        }
+        */
+
+
         if (isset($posted_data['search_filter'])) {
 
             if (isset($posted_data['order_type']) && $posted_data['order_type'] == 'Product')
@@ -283,6 +311,7 @@ class Order extends Model
             $result = $query->toSql();
             echo "Line no @"."<br>";
             echo "<pre>";
+            print_r($posted_data);
             print_r($result);
             echo "</pre>";
             exit("@@@@");
@@ -390,13 +419,41 @@ class Order extends Model
         if (isset($posted_data['points_earn'])) {
             $data->points_earn = $posted_data['points_earn'];
         }
+        if (isset($posted_data['supplier_payment'])) {
+            if ($posted_data['supplier_payment'] == 1) $posted_data['supplier_payment'] = 'Pending';
+            else if ($posted_data['supplier_payment'] == 2) $posted_data['supplier_payment'] = 'Paid';
+            $data->supplier_payment = $posted_data['supplier_payment'];
+        }
+        if (isset($posted_data['refund_req'])) {
+            if ($posted_data['refund_req'] == 1) $posted_data['refund_req'] = 'No';
+            else if ($posted_data['refund_req'] == 2) $posted_data['refund_req'] = 'Yes';
+            $data->refund_req = $posted_data['refund_req'];
+        }
+        if (isset($posted_data['refund_req_reason'])) {
+            $data->refund_req_reason = $posted_data['refund_req_reason'];
+        }
+        if (isset($posted_data['refund_status'])) {
+            if ($posted_data['refund_status'] == 1) $posted_data['refund_status'] = 'Not-Requested';
+            if ($posted_data['refund_status'] == 2) $posted_data['refund_status'] = 'Requested';
+            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Approve';
+            else if ($posted_data['refund_status'] == 4) $posted_data['refund_status'] = 'Rejected';
+            $data->refund_status = $posted_data['refund_status'];
+        }
+        if (isset($posted_data['refund_status_reason'])) {
+            $data->refund_status_reason = $posted_data['refund_status_reason'];
+        }
         
         $data->save();
-        $data = Order::getOrder([
-            'detail' => true,
-            'id' => $data->id
-        ]);
 
+        $filter = array();
+        $filter['detail'] = true;
+        $filter['id'] = $data->id;
+        
+        if (isset($posted_data['without_with']) && $posted_data['without_with']) {
+            $filter['without_with'] = true;
+        }
+
+        $data = Order::getOrder($filter);
         return $data;
     }
 

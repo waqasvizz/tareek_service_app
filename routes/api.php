@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\UserWeekDayController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMultipleAddresseController;
 use App\Http\Controllers\Api\UserCardController;
+use App\Http\Controllers\Api\UserBankController;
 use App\Http\Controllers\Api\UserDeliveryOptionController;
 use App\Http\Controllers\Api\UserStripeInformationController;
 use App\Http\Controllers\Api\PointCategorieController;
@@ -68,6 +69,7 @@ Route::middleware('auth:api')->group( function () {
     Route::post('products/{id}', [ProductController::class, 'update']);
     Route::post('user_address/{id}', [UserMultipleAddresseController::class, 'update']);
     Route::post('user_cards/{id}', [UserCardController::class, 'update']);
+    Route::post('user_banks/{id}', [UserBankController::class, 'update']);
     Route::post('user_delivery_option/{id}', [UserDeliveryOptionController::class, 'update']);
     Route::post('orders/{id}', [OrderController::class, 'update']);
     Route::post('users/{id}', [UserController::class, 'update']);
@@ -85,6 +87,11 @@ Route::middleware('auth:api')->group( function () {
     Route::get('bulk_orders/get_details', [ProductController::class, 'get_details']);
     Route::post('bulk_orders/update_orders', [ProductController::class, 'update_bulk_orders']);
 
+    Route::post('supplier_transactions/mark_paid', [OrderController::class, 'mark_paid']);
+    Route::get('supplier_transactions/get_pending', [OrderController::class, 'get_pending']);
+    Route::post('transactions/refund', [OrderController::class, 'refund_requests']);
+    Route::post('transactions/refund_action', [OrderController::class, 'refund_process']);
+
     //resouce routes
     Route::resource('point_categories', PointCategorieController::class);
     Route::resource('product_reviews', ProductReviewController::class);
@@ -93,6 +100,7 @@ Route::middleware('auth:api')->group( function () {
     Route::resource('orders', OrderController::class);
     Route::resource('user_delivery_option', UserDeliveryOptionController::class);
     Route::resource('user_cards', UserCardController::class);
+    Route::resource('user_banks', UserBankController::class);
     Route::resource('user_address', UserMultipleAddresseController::class);
     Route::resource('users', UserController::class);
     Route::resource('user_week_days', UserWeekDayController::class);

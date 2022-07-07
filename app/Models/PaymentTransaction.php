@@ -29,9 +29,9 @@ class PaymentTransaction extends Model
         $columns = ['payment_transactions.*'];
         $select_columns = array_merge($columns, []);
 
-        $query = PaymentTransaction::latest()
+        $query = PaymentTransaction::latest();
             // ->with('order')->with('service');
-            ->with('orders_user_card_id');
+            // ->with('orders_user_card_id');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('payment_transactions.id', $posted_data['id']);
