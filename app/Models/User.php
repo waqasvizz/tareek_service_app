@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->hasMany(UserAssets::class);
     }
 
+    public function user_bank()
+    {
+        return $this->hasOne(UserBank::class);
+    }
+
     public function userAddress()
     {
         return $this->hasMany(UserMultipleAddresse::class);
@@ -85,6 +90,7 @@ class User extends Authenticatable
         $query = User::latest()
                     ->with('role')
                     ->with('userAssets')
+                    ->with('user_bank')
                     ->with('userAddress')
                     ->with('fcm_tokens');
                 

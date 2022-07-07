@@ -1038,7 +1038,7 @@ class OrderController extends BaseController
         $request_data =  $request->all();
 
         $data['supplier_payment'] = 1; // 1 means pending
-        $data['without_with'] = true;
+        // $data['without_with'] = true;
         $data['paginate'] = 10;
         if ( isset($request_data['page']) && $request_data['page'] ) {
             $data['page'] = $request_data['page'];

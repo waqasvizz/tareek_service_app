@@ -47,7 +47,7 @@ class Order extends Model
 
     public function senderDetails()
     {
-        return $this->belongsTo('App\Models\User', 'sender_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image']);
+        return $this->belongsTo('App\Models\User', 'sender_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image'])->with('user_bank');
     }
 
     public function receiverDetails()
