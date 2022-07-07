@@ -52,7 +52,7 @@ class Order extends Model
 
     public function receiverDetails()
     {
-        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image', 'company_name']);
+        return $this->belongsTo('App\Models\User', 'receiver_id')->select(['id', 'role_id', 'name', 'email', 'phone_number', 'profile_image', 'company_name'])->with('user_bank');
     }
 
     public function getOrder($posted_data = array())
