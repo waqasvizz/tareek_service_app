@@ -467,42 +467,42 @@ class UserController extends Controller
     
     public function testing()
     {
-        $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
-            'user_id' => 1,
-            'detail' => true
-        ]);
+        // $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //     'user_id' => 1,
+        //     'detail' => true
+        // ]);
  
 
-        if($check_admin_stripe_info->stripe_mode == 'Test'){
-            $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
-        }else{
-            $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
-        }
+        // if($check_admin_stripe_info->stripe_mode == 'Test'){
+        //     $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
+        // }else{
+        //     $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
+        // }
 
         // $stripe = new \Stripe\StripeClient(
         //     'sk_test_51KqDTlGLDz2RvoIA2NcYVf99vTvpcElhoPotX7G8lu0kEsVSONC2mItT8P4pTMx3gUmuQAK1DToNsrZjwMKix0Kd00tmz8yEES'
         //   );
 
-        $response = $admin_stripe->accounts->update(
-            'acct_1LGKKQ4cJ1PGcErj',
-            ['tos_acceptance' => ['date' => 1609798905, 'ip' => '8.8.8.8']]
-          );
+        // $response = $admin_stripe->accounts->update(
+        //     'acct_1LGKKQ4cJ1PGcErj',
+        //     ['tos_acceptance' => ['date' => 1609798905, 'ip' => '8.8.8.8']]
+        //   );
 
-        $response = $admin_stripe->accounts->create([
-            'type' => 'custom',
-            'country' => 'US',
-            'email' => 'waqas.vizz86@gmail.com',
-            'capabilities' => [
-              'card_payments' => ['requested' => true],
-              'transfers' => ['requested' => true],
-            ],
-          ]);
+        // $response = $admin_stripe->accounts->create([
+        //     'type' => 'custom',
+        //     'country' => 'US',
+        //     'email' => 'waqas.vizz86@gmail.com',
+        //     'capabilities' => [
+        //       'card_payments' => ['requested' => true],
+        //       'transfers' => ['requested' => true],
+        //     ],
+        //   ]);
 
-          echo "Line noqaqqqqq @"."<br>";
-          echo "<pre>";
-          print_r($response);
-          echo "</pre>";
-          exit("@@@@");
+        //   echo "Line noqaqqqqq @"."<br>";
+        //   echo "<pre>";
+        //   print_r($response);
+        //   echo "</pre>";
+        //   exit("@@@@");
 
 
         // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
@@ -537,7 +537,7 @@ class UserController extends Controller
         // $Pipe->setudf5("set value 5");
 
         // $isSuccess = $Pipe->performeTransaction();
-        // // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
         // if($isSuccess==1){
         //     echo "Okaaa";
         //     // header('location:'.$benefit_gateway->getresult());
@@ -608,8 +608,8 @@ class UserController extends Controller
         // $benefit_gateway->setcurrencyCode("048");
 
         // modify the following to reflect your pages URLs
-        // $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
-        // $benefit_gateway->seterrorURL("https://www.yourWebsite.com/PG/error.php");
+        $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
+        $benefit_gateway->seterrorURL("https://www.yourWebsite.com/PG/error.php");
 
         
         // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/payment_response/response.php");
@@ -675,7 +675,7 @@ class UserController extends Controller
         }
         else {
             $url=$benefit_gateway->getwebAddress();
-            // echo "<meta http-equiv='refresh' content='0;url=$url'>";
+            echo "<meta http-equiv='refresh' content='0;url=$url'>";
         }
         
 

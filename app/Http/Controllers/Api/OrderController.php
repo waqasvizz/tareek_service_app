@@ -956,10 +956,10 @@ class OrderController extends BaseController
         
         if ( isset($response->refund_status) && $response->refund_status == 'Not-Requested') 
             $message = 'You have never requested for the refund.';
-        else if ( isset($response->refund_status) && $response->refund_status == 'Requested') 
+        else if ( isset($response->refund_status) && $response->refund_status == 'Requested')
             $message = 'Refund request is successfully processed.';
-        else if ( isset($response->refund_status) && $response->refund_status == 'Approve') 
-            $message = 'Your refund request is already approved.';
+        else if ( isset($response->refund_status) && $response->refund_status == 'Paid') 
+            $message = 'Your refund request is already paid.';
         else if ( isset($response->refund_status) && $response->refund_status == 'Rejected') 
             $message = 'Your refund request is already rejected.';
 

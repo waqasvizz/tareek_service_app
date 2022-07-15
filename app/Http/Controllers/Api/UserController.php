@@ -308,7 +308,7 @@ class UserController extends BaseController
         $request_data = $request->all();
    
         $validator = \Validator::make($request_data, [
-            'user_id'      => 'required|in:1',
+            'user_id'      => 'required',
             'result_by'    => 'required|in:gross,order,supplier',
         ],[
             'user_id.in' => 'Sorry, only admin have rights to access this info.'
@@ -327,15 +327,17 @@ class UserController extends BaseController
             $posted_data['sumBy_multiple_column'] = true;
             $posted_data['sumBy_multiple_columnNames'] = ['admin_gross' => 'admin_gross_sum', 'supplier_gross' => 'supplier_gross_sum'];
         }
+        else if ($request_data['result_by'] == 'order') {
+            // $posted_data['without_with'] = true;
+            $posted_data['paginate'] = 10;
+        }
         else if ($request_data['result_by'] == 'supplier') {
             // $posted_data['without_with'] = true;
             $posted_data['show_only_sums'] = true;
             $posted_data['groupBy_value'] = 'orders.receiver_id';
             $posted_data['groupBy_with_sum'] = ['admin_gross' => 'admin_gross_sum', 'supplier_gross' => 'supplier_gross_sum'];
-        }
-        else if ($request_data['result_by'] == 'order') {
-            // $posted_data['without_with'] = true;
-            $posted_data['paginate'] = 10;
+            if ( \Auth::user()->role_id == 3 )
+                $posted_data['receiver_id'] = \Auth::user()->id;
         }
 
         if ($request_data['result_by'] != 'order')

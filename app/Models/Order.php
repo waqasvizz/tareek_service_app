@@ -114,7 +114,7 @@ class Order extends Model
         if (isset($posted_data['refund_status'])) {
             if ($posted_data['refund_status'] == 1) $posted_data['refund_status'] = 'Not-Requested';
             else if ($posted_data['refund_status'] == 2) $posted_data['refund_status'] = 'Requested';
-            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Approve';
+            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Paid';
             else if ($posted_data['refund_status'] == 4) $posted_data['refund_status'] = 'Rejected';
             $query = $query->where('orders.refund_status', $posted_data['refund_status']);
         }
@@ -435,7 +435,7 @@ class Order extends Model
         if (isset($posted_data['refund_status'])) {
             if ($posted_data['refund_status'] == 1) $posted_data['refund_status'] = 'Not-Requested';
             if ($posted_data['refund_status'] == 2) $posted_data['refund_status'] = 'Requested';
-            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Approve';
+            else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Paid';
             else if ($posted_data['refund_status'] == 4) $posted_data['refund_status'] = 'Rejected';
             $data->refund_status = $posted_data['refund_status'];
         }
