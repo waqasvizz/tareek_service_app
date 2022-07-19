@@ -148,6 +148,34 @@ if (! function_exists('split_metadata_strings')) {
     }
 }
 
+if (! function_exists('secureBankInfo')) {
+    function secureBankInfo($string, $type)
+    {
+        $length = strlen($string);
+        if ($length <= 0)
+            return "";
+
+        $str_array = str_split($string);
+        if ($type == "card") {
+            foreach ($str_array as $key => $string) {
+                if ($key > 3 && $key < 12)
+                    $str_array[$key] = '*';
+            }
+        }
+        else if ($type == "cvc" || $type == "year") {
+            foreach ($str_array as $key => $string) {
+                if ($key == 0)
+                    $str_array[$key] = '*';
+                if ($type == "year" && $key == 1 )
+                    $str_array[$key] = '*';
+            }
+        }
+
+        $secure_string = implode("",$str_array);
+        return $secure_string;
+    }
+}
+
 /* LAST UPDATED ON 19 May, 2022 */
 if (! function_exists('getSpecificColumnsFromArray')) {
     function getSpecificColumnsFromArray(array $array, $keys)

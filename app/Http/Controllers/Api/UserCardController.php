@@ -16,10 +16,16 @@ class UserCardController extends BaseController
     public function index(Request $request)
     {
         $request_data = $request->all();
-        // $request_data['paginate'] = 10;
+        if (isset($request_data['user_id']))
+            $request_data['user_id'] = $request_data['user_id'];
+        else {
+            $error_message['error'] = 'User id is not provided in request data.';
+            return $this->sendError($error_message['error'], $error_message);  
+        }
         if (isset($request_data['per_page']))
             $request_data['paginate'] = $request_data['per_page'];
-        
+
+        $request_data['to_array'] = true;
         $response = UserCard::getUserCard($request_data);
         $message = count($response) > 0 ? 'User Card retrieved successfully.' : 'User Card not found against your query.';
 
@@ -33,21 +39,28 @@ class UserCardController extends BaseController
      */
     public function store(Request $request)
     {
-        $request_data = $request->all(); 
-   
+        $request_data = $request->all();
         $validator = \Validator::make($request_data, [
             'card_name'    => 'required',
-            'card_number'    => 'required',
+            'card_number'    => 'required|max:16',
             'exp_month'    => 'required',
-            'exp_year'    => 'required',
-            'cvc_number'    => 'required',
+            'exp_year'    => 'required|max:4|min:4',
+            'cvc_number'    => 'required|max:4|min:3',
         ]);
    
         if($validator->fails()){
-            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
+            return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
 
-        $request_data['user_id'] = \Auth::user()->id;
+        $card_details = UserCard::getUserCard(['user_id' => \Auth::user()->id, 'detail' => true]);
+        if ($card_details) {
+            $error_message['error'] = 'A bank card already belongs to this user.';
+            return $this->sendError($error_message['error'], $error_message);
+        }
+        else {
+            $request_data['user_id'] = \Auth::user()->id;
+        }
+        
         $response = UserCard::saveUpdateUserCard($request_data);
 
         if ( isset($response->id) ){
@@ -83,16 +96,18 @@ class UserCardController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id = 0)
     {
-        $request_data = $request->all(); 
-   
+        $request_data = $request->all();
+        $request_data['update_id'] = $id;
+      
         $validator = \Validator::make($request_data, [
+            'update_id'    => 'required|exists:user_cards,id',
             'card_name'    => 'required',
-            'card_number'    => 'required',
+            'card_number'    => 'required|max:16',
             'exp_month'    => 'required',
-            'exp_year'    => 'required',
-            'cvc_number'    => 'required',
+            'exp_year'    => 'required|max:4|min:4',
+            'cvc_number'    => 'required|max:4|min:3',
         ]);
    
         if($validator->fails()){
@@ -100,9 +115,12 @@ class UserCardController extends BaseController
         }
 
         $request_data['update_id'] = $id;
+        $request_data['user_id'] = \Auth::user()->id;
+        $request_data['to_array'] = true;
+
         $response = UserCard::saveUpdateUserCard($request_data);
 
-        if ( isset($response->id) ){
+        if ( isset($response[0]['id']) ){
             return $this->sendResponse($response, 'User Card is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';

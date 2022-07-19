@@ -25,10 +25,10 @@ class Order extends Model
         return $this->belongsTo(UserDeliveryOption::class);
     }
 
-    public function user_card()
-    {
-        return $this->belongsTo(UserCard::class);
-    }
+    // public function user_card()
+    // {
+    //     return $this->belongsTo(UserCard::class);
+    // }
 
     public function order_product()
     {
@@ -65,7 +65,7 @@ class Order extends Model
             ->with('receiverDetails')
             ->with('user_multiple_address')
             ->with('user_delivery_option')
-            ->with('user_card')
+            // ->with('user_card')
             ->with('order_product')
             ->with('order_service')
             ->with('clearence_documents');
@@ -117,6 +117,11 @@ class Order extends Model
             else if ($posted_data['refund_status'] == 3) $posted_data['refund_status'] = 'Paid';
             else if ($posted_data['refund_status'] == 4) $posted_data['refund_status'] = 'Rejected';
             $query = $query->where('orders.refund_status', $posted_data['refund_status']);
+        }
+        if (isset($posted_data['payment_status'])) {
+            if ($posted_data['payment_status'] == 'False') $posted_data['payment_status'] = 1;
+            else if ($posted_data['payment_status'] == 'True') $posted_data['payment_status'] = 2;
+            $query = $query->where('orders.payment_status', $posted_data['payment_status']);
         }
 
         /*

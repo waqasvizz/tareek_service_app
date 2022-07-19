@@ -250,7 +250,10 @@ class UserController extends BaseController
 
         if ($response->role->id == 1 || $response->role->id == 3) {
             $posted_data = array();
-            $posted_data['count'] = true;
+            // $posted_data['count'] = true;
+
+            $posted_data['sumBy_column'] = true;
+            $posted_data['sumBy_columnName'] = 'total_amount_captured';
             
             if ($response->role->id == 3) {
                 $posted_data['receiver_user_id'] = $request_data['user_id'];
@@ -333,11 +336,18 @@ class UserController extends BaseController
         }
         else if ($request_data['result_by'] == 'supplier') {
             // $posted_data['without_with'] = true;
-            $posted_data['show_only_sums'] = true;
-            $posted_data['groupBy_value'] = 'orders.receiver_id';
+            if ( $request_data['user_id'] == 1 )
+                $posted_data['groupBy_value'] = 'orders.receiver_id';
+            else
+                $posted_data['receiver_id'] = $request_data['user_id']; //\Auth::user()->id;
+
+            $posted_data['payment_status'] = 2; // means all ture statuses orders
+            // $posted_data['show_only_sums'] = true;
+            
             $posted_data['groupBy_with_sum'] = ['admin_gross' => 'admin_gross_sum', 'supplier_gross' => 'supplier_gross_sum'];
-            if ( \Auth::user()->role_id == 3 )
-                $posted_data['receiver_id'] = \Auth::user()->id;
+            // if ( \Auth::user()->role_id == 3 ) {
+                // $posted_data['receiver_id'] = \Auth::user()->id;
+            // }
         }
 
         if ($request_data['result_by'] != 'order')

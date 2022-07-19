@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Service;
 use App\Models\User;
 
+use App\Models\UserCard;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderProduct;
@@ -30,12 +31,14 @@ class Controller extends BaseController
     public $RoleObj;
     public $ServiceObj;
     public $UserObj;
+    public $UserCardObj;
 
     public function __construct() {
         
         $this->RoleObj = new Role();
         $this->ServiceObj = new Service();
         $this->UserObj = new User();
+        $this->UserCardObj = new UserCard();
     }
 
     public function firebase() {

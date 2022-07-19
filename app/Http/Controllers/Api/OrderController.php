@@ -20,6 +20,7 @@ use App\Models\UserDeliveryOption;
 use App\Models\FCM_Token;
 use App\Models\ClearenceService;
 use App\Models\Notification;
+use App\Models\UserCard;
 use App\Models\UserStripeInformation;
 
 
@@ -602,7 +603,7 @@ class OrderController extends BaseController
      */
     public function update(Request $request, $id = 0)
     {
-        $request_data = $request->all(); 
+        $request_data = $request->all();
         $request_data['update_id'] = $id;
    
         $validator = \Validator::make($request_data, [
@@ -630,6 +631,8 @@ class OrderController extends BaseController
         // }
 
         $order_detail = Order::getOrder(['id' => $id, 'detail' => true]);
+        $card_details = UserCard::getUserCard(['user_id' => $order_detail->sender_id, 'to_array' => true, 'card_info' => 'decrypted']);
+
         if($request_data['order_status'] == 2){
 
             if ( isset($order_detail) && $order_detail->payment_status == 'False' ) { // False means no payment done yet now against this order.
@@ -676,10 +679,10 @@ class OrderController extends BaseController
     
                     $create_token_res = $admin_stripe->tokens->create([
                         'card' => [
-                            'number' => $order_detail->user_card->card_number,
-                            'exp_month' => $order_detail->user_card->exp_month,
-                            'exp_year' => $order_detail->user_card->exp_year,
-                            'cvc' => $order_detail->user_card->cvc_number
+                            'number' => $card_details[0]['card_number'],
+                            'exp_month' => $card_details[0]['exp_month'],
+                            'exp_year' => $card_details[0]['exp_year'],
+                            'cvc' => $card_details[0]['cvc_number']
                         ],
                     ]);
                     $card_tok = $create_token_res->id;
@@ -703,10 +706,10 @@ class OrderController extends BaseController
     
                     $create_token_res = $provider_stripe->tokens->create([
                         'card' => [
-                            'number' => $order_detail->user_card->card_number,
-                            'exp_month' => $order_detail->user_card->exp_month,
-                            'exp_year' => $order_detail->user_card->exp_year,
-                            'cvc' => $order_detail->user_card->cvc_number
+                            'number' => $card_details[0]['card_number'],
+                            'exp_month' => $card_details[0]['exp_month'],
+                            'exp_year' => $card_details[0]['exp_year'],
+                            'cvc' => $card_details[0]['cvc_number']
                         ],
                     ]);
                     $card_tok = $create_token_res->id;

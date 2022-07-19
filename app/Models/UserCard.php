@@ -4,13 +4,62 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Crypt;
 
 class UserCard extends Model
 {
     use HasFactory;
 
+    public function getCardNameAttribute($value) {
+        return $value == null ? $value : ucfirst($value);
+    }
+
+    public function setCardNameAttribute($value) {
+        $this->attributes['card_name'] = $value;
+    }
+
+    public function getCardNumberAttribute($value) {
+        if ($value != null || $value != "") {
+            $value = Crypt::decrypt($value);
+            return $value;
+        }
+        else return null;
+    }
+
+    public function setCardNumberAttribute($value) {
+        $this->attributes['card_number'] = Crypt::encrypt($value);
+    }
+
+    public function getCvcNumberAttribute($value) {
+        if ($value != null || $value != "") {
+            $value = Crypt::decrypt($value);
+            return $value;
+        }
+        else return null;
+    }
+
+    public function setCvcNumberAttribute($value) {
+        $this->attributes['cvc_number'] = Crypt::encrypt($value);
+    }
+
+    public function getExpYearAttribute($value) {
+        if ($value != null || $value != "") {
+            $value = Crypt::decrypt($value);
+            return $value;
+
+            // if (UserCard::getMode() == "encrypted") $str_array = secureBankInfo($value, "year");
+            // else $str_array = $value;
+            // return $str_array;
+        }
+        else return null;
+    }
+
+    public function setExpYearAttribute($value) {
+        $this->attributes['exp_year'] = Crypt::encrypt($value);
+    }
+
     public function getUserCard($posted_data = array())
-    {
+    {    
         $query = UserCard::latest();
 
         if (isset($posted_data['id'])) {
@@ -36,14 +85,24 @@ class UserCard extends Model
                 $result = $query->first();
             } else if (isset($posted_data['count'])) {
                 $result = $query->count();
+            } else if (isset($posted_data['to_array'])) {
+                $result = $query->get()->toArray();
             } else {
                 $result = $query->get();
             }
         }
+
+        if ( !(isset($posted_data['card_info']) && $posted_data['card_info'] == "decrypted") ) {
+            if (array_key_exists('card_number', $result[0]))
+                $result[0]['card_number'] = secureBankInfo($result[0]['card_number'], 'card');
+            if (array_key_exists('cvc_number', $result[0]))
+                $result[0]['cvc_number'] = secureBankInfo($result[0]['cvc_number'], 'cvc');
+            if (array_key_exists('exp_year', $result[0]))
+                $result[0]['exp_year'] = secureBankInfo($result[0]['exp_year'], 'year');
+        }
+
         return $result;
     }
-
-
 
     public function saveUpdateUserCard($posted_data = array())
     {
@@ -73,6 +132,8 @@ class UserCard extends Model
         }
 
         $data->save();
+        $data = UserCard::getUserCard(['id' => $data->id, 'to_array' => true]);
+
         return $data;
     }
 
