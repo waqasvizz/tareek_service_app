@@ -37,6 +37,9 @@
         },
         "files": [
             "app/Helpers/common.php"
+        ],
+        "classmap": [
+            "app/libraries/BenefitPaymentGateway/"
         ]
     },
     "autoload-dev": {

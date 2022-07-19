@@ -294,6 +294,18 @@ class UserController extends BaseController
             }
             
             $data['requests']['total'] = Order::getOrder($posted_data);
+
+            if ($response->role->id == 3) {
+                $posted_data = array();
+                $posted_data['receiver_id'] = $response->id;
+                $posted_data['without_with'] = true;
+                $posted_data['supplier_payment'] = 'no';
+                $posted_data['sumBy_column'] = true;
+                $posted_data['sumBy_columnName'] = 'supplier_gross';
+                $posted_data['order_status_not_in'] = [1]; // means only order 2 status will be fetched which are accepted
+
+                $data['payments']['pending'] = Order::getOrder($posted_data);
+            }                
         }
         
         return $this->sendResponse($data, 'Dashboard items successfully fetched.');

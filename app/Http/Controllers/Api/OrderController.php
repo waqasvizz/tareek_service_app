@@ -1041,6 +1041,12 @@ class OrderController extends BaseController
         $request_data =  $request->all();
 
         $data['supplier_payment'] = 1; // 1 means pending
+        $data['payment_status'] = 'True'; // True means payment is done
+        
+        if (\Auth::user()->id != 1) {
+            $data['receiver_id'] = \Auth::user()->id;
+        }
+
         // $data['without_with'] = true;
         $data['paginate'] = 10;
         if ( isset($request_data['page']) && $request_data['page'] ) {
