@@ -1,12 +1,19 @@
 <?php
+
+   /**
+    *  @author  DANISH HUSSAIN <danishhussain9525@hotmail.com>
+    *  @link    Author Website: https://danishhussain.w3spaces.com/
+    *  @since   2020-03-01
+   **/
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserCard;
+use App\Models\CountriesMetadata;
 
-class UserCardController extends BaseController
+class CountriesMetadataController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -26,8 +33,8 @@ class UserCardController extends BaseController
             $request_data['paginate'] = $request_data['per_page'];
 
         $request_data['to_array'] = true;
-        $response = UserCard::getUserCard($request_data);
-        $message = count($response) > 0 ? 'User Card retrieved successfully.' : 'User Card not found against your query.';
+        $response = CountriesMetadata::getCountriesMetadata($request_data);
+        $message = count($response) > 0 ? 'Countries data retrieved successfully.' : 'Countries data not found against your query.';
 
         return $this->sendResponse($response, $message);
     }
@@ -41,33 +48,34 @@ class UserCardController extends BaseController
     {
         $request_data = $request->all();
         $validator = \Validator::make($request_data, [
-            'card_name'    => 'required',
-            'card_number'    => 'required|max:16',
-            'exp_month'    => 'required',
-            'exp_year'    => 'required|max:4|min:4',
-            'cvc_number'    => 'required|max:4|min:3',
+            'name'    => 'required',
+            'code'    => 'required',
+            'iso_code'    => 'required',
+            'state_required'    => 'required',
+            'postcode_required'    => 'required',
+            'intl_calling_number'    => 'required',
         ]);
    
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);
         }
 
-        $card_details = UserCard::getUserCard(['user_id' => \Auth::user()->id, 'to_array' => true]);
-        if ($card_details) {
-            $error_message['error'] = 'A bank card already belongs to this user.';
-            return $this->sendError($error_message['error'], $error_message);
-        }
-        else {
-            $request_data['user_id'] = \Auth::user()->id;
-        }
+        // $card_details = CountriesMetadata::getCountriesMetadata(['user_id' => \Auth::user()->id, 'to_array' => true]);
+        // if ($card_details) {
+        //     $error_message['error'] = 'A bank card already belongs to this user.';
+        //     return $this->sendError($error_message['error'], $error_message);
+        // }
+        // else {
+        //     $request_data['user_id'] = \Auth::user()->id;
+        // }
         
-        $response = UserCard::saveUpdateUserCard($request_data);
+        $response = CountriesMetadata::saveUpdateCountriesMetadata($request_data);
 
-        if ( isset($response[0]['id']) ){
-            return $this->sendResponse($response, 'User Card is successfully added.');
+        if ( isset($response->id) ){
+            return $this->sendResponse($response, 'Countries data is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
-            return $this->sendError($error_message['error'], $error_message);  
+            return $this->sendError($error_message['error'], $error_message);
         }
     } 
    
@@ -79,14 +87,14 @@ class UserCardController extends BaseController
      */
     public function show($id)
     {
-        $response = UserCard::find($id);
+        $response = CountriesMetadata::find($id);
   
         if (is_null($response)) {
-            $error_message['error'] = 'User Card not found.';
+            $error_message['error'] = 'Countries data not found.';
             return $this->sendError($error_message['error'], $error_message);  
         }
    
-        return $this->sendResponse($response, 'User Card retrieved successfully.');
+        return $this->sendResponse($response, 'Countries data retrieved successfully.');
     }
     
     /**
@@ -118,10 +126,10 @@ class UserCardController extends BaseController
         $request_data['user_id'] = \Auth::user()->id;
         $request_data['to_array'] = true;
 
-        $response = UserCard::saveUpdateUserCard($request_data);
+        $response = CountriesMetadata::saveUpdateCountriesMetadata($request_data);
 
         if ( isset($response[0]['id']) ){
-            return $this->sendResponse($response, 'User Card is successfully updated.');
+            return $this->sendResponse($response, 'Countries data is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -136,12 +144,12 @@ class UserCardController extends BaseController
      */
     public function destroy($id)
     {
-        $response = UserCard::deleteUserCard($id);
+        $response = CountriesMetadata::deleteCountriesMetadata($id);
         if($response) {
-            return $this->sendResponse([], 'User Card deleted successfully.');
+            return $this->sendResponse([], 'Countries data deleted successfully.');
         }
         else {
-            $error_message['error'] = 'User Card already deleted / Not found in database.';
+            $error_message['error'] = 'Countries data already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
     }

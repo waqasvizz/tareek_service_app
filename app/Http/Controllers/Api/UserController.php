@@ -10,6 +10,8 @@ use App\Models\Service;
 use App\Models\Product;
 use App\Models\Notification;
 use App\Models\FCM_Token;
+use App\Models\CountriesMetadata;
+use App\Models\UserMultipleAddresse;
 use App\Models\PaymentTransaction;
 use App\Models\Order;
 
@@ -89,11 +91,11 @@ class UserController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id = 0)
     {
         $request_data = $request->all(); 
         $request_data['update_id'] = $id;
-   
+    
         $validator = \Validator::make($request_data, [
             'update_id' => 'required|exists:users,id',
             // 'full_name'    => 'required',
@@ -104,8 +106,7 @@ class UserController extends BaseController
         if($validator->fails()){
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
-
-
+        
         if (isset($request->profile_image)) {
             
             $allowedfileExtension = ['jpg','jpeg','png'];

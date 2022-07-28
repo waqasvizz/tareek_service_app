@@ -106,6 +106,7 @@ Route::get('process_max_discounts', [Controller::class, 'calculate_orders_max_di
 
 // Auth::routes();
 Route::get('/test', [UserController::class, 'testing']);
+Route::get('/payment-test', [UserController::class, 'benefit_testing']);
 Route::get('/response', [UserController::class, 'response']);
 Route::post('/error', [UserController::class, 'error']);
 // Route::get('/', [UserController::class, 'welcome']);

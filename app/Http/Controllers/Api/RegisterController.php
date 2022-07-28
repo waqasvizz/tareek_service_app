@@ -17,6 +17,8 @@ use App\Models\Notification;
 use App\Models\FCM_Token;
 use App\Models\EmailMessage;
 use App\Models\EmailLogs;
+use App\Models\UserMultipleAddresse;
+use App\Models\CountriesMetadata;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -31,12 +33,17 @@ class RegisterController extends BaseController
     {
         $posted_data = $request->all();
         $rules = array(
-            'role'              => 'required',
+            'role'              => 'required|integer|in:2,3,4',
+            'city'              => $posted_data['role'] == 3 ? 'required_without_all:state' : 'nullable',
+            'state'             => $posted_data['role'] == 3 ? 'required_without_all:city' : 'nullable',
+            'address'           => $posted_data['role'] == 3 ? 'required|max:100' : 'nullable',
+            'title'             => $posted_data['role'] == 3 ? 'required|max:100' : 'nullable',
+            'postal_code'       => $posted_data['role'] == 3 ? 'required|max:100' : 'nullable',
+            'country'           => $posted_data['role'] == 3 ? 'required|max:100' : 'nullable',
             'user_type'         => 'required',
             'full_name'         => 'nullable|max:50',
             // 'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable',
-            'address'           => 'nullable|max:100',
             'email'             => $posted_data['user_type'] != 'app' ? 'required|email' : 'required|email|unique:users',
             'phone_number'      => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'company_name'      => 'nullable|max:50',
@@ -77,10 +84,10 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);
             }
 
-            if( $posted_data['role'] != 2 && $posted_data['role'] != 3 && $posted_data['role'] != 4 ){
-                $error_message['error'] = 'You entered the invalid role.';
-                return $this->sendError($error_message['error'], $error_message);  
-            }
+            // if( $posted_data['role'] != 2 && $posted_data['role'] != 3 && $posted_data['role'] != 4 ){
+            //     $error_message['error'] = 'You entered the invalid role.';
+            //     return $this->sendError($error_message['error'], $error_message);  
+            // }
 
             if($posted_data['role'] != 2 && isset($posted_data['user_type']) && $posted_data['user_type'] != 'app') {
                 $error_message['error'] = 'Sorry, only customers can login using social accounts.';
@@ -287,6 +294,19 @@ class RegisterController extends BaseController
                 return $this->sendError($error_message['error'], $error_message);
             }
 
+            if($posted_data['role'] == 3 && (isset($posted_data['country']) || $posted_data['country'])){
+                
+                $country_arr = array();
+                $country_arr['name'] = $posted_data['country'];
+                $country_arr['detail'] = true;
+                $country_data = CountriesMetadata::getCountriesMetadata($country_arr);
+                
+                if ( !isset($country_data->id) ) {
+                    $error_message['error'] = 'Please enter the valid country name for the Supplier.';
+                    return $this->sendError($error_message['error'], $error_message);  
+                }
+            }
+
             $posted_data['account_status'] = $posted_data['role'] == 3 ? 2 : 1;
             $posted_data['user_type'] = 1; //app
 
@@ -315,6 +335,17 @@ class RegisterController extends BaseController
             
             $message = ($user_id) > 0 ? 'User is successfully registered.' : 'Something went wrong during registration.';
             if ($user_id) {
+
+                if ($posted_data['role'] == 3) {
+                    $address_arr['user_id'] = $user_id;
+                    $address_arr['title'] = $posted_data['title'];
+                    $address_arr['address'] = $posted_data['address'];
+                    $address_arr['country'] = $posted_data['country'];
+                    $address_arr['city'] = isset($posted_data['city']) ? $posted_data['city'] : NULL;
+                    $address_arr['state'] = isset($posted_data['state']) ? $posted_data['state'] : NULL;
+                    $address_arr['postal_code'] = $posted_data['postal_code'];
+                    $data = UserMultipleAddresse::saveUpdateUserMultipleAddresse($address_arr);
+                }
 
                 if (isset($request->company_documents)) {
                     $allowedfileExtension = ['jpeg','jpg','png','pdf'];

@@ -10,11 +10,15 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Service;
 use App\Models\UserStripeInformation;
+use App\Models\CountriesMetadata;
+use App\Services\SoapClients\SoapLocationClient;
+use App\Services\SoapClients\SoapRatesClient;
 use BenefitPaymentGateway;
 use Validator;
 use Session;
 use DB;
 use Auth;
+use SoapClient;
 
 class UserController extends Controller
 {
@@ -465,8 +469,197 @@ class UserController extends Controller
         // return redirect()->back();
     }
     
-    public function testing()
+    public function benefit_testing(Request $request)
     {
+        return "Deeeeee";
+    }
+    
+    public function testing(SoapLocationClient $soapLocationClient, SoapRatesClient $soapRateClient)
+    {
+        
+
+        $params = array(
+            // 'ClientInfo' => config('services.soap.ClientInfo'),
+            'ClientInfo'  			=> array(
+                'AccountCountryCode'	=> 'BH',
+                'AccountEntity'		 	=> 'BAH',
+                'AccountNumber'		 	=> '20000068',
+                'AccountPin'		 	=> '543543',
+                'UserName'			 	=> 'reem@reem.com',
+                'Password'			 	=> '123456789',
+                'Version'			 	=> 'v1.0',
+                'Source'                => NULL
+            ),
+            'Transaction' => array(
+                'Reference1' => '001',
+                // 'Reference2' => '002',
+                // 'Reference3' => '003',
+                // 'Reference4' => '004',
+                // 'Reference5' => '005'
+            ),
+            'OriginAddress' => array(
+                'City' => 'Muharraq',
+                'CountryCode' => 'BH'
+            ),
+            
+            'DestinationAddress' => array(
+                'City' => 'Muharraq',
+                'CountryCode' => 'BH'
+            ),
+    
+            'ShipmentDetails' => array(
+                'PaymentType'			 => 'P',
+                'ProductGroup'			 => 'DOM',
+                'ProductType'			 => 'ONP',
+                'ActualWeight' 			 => array('Value' => 5, 'Unit' => 'KG'),
+                'ChargeableWeight' 	     => array('Value' => 5, 'Unit' => 'KG'),
+                'NumberOfPieces'		 => 2
+            )
+        );
+
+            
+        
+        // calling the method and printing results
+        try {
+            // ValidateAddress
+            // $response = $soapClient::addressValidation($params);
+            // $response = $soapLocationClient::getAllCountries($params);
+
+            echo "Line no Params@"."<br>";
+            echo "<pre>";
+            print_r($params);
+            echo "</pre>";
+
+            $response = $soapRateClient::calculateShippingRate($params);
+
+            echo "Line no Response@"."<br>";
+            echo "<pre>";
+            print_r($response);
+            echo "</pre>";
+            exit("@@@@");
+
+            /*
+
+            if (isset($posted_data['name'])) {
+                $data->name = $posted_data['name'];
+            }
+            if (isset($posted_data['code'])) {
+                $data->code = $posted_data['code'];
+            }
+            if (isset($posted_data['iso_code'])) {
+                $data->iso_code = $posted_data['iso_code'];
+            }
+            if (isset($posted_data['state_required'])) {
+                $data->state_required = $posted_data['state_required'];
+            }
+            if (isset($posted_data['postcode_required'])) {
+                $data->postcode_required = $posted_data['postcode_required'];
+            }
+            if (isset($posted_data['intl_calling_number'])) {
+                $data->intl_calling_number = $posted_data['intl_calling_number'];
+            }   
+
+            */
+
+            /*
+            foreach ($response['Countries']['Country'] as $key => $value) {
+                // $data = array();
+                // $data['name'] = $value['Name'];
+                // $data['code'] = $value['Code'];
+                // $data['iso_code'] = $value['IsoCode'];
+                // $data['state_required'] = $value['StateRequired'];
+                // $data['postcode_required'] = $value['PostCodeRequired'];
+                // $data['intl_calling_number'] = $value['InternationalCallingNumber'];
+
+                // $response = CountriesMetadata::saveUpdateCountriesMetadata($data);
+                
+                // if ( isset($response->id) ){
+                //     // return $this->sendResponse($response, 'Countries data is successfully added.');
+                // }else{
+                //     $error_message['error'] = 'Somthing went wrong during query.';
+                //     // return $this->sendError($error_message['error'], $error_message);
+                // }
+            }
+            */
+        }
+        catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+
+        exit('aaaaawwhh');
+
+
+        // $soap
+
+        // $path = public_path().'/storage/aramex_keys/Location-API -WSDL.wsdl';
+        // $path = asset('storage/aramex_keys/Location-API -WSDL.wsdl');
+        // $path = asset('storage/aramex_keys/Location-API -WSDL.wsdl');
+        // echo $path.'\n';
+        // exit('deeee');
+        // $soapClient = new SoapClient($path);
+        // $dd = config('services.soap.ClientInfo');
+        
+        // calling the method and printing results
+        try {
+            $soap_response = $soap::getAddress($soap, $params);
+            // $res = $soapClient->ValidateAddress($params);
+
+            // echo '<pre>';
+            // print_r($soap_response);
+            // die();
+    
+            echo '<pre>';
+            print_r($soap_response);
+            die();
+    
+        } catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+        exit('aaaaawwhh');
+
+        
+
+
+        /*
+        $params = array(
+            'ClientInfo'  			=> array(
+                                        'AccountCountryCode'		=> 'JO',
+                                        'AccountEntity'		 	=> 'AMM',
+                                        'AccountNumber'		 	=> '20016',
+                                        'AccountPin'		 	=> '331421',
+                                        'UserName'			=> 'testingapi@aramex.com',
+                                        'Password'		 	=> 'R123456789$r',
+                                        'Version'		 	=> 'v1.0',
+                                        'Source' 			=> NULL			
+                                    ),
+
+            'Transaction' 			=> array(
+                                        'Reference1'			=> '001',
+                                        'Reference2'			=> '002',
+                                        'Reference3'			=> '003',
+                                        'Reference4'			=> '004',
+                                        'Reference5'			=> '005'
+                                
+                                    ),
+            
+            );
+        
+        // calling the method and printing results
+        try {
+            $auth_call = $soapClient->FetchCountries($params);
+
+            echo '<pre>';
+            print_r($auth_call);
+            die();
+
+        } catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+        
+        exit('deee');
+        
+        */
+
         // $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
         //     'user_id' => 1,
         //     'detail' => true
@@ -503,6 +696,7 @@ class UserController extends Controller
         //   print_r($response);
         //   echo "</pre>";
         //   exit("@@@@");
+
 
 
         // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
@@ -571,26 +765,26 @@ class UserController extends Controller
         // exit($_SERVER['DOCUMENT_ROOT']);
 
         // URL::to("/");
-        $val = '25';
+        // $val = '25';
         
-        $benefit_gateway = new BenefitPaymentGateway();
+        // $benefit_gateway = new BenefitPaymentGateway();
         
         // modify the following to reflect your "Tranportal ID", "Tranportal Password ", "Terminal Resourcekey"
         
-        $benefit_gateway->setAction("1");
-        $benefit_gateway->setCurrency("048");
-        $benefit_gateway->setLanguage("USA");
-        $benefit_gateway->setType("D");
+        // $benefit_gateway->setAction("1");
+        // $benefit_gateway->setCurrency("048");
+        // $benefit_gateway->setLanguage("USA");
+        // $benefit_gateway->setType("D");
 
-        $benefit_gateway->setAlias("test18009950");
+        // $benefit_gateway->setAlias("test18009950");
 
-        $key_full_url = public_path().'/storage/key_files/keystore/';
-        $resource_full_url = public_path().'/storage/key_files/resource/';
+        // $key_full_url = public_path().'/storage/key_files/keystore/';
+        // $resource_full_url = public_path().'/storage/key_files/resource/';
 
         // $benefit_gateway->setResourcePath("resource/"); //only the path that contains the file; do not write the file name
         // $benefit_gateway->setKeystorePath("resource/"); //only the path that contains the file; do not write the file name
-        $benefit_gateway->setResourcePath($resource_full_url);
-        $benefit_gateway->setKeystorePath($key_full_url);
+        // $benefit_gateway->setResourcePath($resource_full_url);
+        // $benefit_gateway->setKeystorePath($key_full_url);
 
 
         // if (file_exists($key_full_url))
@@ -608,23 +802,23 @@ class UserController extends Controller
         // $benefit_gateway->setcurrencyCode("048");
 
         // modify the following to reflect your pages URLs
-        $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
-        $benefit_gateway->seterrorURL("https://www.yourWebsite.com/PG/error.php");
+        // $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
+        // $benefit_gateway->seterrorURL("https://www.yourWebsite.com/PG/error.php");
 
         
         // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/payment_response/response.php");
         // $benefit_gateway->seterrorURL("https://tareek.go-demo.com/payment_response/error.php");
-        $benefit_gateway->setresponseURL("https://tareek.go-demo.com/response");
-        $benefit_gateway->seterrorURL("https://tareek.go-demo.com/error");
+        // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/response");
+        // $benefit_gateway->seterrorURL("https://tareek.go-demo.com/error");
 
         
 
         // set a unique track ID for each transaction so you can use it later to match transaction response and identify transactions in your system and “BENEFIT Payment Gateway” portal.
         
-        $benefit_gateway->settrackId(date('Ymdhis'));
-        
+        // $benefit_gateway->settrackId(date('Ymdhis'));
+        // 
         // set transaction amount
-        $benefit_gateway->setamt("20.500");
+        // $benefit_gateway->setamt("20.500");
         
         // $benefit_gateway->setamt($val);
         // $benefit_gateway->setaction($val);
@@ -635,11 +829,11 @@ class UserController extends Controller
 
         // The following user-defined fields (UDF1, UDF2, UDF3, UDF4, UDF5) are optional fields.
         // However, we recommend setting theses optional fields with invoice/product/customer identification information as they will be reflected in “BENEFIT Payment Gateway” portal where you will be able to link transactions to respective customers. This is helpful for dispute cases. 
-        $benefit_gateway->setudf1('AA11');
-        $benefit_gateway->setudf2('AA22');
-        $benefit_gateway->setudf3('AA33');
-        $benefit_gateway->setudf4('AA44');
-        $benefit_gateway->setudf5('AA55');
+        // $benefit_gateway->setudf1('AA11');
+        // $benefit_gateway->setudf2('AA22');
+        // $benefit_gateway->setudf3('AA33');
+        // $benefit_gateway->setudf4('AA44');
+        // $benefit_gateway->setudf5('AA55');
 
                         // $benefit_gateway->setexpYear('2024');
                         // $benefit_gateway->setexpMonth('06');
@@ -669,14 +863,14 @@ class UserController extends Controller
         // }
 
         
-        if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0) {
-            echo("ERROR OCCURED! SEE CONSOLE FOR MORE DETAILS");
-            return;
-        }
-        else {
-            $url=$benefit_gateway->getwebAddress();
-            echo "<meta http-equiv='refresh' content='0;url=$url'>";
-        }
+        // if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0) {
+        //     echo("ERROR OCCURED! SEE CONSOLE FOR MORE DETAILS");
+        //     return;
+        // }
+        // else {
+        //     $url=$benefit_gateway->getwebAddress();
+        //     echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        // }
         
 
         /*
@@ -703,14 +897,14 @@ class UserController extends Controller
         //     echo "<meta http-equiv='refresh' content='0;url=$url'>";
         // }
         
-        echo "Line no @"."<br>";
-        echo "<pre>";
-        print_r($benefit_gateway);
-        echo "</pre>";
-        exit("@@@@");
+        // echo "Line no @"."<br>";
+        // echo "<pre>";
+        // print_r($benefit_gateway);
+        // echo "</pre>";
+        // exit("@@@@");
 
-        echo "OUTSIDE";
-        exit("@@@@");
+        // echo "OUTSIDE";
+        // exit("@@@@");
 
         /*
         **************************************
@@ -777,39 +971,39 @@ class UserController extends Controller
 
         */
 
-        echo "Line no @"."<br>";
-        echo "<pre>";
-        print_r($benefit_gateway);
-        echo "</pre>";
-        exit("@@@@");
+        // echo "Line no @"."<br>";
+        // echo "<pre>";
+        // print_r($benefit_gateway);
+        // echo "</pre>";
+        // exit("@@@@");
 
-        exit('deee');
+        // exit('deee');
 
-        $data = [
-            'subject' => 'New Order - '.config('app.name'),
-            'name' => 'Danish Hussain',
-            'email' => 'danishhussain9525@gmail.com',
-        ];
+        // $data = [
+        //     'subject' => 'New Order - '.config('app.name'),
+        //     'name' => 'Danish Hussain',
+        //     'email' => 'danishhussain9525@gmail.com',
+        // ];
 
-        \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
-            $message->to($data['email'])
-                    ->subject($data['subject']);
-        });
+        // \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
+        //     $message->to($data['email'])
+        //             ->subject($data['subject']);
+        // });
 
-        exit('aaaaa');
+        // exit('aaaaa');
 
-        $html = decodeShortCodesTemplate([
-            'html' => '<b><p>Hi [receiver_name], How are you? [receiver_name] you are awesome from [sender_name], App name is [app_name], Logo link is [logo_url], Email verify with this link [email_verification_url]</p></b>',
-            'email_message_id' => 1,
-            'sender_id' => 1,
-            'receiver_id' => 10,
-        ]);
+        // $html = decodeShortCodesTemplate([
+        //     'html' => '<b><p>Hi [receiver_name], How are you? [receiver_name] you are awesome from [sender_name], App name is [app_name], Logo link is [logo_url], Email verify with this link [email_verification_url]</p></b>',
+        //     'email_message_id' => 1,
+        //     'sender_id' => 1,
+        //     'receiver_id' => 10,
+        // ]);
 
-        echo "Line no deee@"."<br>";
-        echo "<pre>";
-        print_r($html);
-        echo "</pre>";
-        exit("@@@@");
+        // echo "Line no deee@"."<br>";
+        // echo "<pre>";
+        // print_r($html);
+        // echo "</pre>";
+        // exit("@@@@");
 
 
         // $base_url = public_path();
@@ -817,7 +1011,7 @@ class UserController extends Controller
 
         // echo $_SERVER['DOCUMENT_ROOT'];
 
-        exit('deedeeee');
+        // exit('deedeeee');
         // $posted_data['id'] = Auth::user()->id;
         // $posted_data['detail'] = true;
 

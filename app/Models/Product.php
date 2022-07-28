@@ -176,6 +176,9 @@ class Product extends Model
         if (isset($posted_data['product_long'])) {
             $data->long = $posted_data['product_long'];
         }
+        if (isset($posted_data['product_weight'])) {
+            $data->weight = $posted_data['product_weight'];
+        }
         if (isset($posted_data['product_description'])) {
             $data->description = $posted_data['product_description'];
         }

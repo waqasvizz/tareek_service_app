@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserMultipleAddresse;
+use App\Models\CountriesMetadata;
 
 class UserMultipleAddresseController extends BaseController
 {
@@ -22,7 +23,7 @@ class UserMultipleAddresseController extends BaseController
             $request_data['paginate'] = $request_data['per_page'];
         
         $response = UserMultipleAddresse::getUserMultipleAddresse($request_data);
-        $message = count($response) > 0 ? 'User Address retrieved successfully.' : 'User Address not found against your query.';
+        $message = count($response) > 0 ? 'User address retrieved successfully.' : 'User Address not found against your query.';
 
         return $this->sendResponse($response, $message);
     }
@@ -47,11 +48,24 @@ class UserMultipleAddresseController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
+        if(isset($request_data['country']) || $request_data['country']){
+                
+            $country_arr = array();
+            $country_arr['name'] = $request_data['country'];
+            $country_arr['detail'] = true;
+            $country_data = CountriesMetadata::getCountriesMetadata($country_arr);
+            
+            if ( !isset($country_data->id) ) {
+                $error_message['error'] = 'Please enter the valid country name for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
+        }
+
         $request_data['user_id'] = \Auth::user()->id;
         $response = UserMultipleAddresse::saveUpdateUserMultipleAddresse($request_data);
 
         if ( isset($response->id) ){
-            return $this->sendResponse($response, 'User Address is successfully added.');
+            return $this->sendResponse($response, 'User address is successfully added.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -73,7 +87,7 @@ class UserMultipleAddresseController extends BaseController
             return $this->sendError($error_message['error'], $error_message);  
         }
    
-        return $this->sendResponse($response, 'User Address retrieved successfully.');
+        return $this->sendResponse($response, 'User address retrieved successfully.');
     }
     
     /**
@@ -83,11 +97,13 @@ class UserMultipleAddresseController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id = 0)
     {
         $request_data = $request->all(); 
-   
+        $request_data['update_id'] = $id;
+      
         $validator = \Validator::make($request_data, [
+            'update_id'    => 'required|exists:user_multiple_addresses,id',
             'title'    => 'required',
             'address'    => 'required',
             'latitude'    => 'required',
@@ -98,11 +114,25 @@ class UserMultipleAddresseController extends BaseController
             return $this->sendError('Please fill all the required fields.', ["error"=>$validator->errors()->first()]);   
         }
 
+        if(isset($request_data['country']) || $request_data['country']){
+                
+            $country_arr = array();
+            $country_arr['name'] = $request_data['country'];
+            $country_arr['detail'] = true;
+            $country_data = CountriesMetadata::getCountriesMetadata($country_arr);
+            
+            if ( !isset($country_data->id) ) {
+                $error_message['error'] = 'Please enter the valid country name for the Supplier.';
+                return $this->sendError($error_message['error'], $error_message);  
+            }
+        }
+
+        $request_data['user_id'] = \Auth::user()->id;
         $request_data['update_id'] = $id;
         $response = UserMultipleAddresse::saveUpdateUserMultipleAddresse($request_data);
 
         if ( isset($response->id) ){
-            return $this->sendResponse($response, 'User Address is successfully updated.');
+            return $this->sendResponse($response, 'User address is successfully updated.');
         }else{
             $error_message['error'] = 'Somthing went wrong during query.';
             return $this->sendError($error_message['error'], $error_message);  
@@ -119,10 +149,10 @@ class UserMultipleAddresseController extends BaseController
     {
         $response = UserMultipleAddresse::deleteUserMultipleAddresse($id);
         if($response) {
-            return $this->sendResponse([], 'User Address deleted successfully.');
+            return $this->sendResponse([], 'User address deleted successfully.');
         }
         else {
-            $error_message['error'] = 'User Address already deleted / Not found in database.';
+            $error_message['error'] = 'User address already deleted / Not found in database.';
             return $this->sendError($error_message['error'], $error_message);  
         }
     }

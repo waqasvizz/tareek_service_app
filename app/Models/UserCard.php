@@ -93,11 +93,11 @@ class UserCard extends Model
         }
 
         if ( !(isset($posted_data['card_info']) && $posted_data['card_info'] == "decrypted") ) {
-            if (array_key_exists('card_number', $result[0]))
+            if (isset($result[0]) && array_key_exists('card_number', $result[0]))
                 $result[0]['card_number'] = secureBankInfo($result[0]['card_number'], 'card');
-            if (array_key_exists('cvc_number', $result[0]))
+            if (isset($result[0]) && array_key_exists('cvc_number', $result[0]))
                 $result[0]['cvc_number'] = secureBankInfo($result[0]['cvc_number'], 'cvc');
-            if (array_key_exists('exp_year', $result[0]))
+            if (isset($result[0]) && array_key_exists('exp_year', $result[0]))
                 $result[0]['exp_year'] = secureBankInfo($result[0]['exp_year'], 'year');
         }
 

@@ -57,10 +57,22 @@ class UserMultipleAddresse extends Model
             $data->user_id = $posted_data['user_id'];
         }
         if (isset($posted_data['title'])) {
-            $data->title = $posted_data['title'];
+            $data->title = ucfirst($posted_data['title']);
         }
         if (isset($posted_data['address'])) {
-            $data->address = $posted_data['address'];
+            $data->address = ucfirst($posted_data['address']);
+        }
+        if (isset($posted_data['country'])) {
+            $data->country = ucfirst($posted_data['country']);
+        }
+        if (isset($posted_data['city'])) {
+            $data->city = ucfirst($posted_data['city']);
+        }
+        if (isset($posted_data['state'])) {
+            $data->state = ucfirst($posted_data['state']);
+        }
+        if (isset($posted_data['postal_code'])) {
+            $data->postal_code = $posted_data['postal_code'];
         }
         if (isset($posted_data['latitude'])) {
             $data->latitude = $posted_data['latitude'];
