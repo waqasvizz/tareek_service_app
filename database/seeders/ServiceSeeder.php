@@ -17,58 +17,51 @@ class ServiceSeeder extends Seeder
      */
     public function run()
     {
-        // $faker = \Faker\Factory::create();
-        // Service::factory(10)->create();
         try{
             if(DB::table('services')->count() == 0){
-                File::copy(public_path('storage/service_image/seed-images/painting.jpg'), public_path('storage/service_image/painting.jpg'));
-                File::copy(public_path('storage/service_image/seed-images/carpet-cleaning.jpg'), public_path('storage/service_image/carpet-cleaning.jpg'));
-                File::copy(public_path('storage/service_image/seed-images/landscaping.jpg'), public_path('storage/service_image/landscaping.jpg'));
-                File::copy(public_path('storage/service_image/seed-images/drywall-repair-scaled.jpeg'), public_path('storage/service_image/drywall-repair-scaled.jpeg'));
-                File::copy(public_path('storage/service_image/seed-images/Cleaning-Company.jpeg'), public_path('storage/service_image/Cleaning-Company.jpeg'));
                 
                 DB::table('services')->insert([
 
                     [
-                        'service_name' => 'Painting',
-                        'service_description' => 'Painting',
-                        // 'service_image' => 'storage/service_image/'.$faker->image('public/storage/service_image',640,480, null, false),
-                        'service_image' => 'storage/service_image/painting.jpg',
+                        'user_id' => 3,
+                        'category_id' => 6,
+                        'title' => 'Painting Service',
+                        'price' => 50,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ],
                     [
-                        'service_name' => 'Carpet cleaning',
-                        'service_description' => 'Carpet cleaning',
-                        // 'service_image' => 'storage/service_image/'.$faker->image('public/storage/service_image',640,480, null, false),
-                        'service_image' => 'storage/service_image/carpet-cleaning.jpg',
+                        'user_id' => 3,
+                        'category_id' => 7,
+                        'title' => 'Carpet cleaning Service',
+                        'price' => 60,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ],
                     [
-                        'service_name' => 'Landscaping',
-                        'service_description' => 'Landscaping',
-                        // 'service_image' => 'storage/service_image/'.$faker->image('public/storage/service_image',640,480, null, false),
-                        'service_image' => 'storage/service_image/landscaping.jpg',
+                        'user_id' => 3,
+                        'category_id' => 8,
+                        'title' => 'Cleaning Service',
+                        'price' => 70,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ],
                     [
-                        'service_name' => 'Drywall repair',
-                        'service_description' => 'Drywall repair',
-                        // 'service_image' => 'storage/service_image/'.$faker->image('public/storage/service_image',640,480, null, false),
-                        'service_image' => 'storage/service_image/drywall-repair-scaled.jpeg',
+                        'user_id' => 3,
+                        'category_id' => 9,
+                        'title' => 'Landscaping Service',
+                        'price' => 80,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ],
                     [
-                        'service_name' => 'Cleaning',
-                        'service_description' => 'Cleaning',
-                        // 'service_image' => 'storage/service_image/'.$faker->image('public/storage/service_image',640,480, null, false),
-                        'service_image' => 'storage/service_image/Cleaning-Company.jpeg',
+                        'user_id' => 3,
+                        'category_id' => 10,
+                        'title' => 'Drywall Repair Service',
+                        'price' => 90,
                         'created_at' => now(),
                         'updated_at' => now(),
-                    ]
+                    ],
                 ]);
             } else { echo "<br>[Service Table is not empty] "; }
 

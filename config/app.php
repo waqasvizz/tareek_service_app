@@ -41,7 +41,8 @@ return [
 
     // 'debug' => (bool) env('APP_DEBUG', false),
 
-    'debug' => env('APP_ENV')=='local'? true:false,
+    // 'debug' => env('APP_ENV')=='local'? true:false,
+    'debug' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -59,9 +60,9 @@ return [
     // 'asset_url' => env('ASSET_URL', null),
 
 
-    'url' => env('APP_ENV')=='local'? 'http://localhost:8000':'https://example.com/public/',
+    'url' => env('APP_ENV')=='local'? 'http://localhost:8000':'https://tareek.go-demo.com/public/',
     
-    'asset_url' => env('APP_ENV')=='local'? '':'https://example.com.com/public/',
+    'asset_url' => env('APP_ENV')=='local'? '':'https://tareek.go-demo.com/public/',
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -72,6 +73,10 @@ return [
     | ahead and set this to a sensible default for you out of the box.
     |
     */
+
+    'order_email' => true,
+    'chat_email' => true,
+    'product_email' => true,
 
     'timezone' => 'GMT',
     // 'timezone' => 'UTC',
@@ -181,6 +186,7 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\SoapClientProvider::class,
 
     ],
 
@@ -236,7 +242,8 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
+        'Constants' => App\Constants\Constants::class,
+        'BenefitPaymentGateway' => App\Libraries\BenefitPaymentGateway\API\iPayBenefitPipe::class
     ],
 
 ];

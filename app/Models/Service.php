@@ -15,13 +15,34 @@ class Service extends Model
         // return url('/')."/".$value;
         // return public_path()."/".$value;
     }
+    
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User')->with('role');
+    }
+    
+    public function category()
+    {
+        return $this->belongsTo('App\Models\Category','category_id');
+    }
+    
+    public function UserWeekDays()
+    {
+        return $this->hasMany('App\Models\UserWeekDay')->with('WeekDay');
+    }
 
     public function getServices($posted_data = array())
     {
-        $query = Service::latest();
+        $query = Service::latest()->with('user')->with('category')->with('UserWeekDays');
 
         if (isset($posted_data['id'])) {
             $query = $query->where('services.id', $posted_data['id']);
+        }
+        if (isset($posted_data['user_id'])) {
+            $query = $query->where('services.user_id', $posted_data['user_id']);
+        }
+        if (isset($posted_data['category_id'])) {
+            $query = $query->where('services.category_id', $posted_data['category_id']);
         }
         if (isset($posted_data['service_name'])) {
             $query = $query->where('services.title', 'like', '%' . $posted_data['service_name'] . '%');
@@ -33,7 +54,7 @@ class Service extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'ASC');
+            $query->orderBy('id', 'DESC');
         }
         
         if (isset($posted_data['paginate'])) {
@@ -59,6 +80,9 @@ class Service extends Model
             $data = new Service;
         }
 
+        if (isset($posted_data['user_id'])) {
+            $data->user_id = $posted_data['user_id'];
+        }
         if (isset($posted_data['service_title'])) {
             $data->title = $posted_data['service_title'];
         }
@@ -66,7 +90,7 @@ class Service extends Model
             $data->price = $posted_data['service_price'];
         }
         if (isset($posted_data['service_category'])) {
-            $data->category = $posted_data['service_category'];
+            $data->category_id = $posted_data['service_category'];
         }
         if (isset($posted_data['service_location'])) {
             $data->location = $posted_data['service_location'];
@@ -86,8 +110,15 @@ class Service extends Model
         if (isset($posted_data['service_img'])) {
             $data->service_img = $posted_data['service_img'];
         }
+        if (isset($posted_data['avg_rating'])) {
+            $data->avg_rating = $posted_data['avg_rating'];
+        }
 
         $data->save();
+        // $data = Service::getServices([
+        //     'id' => $data->id,
+        //     'detail' => true
+        // ]);
         return $data;
     }
 

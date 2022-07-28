@@ -59,6 +59,10 @@ class StripeGateway implements PaymentGatewayInterface
 
     }
 
+    public function createConnection(Request $request){
+        // some code here...
+    }
+
     public function payerDetails(Request $request){
         // some code here...
     }

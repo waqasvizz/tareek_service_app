@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MosqueController;
 use App\Http\Controllers\ServiceController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\StorageAssetsController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\Api\PaymentTransactionController;
 use RahulHaque\Filepond\Http\Controllers\FilepondController;
 
 
@@ -27,9 +29,9 @@ use RahulHaque\Filepond\Http\Controllers\FilepondController;
 Route::get('/clear-cache', function() {
     Artisan::call('cache:clear');
     Artisan::call('optimize');
+    Artisan::call('view:clear');
     Artisan::call('route:cache');
     Artisan::call('route:clear');
-    Artisan::call('view:clear');
     Artisan::call('config:cache');
     return '<h1>Cache facade value cleared</h1>';
 });
@@ -64,55 +66,66 @@ Route::get('/queue-work', function() {
     return '<h1>queue work activated</h1>';
 });
     
-Route::get('/migration-refresh', function() {
-    // Artisan::call("migrate:fresh");
-    Artisan::call('migrate:refresh');    
-    // Artisan::call('passport:install --force');    
-    Artisan::call('passport:install');
+// Route::get('/migration-refresh', function() {
+//     // Artisan::call("migrate:fresh");
+//     Artisan::call('migrate:refresh');    
+//     // Artisan::call('passport:install --force');    
+//     Artisan::call('passport:install');
 
+//     return '<h1>Migration refresh successfully</h1>';
+// });
+    
+Route::get('/migration-refresh', function() {
+    Artisan::call('migrate:refresh');
     return '<h1>Migration refresh successfully</h1>';
 });
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+
+Route::get('/migration-fresh', function() {
+    Artisan::call("migrate:fresh");
+    return '<h1>Migration fresh successfully</h1>';
+});
+    
+Route::get('/passport-install', function() {   
+    Artisan::call('passport:install');
+    return '<h1>Passport install successfully</h1>';
+});
+
+Route::get('/', function () {
+    return view('welcome');
+});
+Route::get('/fcm', [Controller::class, 'firebase']);
+Route::get('/send_notification', [Controller::class, 'sendNotification']);
+Route::get('process_payments', [PaymentTransactionController::class, 'start_payment_transaction']);
+Route::get('process_min_discounts', [Controller::class, 'calculate_orders_min_discounts']);
+Route::get('process_max_discounts', [Controller::class, 'calculate_orders_max_discounts']);
 
 // Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Auth::routes();
-Route::get('/test-now', [UserController::class, 'testing']);
-Route::get('/', [UserController::class, 'welcome']);
-Route::get('/login', [UserController::class, 'login'])->name('login');
-Route::get('/logout', [UserController::class, 'logout']);
-// ->name('logout');
+// Auth::routes();
+Route::get('/test', [UserController::class, 'testing']);
+Route::get('/payment-test', [UserController::class, 'benefit_testing']);
+Route::get('/response', [UserController::class, 'response']);
+Route::post('/error', [UserController::class, 'error']);
+// Route::get('/', [UserController::class, 'welcome']);
+// Route::get('/login', [UserController::class, 'login'])->name('login');
+// Route::get('/logout', [UserController::class, 'logout']);
+// // ->name('logout');
 
-Route::get('/register', [UserController::class, 'register'])->name('register');
-Route::get('/forgot-password', [UserController::class, 'forgotPassword'])->name('forgotPassword');
-Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('resetPassword');
+// Route::get('/register', [UserController::class, 'register'])->name('register');
+// Route::get('/forgot-password', [UserController::class, 'forgotPassword'])->name('forgotPassword');
+// Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('resetPassword');
 
-Route::post('/accountRegister', [UserController::class, 'accountRegister'])->name('accountRegister');
-Route::post('/accountLogin', [UserController::class, 'accountLogin'])->name('accountLogin');
-Route::post('/resetPassword', [UserController::class, 'accountResetPassword'])->name('accountResetPassword');
+// Route::post('/accountRegister', [UserController::class, 'accountRegister'])->name('accountRegister');
+// Route::post('/accountLogin', [UserController::class, 'accountLogin'])->name('accountLogin');
+// Route::post('/resetPassword', [UserController::class, 'accountResetPassword'])->name('accountResetPassword');
 
-// Route::post('/save_payment_response', [PaymentController::class, 'savePaymentResponse'])->name('save_payment');
-// Route::get('/items', [PaymentController::class, 'cart']);
-// Route::get('/items-stripe', [PaymentController::class, 'cartStripe'])->name('stripe_payment');
-// Route::post('/payment', [PaymentController::class, 'payment'])->name('payment');
-// Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('success.pay');
-
-Route::middleware(['auth'])->group(function () {
-
-//     Route::get('/filepond_record_get', [FilepondController::class, 'get_records']);
-//     Route::get('/filepond_record_destroy', [FilepondController::class, 'destroy_records']);
-    
-    Route::get('/admin', [UserController::class, 'dashboard']);
-    Route::get('/live_chat', [UserController::class, 'liveChatSample']);
-//     Route::resource('service', ServiceController::class);
-//     Route::resource('category', CategoryController::class);
-//     Route::resource('role', RoleController::class);
-//     Route::resource('user', UserController::class);
-//     Route::resource('post', PostController::class);
-//     Route::resource('storage_asset', StorageAssetsController::class);
-});
+// Route::middleware(['auth'])->group(function () {    
+//     Route::get('/admin', [UserController::class, 'dashboard']);
+//     Route::get('/live_chat', [UserController::class, 'liveChatSample']);
+// //     Route::resource('service', ServiceController::class);
+// //     Route::resource('role', RoleController::class);
+// //     Route::resource('user', UserController::class);
+// });

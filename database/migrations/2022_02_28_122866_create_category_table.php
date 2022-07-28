@@ -16,8 +16,10 @@ class CreateCategoryTable extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('category_title', 100);
-            $table->tinyInteger('category_type')->default('0')->comment('1=Products, 2=Service');
-            $table->string('category_image')->nullable();
+            $table->enum('category_type', ['Product', 'Service']);
+            // $table->tinyInteger('category_type')->default('0')->comment('1=Products, 2=Service');
+            $table->text('category_image')->nullable();
+            $table->integer('commission')->nullable();
             $table->timestamps();
         });
     }

@@ -9,10 +9,16 @@ use App\Models\AssignService;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Service;
+use App\Models\UserStripeInformation;
+use App\Models\CountriesMetadata;
+use App\Services\SoapClients\SoapLocationClient;
+use App\Services\SoapClients\SoapRatesClient;
+use BenefitPaymentGateway;
 use Validator;
 use Session;
 use DB;
 use Auth;
+use SoapClient;
 
 class UserController extends Controller
 {
@@ -284,8 +290,10 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $posted_data = $request->all(); 
+        $posted_data['update_id'] = $id;
         
         $rules = array(
+            'update_id' => 'exists:users,id',
             'phone_number' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:12',
             'user_role' => 'required',
             'user_name' => 'required',
@@ -304,12 +312,8 @@ class UserController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
             // ->withInput($request->except('password'));
         } else {
-            // echo '<pre>';
-            // print_r($posted_data);
-            // exit;
 
             try{
-                $posted_data['update_id'] = $id;
                 $posted_data['role'] = $posted_data['user_role'];
                 $posted_data['name'] = $posted_data['user_name'];
 
@@ -465,19 +469,889 @@ class UserController extends Controller
         // return redirect()->back();
     }
     
-    public function testing() {
+    public function benefit_testing(Request $request)
+    {
+        return "Deeeeee";
+    }
+    
+    public function testing(SoapLocationClient $soapLocationClient, SoapRatesClient $soapRateClient)
+    {
+        
 
-        $base_url = public_path();
-        echo $base_url.'<br><br>';
+        $params = array(
+            // 'ClientInfo' => config('services.soap.ClientInfo'),
+            'ClientInfo'  			=> array(
+                'AccountCountryCode'	=> 'BH',
+                'AccountEntity'		 	=> 'BAH',
+                'AccountNumber'		 	=> '20000068',
+                'AccountPin'		 	=> '543543',
+                'UserName'			 	=> 'reem@reem.com',
+                'Password'			 	=> '123456789',
+                'Version'			 	=> 'v1.0',
+                'Source'                => NULL
+            ),
+            'Transaction' => array(
+                'Reference1' => '001',
+                // 'Reference2' => '002',
+                // 'Reference3' => '003',
+                // 'Reference4' => '004',
+                // 'Reference5' => '005'
+            ),
+            'OriginAddress' => array(
+                'City' => 'Muharraq',
+                'CountryCode' => 'BH'
+            ),
+            
+            'DestinationAddress' => array(
+                'City' => 'Muharraq',
+                'CountryCode' => 'BH'
+            ),
+    
+            'ShipmentDetails' => array(
+                'PaymentType'			 => 'P',
+                'ProductGroup'			 => 'DOM',
+                'ProductType'			 => 'ONP',
+                'ActualWeight' 			 => array('Value' => 5, 'Unit' => 'KG'),
+                'ChargeableWeight' 	     => array('Value' => 5, 'Unit' => 'KG'),
+                'NumberOfPieces'		 => 2
+            )
+        );
 
-        echo $_SERVER['DOCUMENT_ROOT'];
+            
+        
+        // calling the method and printing results
+        try {
+            // ValidateAddress
+            // $response = $soapClient::addressValidation($params);
+            // $response = $soapLocationClient::getAllCountries($params);
 
-        exit('deedeeee');
+            echo "Line no Params@"."<br>";
+            echo "<pre>";
+            print_r($params);
+            echo "</pre>";
+
+            $response = $soapRateClient::calculateShippingRate($params);
+
+            echo "Line no Response@"."<br>";
+            echo "<pre>";
+            print_r($response);
+            echo "</pre>";
+            exit("@@@@");
+
+            /*
+
+            if (isset($posted_data['name'])) {
+                $data->name = $posted_data['name'];
+            }
+            if (isset($posted_data['code'])) {
+                $data->code = $posted_data['code'];
+            }
+            if (isset($posted_data['iso_code'])) {
+                $data->iso_code = $posted_data['iso_code'];
+            }
+            if (isset($posted_data['state_required'])) {
+                $data->state_required = $posted_data['state_required'];
+            }
+            if (isset($posted_data['postcode_required'])) {
+                $data->postcode_required = $posted_data['postcode_required'];
+            }
+            if (isset($posted_data['intl_calling_number'])) {
+                $data->intl_calling_number = $posted_data['intl_calling_number'];
+            }   
+
+            */
+
+            /*
+            foreach ($response['Countries']['Country'] as $key => $value) {
+                // $data = array();
+                // $data['name'] = $value['Name'];
+                // $data['code'] = $value['Code'];
+                // $data['iso_code'] = $value['IsoCode'];
+                // $data['state_required'] = $value['StateRequired'];
+                // $data['postcode_required'] = $value['PostCodeRequired'];
+                // $data['intl_calling_number'] = $value['InternationalCallingNumber'];
+
+                // $response = CountriesMetadata::saveUpdateCountriesMetadata($data);
+                
+                // if ( isset($response->id) ){
+                //     // return $this->sendResponse($response, 'Countries data is successfully added.');
+                // }else{
+                //     $error_message['error'] = 'Somthing went wrong during query.';
+                //     // return $this->sendError($error_message['error'], $error_message);
+                // }
+            }
+            */
+        }
+        catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+
+        exit('aaaaawwhh');
+
+
+        // $soap
+
+        // $path = public_path().'/storage/aramex_keys/Location-API -WSDL.wsdl';
+        // $path = asset('storage/aramex_keys/Location-API -WSDL.wsdl');
+        // $path = asset('storage/aramex_keys/Location-API -WSDL.wsdl');
+        // echo $path.'\n';
+        // exit('deeee');
+        // $soapClient = new SoapClient($path);
+        // $dd = config('services.soap.ClientInfo');
+        
+        // calling the method and printing results
+        try {
+            $soap_response = $soap::getAddress($soap, $params);
+            // $res = $soapClient->ValidateAddress($params);
+
+            // echo '<pre>';
+            // print_r($soap_response);
+            // die();
+    
+            echo '<pre>';
+            print_r($soap_response);
+            die();
+    
+        } catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+        exit('aaaaawwhh');
+
+        
+
+
+        /*
+        $params = array(
+            'ClientInfo'  			=> array(
+                                        'AccountCountryCode'		=> 'JO',
+                                        'AccountEntity'		 	=> 'AMM',
+                                        'AccountNumber'		 	=> '20016',
+                                        'AccountPin'		 	=> '331421',
+                                        'UserName'			=> 'testingapi@aramex.com',
+                                        'Password'		 	=> 'R123456789$r',
+                                        'Version'		 	=> 'v1.0',
+                                        'Source' 			=> NULL			
+                                    ),
+
+            'Transaction' 			=> array(
+                                        'Reference1'			=> '001',
+                                        'Reference2'			=> '002',
+                                        'Reference3'			=> '003',
+                                        'Reference4'			=> '004',
+                                        'Reference5'			=> '005'
+                                
+                                    ),
+            
+            );
+        
+        // calling the method and printing results
+        try {
+            $auth_call = $soapClient->FetchCountries($params);
+
+            echo '<pre>';
+            print_r($auth_call);
+            die();
+
+        } catch (SoapFault $fault) {
+            die('Error : ' . $fault->faultstring);
+        }
+        
+        exit('deee');
+        
+        */
+
+        // $check_admin_stripe_info = UserStripeInformation::getUserStripeInformation([
+        //     'user_id' => 1,
+        //     'detail' => true
+        // ]);
+ 
+
+        // if($check_admin_stripe_info->stripe_mode == 'Test'){
+        //     $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_test);
+        // }else{
+        //     $admin_stripe = new \Stripe\StripeClient($check_admin_stripe_info->sk_live);
+        // }
+
+        // $stripe = new \Stripe\StripeClient(
+        //     'sk_test_51KqDTlGLDz2RvoIA2NcYVf99vTvpcElhoPotX7G8lu0kEsVSONC2mItT8P4pTMx3gUmuQAK1DToNsrZjwMKix0Kd00tmz8yEES'
+        //   );
+
+        // $response = $admin_stripe->accounts->update(
+        //     'acct_1LGKKQ4cJ1PGcErj',
+        //     ['tos_acceptance' => ['date' => 1609798905, 'ip' => '8.8.8.8']]
+        //   );
+
+        // $response = $admin_stripe->accounts->create([
+        //     'type' => 'custom',
+        //     'country' => 'US',
+        //     'email' => 'waqas.vizz86@gmail.com',
+        //     'capabilities' => [
+        //       'card_payments' => ['requested' => true],
+        //       'transfers' => ['requested' => true],
+        //     ],
+        //   ]);
+
+        //   echo "Line noqaqqqqq @"."<br>";
+        //   echo "<pre>";
+        //   print_r($response);
+        //   echo "</pre>";
+        //   exit("@@@@");
+
+
+
+        // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
+        // $Pipe = new BenefitPaymentGateway();
+        
+        // // modify the following to reflect your "Tranportal ID", "Tranportal Password ", "Terminal Resourcekey"
+        // $Pipe->setkey("21715115560721715115560721715115");
+        // $Pipe->setid("18009950");
+        // $Pipe->setpassword("18009950");
+        
+        // // Do NOT change the values of the following parameters at all.
+        // $Pipe->setaction("1");
+        // $Pipe->setcardType("D");
+        // $Pipe->setcurrencyCode("048");
+        
+        // // modify the following to reflect your pages URLs
+        // $Pipe->setresponseURL("https://tareek.go-demo.com/response");
+        // $Pipe->seterrorURL("https://tareek.go-demo.com/error");
+
+        // // set a unique track ID for each transaction so you can use it later to match transaction response and identify transactions in your system and “BENEFIT Payment Gateway” portal.
+        // $Pipe->settrackId(date('Ymdhis'));
+        
+        // // set transaction amount
+        // $Pipe->setamt("15.950");
+        
+        // // The following user-defined fields (UDF1, UDF2, UDF3, UDF4, UDF5) are optional fields.
+        // // However, we recommend setting theses optional fields with invoice/product/customer identification information as they will be reflected in “BENEFIT Payment Gateway” portal where you will be able to link transactions to respective customers. This is helpful for dispute cases. 
+        // $Pipe->setudf1("set value 1");
+        // $Pipe->setudf2("set value 2");
+        // $Pipe->setudf3("set value 3");
+        // $Pipe->setudf4("set value 4");
+        // $Pipe->setudf5("set value 5");
+
+        // $isSuccess = $Pipe->performeTransaction();
+        // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        // if($isSuccess==1){
+        //     echo "Okaaa";
+        //     // header('location:'.$benefit_gateway->getresult());
+        //     echo 'Success: '.$Pipe->getresult();
+        // }
+        // else{
+        //     echo 'Error: '.$Pipe->geterror().'<br />Error Text: '.$Pipe->geterrorText();
+        // }
+
+        
+        // // $isSuccess = $Pipe->performeTransaction();
+        // // if($isSuccess==1){
+        // //     header('location:'.$Pipe->getresult());
+        // // }
+        // // else{
+        // //     echo 'Error: '.$Pipe->geterror().'<br />Error Text: '.$Pipe->geterrorText();
+        // // }
+        // /////////////////////////////////////////// FINAL Try ///////////////////////////////////////////
+        // exit('deeeee');
+
+
+
+
+
+        // dd($route);
+
+        // exit(asset('storage/default-images/app-logo-email.png'));
+        
+        // exit($_SERVER['SERVER_NAME']);
+        // exit($_SERVER['SERVER_PORT']);
+        // exit($_SERVER['DOCUMENT_ROOT']);
+
+        // URL::to("/");
+        // $val = '25';
+        
+        // $benefit_gateway = new BenefitPaymentGateway();
+        
+        // modify the following to reflect your "Tranportal ID", "Tranportal Password ", "Terminal Resourcekey"
+        
+        // $benefit_gateway->setAction("1");
+        // $benefit_gateway->setCurrency("048");
+        // $benefit_gateway->setLanguage("USA");
+        // $benefit_gateway->setType("D");
+
+        // $benefit_gateway->setAlias("test18009950");
+
+        // $key_full_url = public_path().'/storage/key_files/keystore/';
+        // $resource_full_url = public_path().'/storage/key_files/resource/';
+
+        // $benefit_gateway->setResourcePath("resource/"); //only the path that contains the file; do not write the file name
+        // $benefit_gateway->setKeystorePath("resource/"); //only the path that contains the file; do not write the file name
+        // $benefit_gateway->setResourcePath($resource_full_url);
+        // $benefit_gateway->setKeystorePath($key_full_url);
+
+
+        // if (file_exists($key_full_url))
+        //     return config('app.url').'/'.$image_path;
+        // else
+        //     return config('app.url').'/storage/defaults/user.jpg';
+        
+        // $benefit_gateway->setkey("21715115560721715115560721715115");
+        // $benefit_gateway->setid("18009950");
+        // $benefit_gateway->setpassword("18009950");
+        
+        // Do NOT change the values of the following parameters at all.
+        // $benefit_gateway->setaction("1");
+        // $benefit_gateway->setcardType("D");
+        // $benefit_gateway->setcurrencyCode("048");
+
+        // modify the following to reflect your pages URLs
+        // $benefit_gateway->setresponseURL("https://www.yourWebsite.com/PG/response.php");
+        // $benefit_gateway->seterrorURL("https://www.yourWebsite.com/PG/error.php");
+
+        
+        // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/payment_response/response.php");
+        // $benefit_gateway->seterrorURL("https://tareek.go-demo.com/payment_response/error.php");
+        // $benefit_gateway->setresponseURL("https://tareek.go-demo.com/response");
+        // $benefit_gateway->seterrorURL("https://tareek.go-demo.com/error");
+
+        
+
+        // set a unique track ID for each transaction so you can use it later to match transaction response and identify transactions in your system and “BENEFIT Payment Gateway” portal.
+        
+        // $benefit_gateway->settrackId(date('Ymdhis'));
+        // 
+        // set transaction amount
+        // $benefit_gateway->setamt("20.500");
+        
+        // $benefit_gateway->setamt($val);
+        // $benefit_gateway->setaction($val);
+        // $benefit_gateway->setpassword($val);
+        // $benefit_gateway->setid($val);
+        // $benefit_gateway->setcurrencyCode($val);
+        // $benefit_gateway->settrackId($val);
+
+        // The following user-defined fields (UDF1, UDF2, UDF3, UDF4, UDF5) are optional fields.
+        // However, we recommend setting theses optional fields with invoice/product/customer identification information as they will be reflected in “BENEFIT Payment Gateway” portal where you will be able to link transactions to respective customers. This is helpful for dispute cases. 
+        // $benefit_gateway->setudf1('AA11');
+        // $benefit_gateway->setudf2('AA22');
+        // $benefit_gateway->setudf3('AA33');
+        // $benefit_gateway->setudf4('AA44');
+        // $benefit_gateway->setudf5('AA55');
+
+                        // $benefit_gateway->setexpYear('2024');
+                        // $benefit_gateway->setexpMonth('06');
+                        // $benefit_gateway->setmember($val);
+                        // $benefit_gateway->setcardNo('4600410123456789');
+        // $benefit_gateway->setcardType($val);
+
+        // $date = date('Y-m-d h:i:s');
+        // $benefit_gateway->setpaymentData($date);
+
+                        // $benefit_gateway->setpaymentMethod($val);
+                        // $benefit_gateway->settransactionIdentifier($val);
+        // $benefit_gateway->setresponseURL($val);
+        // $benefit_gateway->seterrorURL($val);
+                        // $benefit_gateway->settransId($val);
+                        // $benefit_gateway->setpin($val);
+                        // $benefit_gateway->setticketNo($val);
+                        // $benefit_gateway->setbookingId($val);
+        // $benefit_gateway->settransactionDate($date);
+
+        // $isSuccess = $benefit_gateway->performeTransaction();
+        // if($isSuccess==1){
+        //     header('location:'.$benefit_gateway->getresult());
+        // }
+        // else{
+        //     echo 'Error: '.$benefit_gateway->geterror().'<br />Error Text: '.$benefit_gateway->geterrorText();
+        // }
+
+        
+        // if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0) {
+        //     echo("ERROR OCCURED! SEE CONSOLE FOR MORE DETAILS");
+        //     return;
+        // }
+        // else {
+        //     $url=$benefit_gateway->getwebAddress();
+        //     echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        // }
+        
+
+        /*
+        $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        // $isSuccess = $benefit_gateway->performPaymentInitializationHTTP();
+        if($isSuccess==1){
+            echo "Okaaa";
+            // header('location:'.$benefit_gateway->getresult());
+            echo 'Success: '.$benefit_gateway->getresult();
+        }
+        else{
+            echo 'Error: '.$benefit_gateway->geterror().'<br />Error Text: '.$benefit_gateway->geterrorText();
+        }
+        */
+
+        // if(trim($benefit_gateway->performPaymentInitializationHTTP())!=0)
+        // {
+        //     echo("ERROR OCCURED! SEE CONSOLE FOR MORE DETAILS");
+        //     return;
+        // }
+        // else
+        // {
+        //     $url=$benefit_gateway->getwebAddress();
+        //     echo "<meta http-equiv='refresh' content='0;url=$url'>";
+        // }
+        
+        // echo "Line no @"."<br>";
+        // echo "<pre>";
+        // print_r($benefit_gateway);
+        // echo "</pre>";
+        // exit("@@@@");
+
+        // echo "OUTSIDE";
+        // exit("@@@@");
+
+        /*
+        **************************************
+                 ALL RELATED PARAMS
+        **************************************
+
+        'amt' => $this->amt,
+		'action' => $this->action,
+		'password' => $this->password,
+		'id' => $this->id,
+		'currencycode' => $this->currencyCode,
+		'trackId' => $this->trackId,
+		'udf1' => $this->udf1,
+		'udf2' => $this->udf2,
+		'udf3' => $this->udf3,
+		'udf4' => $this->udf4,
+		'udf5' => $this->udf5,
+		'expYear' => $this->expYear,
+		'expMonth' => $this->expMonth,
+		'member' => $this->member,
+		'cardNo' => $this->cardNo,
+		'cardType' => $this->cardType,
+		'paymentData' => $this->paymentData,
+		'paymentMethod' => $this->paymentMethod,
+		'transactionIdentifier' => $this->transactionIdentifier,
+		'responseURL' => $this->responseURL,
+		'errorURL' => $this->errorURL,
+		'transId' => $this->transId,
+		'pin' => $this->pin,
+		'ticketNo' => $this->ticketNo,
+		'bookingId' => $this->bookingId,
+		'transactionDate' => $this->transactionDate,
+        
+        **************************************
+               ALL RELATED FUNCTIONS
+        **************************************
+        
+        $benefit_gateway->setamt($val);
+        $benefit_gateway->setaction($val);
+        $benefit_gateway->setpassword($val);
+        $benefit_gateway->setid($val);
+        $benefit_gateway->setcurrencyCode($val);
+        $benefit_gateway->settrackId($val);
+        $benefit_gateway->setudf1($val);
+        $benefit_gateway->setudf2($val);
+        $benefit_gateway->setudf3($val);
+        $benefit_gateway->setudf4($val);
+        $benefit_gateway->setudf5($val);
+        $benefit_gateway->setexpYear($val);
+        $benefit_gateway->setexpMonth($val);
+        $benefit_gateway->setmember($val);
+        $benefit_gateway->setcardNo($val);
+        $benefit_gateway->setcardType($val);
+        $benefit_gateway->setpaymentData($val);
+        $benefit_gateway->setpaymentMethod($val);
+        $benefit_gateway->settransactionIdentifier($val);
+        $benefit_gateway->setresponseURL($val);
+        $benefit_gateway->seterrorURL($val);
+        $benefit_gateway->settransId($val);
+        $benefit_gateway->setpin($val);
+        $benefit_gateway->setticketNo($val);
+        $benefit_gateway->setbookingId($val);
+        $benefit_gateway->settransactionDate($val);
+
+        */
+
+        // echo "Line no @"."<br>";
+        // echo "<pre>";
+        // print_r($benefit_gateway);
+        // echo "</pre>";
+        // exit("@@@@");
+
+        // exit('deee');
+
+        // $data = [
+        //     'subject' => 'New Order - '.config('app.name'),
+        //     'name' => 'Danish Hussain',
+        //     'email' => 'danishhussain9525@gmail.com',
+        // ];
+
+        // \Mail::send('emails.order_email', ['email_data' => $data], function($message) use ($data) {
+        //     $message->to($data['email'])
+        //             ->subject($data['subject']);
+        // });
+
+        // exit('aaaaa');
+
+        // $html = decodeShortCodesTemplate([
+        //     'html' => '<b><p>Hi [receiver_name], How are you? [receiver_name] you are awesome from [sender_name], App name is [app_name], Logo link is [logo_url], Email verify with this link [email_verification_url]</p></b>',
+        //     'email_message_id' => 1,
+        //     'sender_id' => 1,
+        //     'receiver_id' => 10,
+        // ]);
+
+        // echo "Line no deee@"."<br>";
+        // echo "<pre>";
+        // print_r($html);
+        // echo "</pre>";
+        // exit("@@@@");
+
+
+        // $base_url = public_path();
+        // echo $base_url.'<br><br>';
+
+        // echo $_SERVER['DOCUMENT_ROOT'];
+
+        // exit('deedeeee');
         // $posted_data['id'] = Auth::user()->id;
         // $posted_data['detail'] = true;
 
         // $result = User::getUser($posted_data);
 
+    }
+
+    public function response(Request $request) {
+        // require('BenefitAPIPlugin.php');
+        $data = $request->all();
+        $trandata = isset($_POST["trandata"]) ? $_POST["trandata"] : "";
+        
+        echo "Line no data@"."<br>";
+        echo "<pre>";
+        print_r($data);
+        echo "</pre><br><br><br><br>";
+
+        echo "Line no trans@"."<br>";
+        echo "<pre>";
+        print_r($trandata);
+        echo "</pre>";
+        exit("@@@@");
+
+        if ($trandata != "")
+        {
+            $Pipe = new BenefitPaymentGateway();
+            
+            // modify the following to reflect your "Terminal Resourcekey"
+            $Pipe->setkey("21715115560721715115560721715115");
+            
+            $Pipe->settrandata($trandata);
+            
+            $returnValue =  $Pipe->parseResponseTrandata();
+            if ($returnValue == 1)
+            {
+                $paymentID = $Pipe->getpaymentId();
+                $result = $Pipe->getresult();
+                $responseCode = $Pipe->getauthRespCode();
+                $transactionID = $Pipe->gettransId();
+                $referenceID = $Pipe->getref();
+                $trackID = $Pipe->gettrackId();
+                $amount = $Pipe->getamt();
+                $UDF1 = $Pipe->getudf1();
+                $UDF2 = $Pipe->getudf2();
+                $UDF3 = $Pipe->getudf3();
+                $UDF4 = $Pipe->getudf4();
+                $UDF5 = $Pipe->getudf5();
+                $authCode = $Pipe->getauthCode();
+                $postDate = $Pipe->gettranDate();
+                $errorCode = $Pipe->geterror();
+                $errorText = $Pipe->geterrorText();
+            
+                // Remove any HTML/CSS/javascrip from the page. Also, you MUST NOT write anything on the page EXCEPT the word "REDIRECT=" (in upper-case only) followed by a URL.
+                // If anything else is written on the page then you will not be able to complete the process.
+                if ($Pipe->getresult() == "CAPTURED")
+                {
+                    echo("REDIRECT=https://www.yourWebsite.com/PG/approved.php");
+                }
+                else if ($Pipe->getresult() == "NOT CAPTURED" || $Pipe->getresult() == "CANCELED" || $Pipe->getresult() == "DENIED BY RISK" || $Pipe->getresult() == "HOST TIMEOUT")
+                {
+                    if ($Pipe->getresult() == "NOT CAPTURED")
+                    {
+                        switch ($Pipe->getAuthRespCode())
+                        {
+                            case "05":
+                                $response = "Please contact issuer";
+                                break;
+                            case "14":
+                                $response = "Invalid card number";
+                                break;
+                            case "33":
+                                $response = "Expired card";
+                                break;
+                            case "36":
+                                $response = "Restricted card";
+                                break;
+                            case "38":
+                                $response = "Allowable PIN tries exceeded";
+                                break;
+                            case "51":
+                                $response = "Insufficient funds";
+                                break;
+                            case "54":
+                                $response = "Expired card";
+                                break;
+                            case "55":
+                                $response = "Incorrect PIN";
+                                break;
+                            case "61":
+                                $response = "Exceeds withdrawal amount limit";
+                                break;
+                            case "62":
+                                $response = "Restricted Card";
+                                break;
+                            case "65":
+                                $response = "Exceeds withdrawal frequency limit";
+                                break;
+                            case "75":
+                                $response = "Allowable number PIN tries exceeded";
+                                break;
+                            case "76":
+                                $response = "Ineligible account";
+                                break;
+                            case "78":
+                                $response = "Refer to Issuer";
+                                break;
+                            case "91":
+                                $response = "Issuer is inoperative";
+                                break;
+                            default:
+                                // for unlisted values, please generate a proper user-friendly message
+                                $response = "Unable to process transaction temporarily. Try again later or try using another card.";
+                                break;
+                        }
+                    }
+                    else if ($Pipe->getresult() == "CANCELED")
+                    {
+                        $response = "Transaction was canceled by user.";
+                    }
+                    else if ($Pipe->getresult() == "DENIED BY RISK")
+                    {
+                        $response = "Maximum number of transactions has exceeded the daily limit.";
+                    }
+                    else if ($Pipe->getresult() == "HOST TIMEOUT")
+                    {
+                        $response = "Unable to process transaction temporarily. Try again later.";
+                    }
+                    echo "REDIRECT=https://www.yourWebsite.com/PG/declined.php";
+                }
+                else
+                {
+                    //Unable to process transaction temporarily. Try again later or try using another card.
+                    echo "REDIRECT=https://www.yourWebsite.com/PG/err-response.php";
+                }
+            }
+            else
+            {
+                $errorText = $Pipe->geterrorText();
+            }
+        }
+        else if (isset($_POST["ErrorText"]))
+        {
+            $paymentID = $_POST["paymentid"];
+            $trackID = $_POST["trackid"];
+            $amount = $_POST["amt"];
+            $UDF1 = $_POST["udf1"];
+            $UDF2 = $_POST["udf2"];
+            $UDF3 = $_POST["udf3"];
+            $UDF4 = $_POST["udf4"];
+            $UDF5 = $_POST["udf5"];
+            $errorText = $_POST["ErrorText"];
+        }
+        else
+        {
+            $errorText = "Unknown Exception";
+        }
+    }
+
+    public function error(Request $request) {
+
+        $response_data = $request->all();
+
+        echo "Line no nowwww@"."<br>";
+        echo "<pre>";
+        print_r($request->all());
+        echo "</pre>";
+        // exit("@@@@");
+        
+        $myObj = new BenefitPaymentGateway();
+
+        // $myObj = new iPayBenefitPipe(); 
+
+        $myObj->setAlias("test18009950");
+
+        $key_full_url = public_path().'/storage/key_files/keystore/';
+        $resource_full_url = public_path().'/storage/key_files/resource/';
+
+        $myObj->setResourcePath($resource_full_url);
+        $myObj->setKeystorePath($key_full_url);
+
+        $trandata = "";
+        $paymentID = "";
+        $result = "";
+        $responseCode = "";
+        $response = "";
+        $transactionID = "";
+        $referenceID = "";
+        $trackID = "";
+        $amount = "";
+        $UDF1 = "";
+        $UDF2 = "";
+        $UDF3 = "";
+        $UDF4 = "";
+        $UDF5 = "";
+        $authCode = "";
+        $postDate = "";
+        $errorCode = "";
+        $errorText = "";
+        
+        $trandata = isset($response_data["trandata"]) ? $response_data["trandata"] : "";
+        
+        if ($trandata != "")
+        {
+            $returnValue = $myObj->parseEncryptedRequest($trandata);
+
+            echo "Line no returnValue@"."<br>";
+            echo "<pre>";
+            print_r($returnValue);
+            echo "</pre>";
+
+            if ($returnValue == 0)
+            {
+                $paymentID = $myObj->getPaymentId();
+                $result = $myObj->getresult();
+                $responseCode = $myObj->getAuthRespCode();
+                $transactionID = $myObj->getTransId();
+                $referenceID = $myObj->getRef();
+                $trackID = $myObj->getTrackId();
+                $amount = $myObj->getAmt();
+                $UDF1 = $myObj->getUdf1();
+                $UDF2 = $myObj->getUdf2();
+                $UDF3 = $myObj->getUdf3();
+                $UDF4 = $myObj->getUdf4();
+                $UDF5 = $myObj->getUdf5();
+                $authCode = $myObj->getAuth();
+                $postDate = $myObj->getDate();
+                $errorCode = $myObj->getError();
+                $errorText = $myObj->getError_text();
+    
+            }
+            else
+            {
+                $errorText = $myObj->getError_text();
+            }
+        }
+        else if (isset($response_data["ErrorText"]))
+        {
+            echo "Line no errorrrrr@"."<br>";
+            echo "<pre>";
+            print_r($response_data["ErrorText"]);
+            echo "</pre>";
+
+            $paymentID = $response_data["paymentid"];
+            $trackID = $response_data["trackid"];
+            $amount = $response_data["amt"];
+            $UDF1 = $response_data["udf1"];
+            $UDF2 = $response_data["udf2"];
+            $UDF3 = $response_data["udf3"];
+            $UDF4 = $response_data["udf4"];
+            $UDF5 = $response_data["udf5"];
+            $errorText = $response_data["ErrorText"];
+        }
+        else
+        {
+            $errorText = "Unknown Exception";
+        }
+        
+    
+        // Remove any HTML/CSS/javascrip from the page. Also, you MUST NOT write anything on the page EXCEPT the word "REDIRECT=" (in upper-case only) followed by a URL.
+        // If anything else is written on the page then you will not be able to complete the process.
+        if ($myObj->getResult() == "CAPTURED")
+        {
+            echo("REDIRECT=https://www.yourWebsite.com/PG/approved.php");
+        }
+        else if ($myObj->getResult() == "NOT CAPTURED" || $myObj->getResult() == "CANCELED" || $myObj->getResult() == "DENIED BY RISK" || $myObj->getResult() == "HOST TIMEOUT")
+        {
+            if ($myObj->getResult() == "NOT CAPTURED")
+            {
+                switch ($myObj->getAuthRespCode())
+                {
+                    case "05":
+                        $response = "Please contact issuer";
+                        break;
+                    case "14":
+                        $response = "Invalid card number";
+                        break;
+                    case "33":
+                        $response = "Expired card";
+                        break;
+                    case "36":
+                        $response = "Restricted card";
+                        break;
+                    case "38":
+                        $response = "Allowable PIN tries exceeded";
+                        break;
+                    case "51":
+                        $response = "Insufficient funds";
+                        break;
+                    case "54":
+                        $response = "Expired card";
+                        break;
+                    case "55":
+                        $response = "Incorrect PIN";
+                        break;
+                    case "61":
+                        $response = "Exceeds withdrawal amount limit";
+                        break;
+                    case "62":
+                        $response = "Restricted Card";
+                        break;
+                    case "65":
+                        $response = "Exceeds withdrawal frequency limit";
+                        break;
+                    case "75":
+                        $response = "Allowable number PIN tries exceeded";
+                        break;
+                    case "76":
+                        $response = "Ineligible account";
+                        break;
+                    case "78":
+                        $response = "Refer to Issuer";
+                        break;
+                    case "91":
+                        $response = "Issuer is inoperative";
+                        break;
+                    default:
+                        // for unlisted values, please generate a proper user-friendly message
+                        $response = "Unable to process transaction temporarily. Try again later or try using another card.";
+                        break;
+                }
+            }
+            else if ($myObj->getResult() == "CANCELED")
+            {
+                $response = "Transaction was canceled by user.";
+            }
+            else if ($myObj->getResult() == "DENIED BY RISK")
+            {
+                $response = "Maximum number of transactions has exceeded the daily limit.";
+            }
+            else if ($myObj->getResult() == "HOST TIMEOUT")
+            {
+                $response = "Unable to process transaction temporarily. Try again later.";
+            }
+            echo "REDIRECT=https://www.yourWebsite.com/PG/declined.php";
+        }
+        else
+        {
+            //Unable to process transaction temporarily. Try again later or try using another card.
+            echo "REDIRECT=https://www.yourWebsite.com/PG/err-response.php";
+        }
     }
 
     public function accountLogin(Request $request)

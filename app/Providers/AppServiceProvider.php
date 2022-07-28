@@ -8,6 +8,7 @@ use Laravel\Passport\Console\KeysCommand;
 use Laravel\Passport\Passport;
 use App\Billings\Gateways\PaypalGateway;
 use App\Billings\Gateways\StripeGateway;
+use App\Billings\Gateways\CredimaxGateway;
 use App\Billings\PaymentGatewayInterface;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
                 return new PaypalGateway();
             else if ($gateway === 'stripe')
                 return new StripeGateway();
+            else if ($gateway === 'credimax')
+                return new CredimaxGateway();
         });
     }
     

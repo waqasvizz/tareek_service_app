@@ -35,6 +35,10 @@ class PaypalGateway implements PaymentGatewayInterface
         return redirect($res['paypal_link']);
     }
 
+    public function createConnection(Request $request){
+        // some code here...
+    }
+
     public function payerDetails(Request $request){
         // some code here...
     }

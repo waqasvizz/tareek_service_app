@@ -30,4 +30,20 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'soap' => [
+        'ClientInfo' => [
+            'AccountCountryCode'	=> env('ACCOUNT_COUNTRY_CODE'),
+            'AccountEntity'		 	=> env('ACCOUNT_ENTITY'),
+            'AccountNumber'		 	=> env('ACCOUNT_NUMBER'),
+            'AccountPin'		 	=> env('ACCOUNT_PIN'),
+            'UserName'			    => env('USER_NAME'),
+            'Password'		 	    => env('PASSWORD'),
+            'Version'		 	    => env('VERSION'),
+            'Source' 			    => env('SOURCE'),
+        ],
+        'location_wsdl' => public_path().'/storage/aramex_keys/Location-API -WSDL.wsdl',
+        'rates_wsdl' => public_path().'/storage/aramex_keys/aramex-rates-calculator-wsdl.wsdl',
+        'tracking_wsdl' => public_path().'/storage/aramex_keys/shipments-tracking-api-wsdl.wsdl',
+        'shipping_wsdl' => public_path().'/storage/aramex_keys/shipping-services-api-wsdl.wsdl',
+    ],
 ];

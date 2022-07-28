@@ -1,5 +1,11 @@
 <?php
 
+   /**
+    *  @author  DANISH HUSSAIN <danishhussain9525@hotmail.com>
+    *  @link    Author Website: https://danishhussain.w3spaces.com/
+    *  @since   2020-03-01
+   **/
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,6 +38,9 @@ class Category extends Model
         if (isset($posted_data['id'])) {
             $query = $query->where('categories.id', $posted_data['id']);
         }
+        if (isset($posted_data['category_type'])) {
+            $query = $query->where('categories.category_type', $posted_data['category_type']);
+        }
         if (isset($posted_data['category_title'])) {
             $query = $query->where('categories.category_title', 'like', '%' . $posted_data['category_title'] . '%');
         }
@@ -42,7 +51,7 @@ class Category extends Model
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('id', 'ASC');
+            $query->orderBy('id', 'desc');
         }
 
         if (isset($posted_data['paginate'])) {
@@ -56,6 +65,11 @@ class Category extends Model
                 $result = $query->get();
             }
         }
+        // $result = $query->toSql();
+        // echo '<pre>';
+        // print_r($posted_data);
+        // print_r($result);
+        // exit;
         return $result;
     }
 
@@ -77,6 +91,9 @@ class Category extends Model
         }
         if (isset($posted_data['category_image'])) {
             $data->category_image = $posted_data['category_image'];
+        }
+        if (isset($posted_data['commission'])) {
+            $data->commission = $posted_data['commission'];
         }
 
         $data->save();

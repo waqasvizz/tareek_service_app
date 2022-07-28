@@ -4,6 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Validator;
+use Crypt;
+use Auth;
+use DB;
+use Stripe;
+use Storage;
+use Mail;
 
 class BaseController extends Controller
 {
@@ -34,12 +41,12 @@ class BaseController extends Controller
     {
     	$response = [
             'success' => false,
-            'message' => $error,
+            'message' => $errorMessages['error'],
         ];
 
-        if(!empty($errorMessages)){
-            $response['data'] = $errorMessages;
-        }
+        // if(!empty($errorMessages)){
+            // $response['error_messages'] = $errorMessages;
+        // }
         
         return response()->json($response, $code);
     }

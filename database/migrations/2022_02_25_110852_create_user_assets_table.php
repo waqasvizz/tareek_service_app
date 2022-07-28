@@ -17,8 +17,12 @@ class CreateUserAssetsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
-            $table->unsignedBigInteger('storage_id');
-            $table->foreign('storage_id')->references('id')->on('storage_assets')->onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedBigInteger('asset_type');
+            $table->foreign('asset_type')->references('id')->on('user_assets_categories')->onUpdate('cascade')->onDelete('cascade');
+            $table->string('filename', 255);
+            $table->string('filepath', 255);
+            $table->string('mimetypes', 255);
+            $table->tinyInteger('asset_status')->comment('1=verified, 0=not-verified')->default(0);
             $table->timestamps();
         });
     }

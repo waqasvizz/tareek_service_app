@@ -47,6 +47,33 @@ class User extends Authenticatable
     ];
 
 
+    public function role()
+    {
+        return $this->belongsTo('App\Models\Role')
+            ->select(['roles.id', 'roles.name']);
+    }
+
+    public function userAssets()
+    {
+        return $this->hasMany(UserAssets::class);
+    }
+
+    public function user_bank()
+    {
+        return $this->hasOne(UserBank::class);
+    }
+
+    public function userAddress()
+    {
+        return $this->hasMany(UserMultipleAddresse::class);
+    }
+
+    public function fcm_tokens()
+    {
+        return $this->hasMany('App\Models\FCM_Token');
+        // return $this->belongsToMany('App\Models\AssignJob');
+    }
+
     public function AssignService()
     {
         return $this->hasMany(AssignService::class);
@@ -60,10 +87,25 @@ class User extends Authenticatable
 
     public function getUser($posted_data = array())
     {
-        $query = User::latest();
+        $query = User::latest()
+                    ->with('role')
+                    ->with('userAssets')
+                    ->with('user_bank')
+                    ->with('userAddress')
+                    ->with('fcm_tokens');
+                
+        if (isset($posted_data['without_with'])) {
+            $query = User::latest();
+        }
 
         if (isset($posted_data['id'])) {
             $query = $query->where('users.id', $posted_data['id']);
+        }
+        if (isset($posted_data['users_in'])) {
+            $query = $query->whereIn('users.id', $posted_data['users_in']);
+        }
+        if (isset($posted_data['users_not_in'])) {
+            $query = $query->whereNotIn('users.id', $posted_data['users_not_in']);
         }
         if (isset($posted_data['email'])) {
             $query = $query->where('users.email', $posted_data['email']);
@@ -72,37 +114,26 @@ class User extends Authenticatable
             $query = $query->where('users.name', 'like', '%' . $posted_data['name'] . '%');
         }
         if (isset($posted_data['role'])) {
-            $query = $query->where('users.role', $posted_data['role']);
+            $query = $query->where('users.role_id', $posted_data['role']);
         }
 	    if (isset($posted_data['phone_number'])) {
             $query = $query->where('users.phone_number', $posted_data['phone_number']);
         }
 
-        $query->join('roles', 'roles.id', '=', 'users.role');
+        // $query->join('roles', 'roles.id', '=', 'users.role');
 
         // $query->leftJoin('payments', function ($join) {
         //     $join->on('payments.user_id', '=', 'users.id');
         //     $join->on('payments.id', DB::raw('(SELECT MAX(payments.id) FROM payments WHERE `payments`.`user_id` = `users`.`id`)'));
         // });
         
-        if ( isset($posted_data['latitude']) && isset($posted_data['longitude']) ) {
-            $query = $query->select('users.*', 'users.id as user_id', 'roles.name as role_name', DB::raw("(6373 * acos( 
-                cos( radians(users.latitude) ) 
-              * cos( radians( ".$posted_data['latitude']." ) ) 
-              * cos( radians( ".$posted_data['longitude']." ) - radians(users.longitude) ) 
-              + sin( radians(users.latitude) ) 
-              * sin( radians( ".$posted_data['latitude']." ) )
-                ) ) as distance"));
-        }else{
-            $query->select('users.*', 'users.id as user_id', 'roles.name as role_name');
-        }
-        // $query->select('users.*', 'users.id as user_id', 'payments.*', 'payments.id as payment_id', 'roles.name as role_name');
+        $query->select('*');
         
         $query->getQuery()->orders = null;
         if (isset($posted_data['orderBy_name'])) {
             $query->orderBy($posted_data['orderBy_name'], $posted_data['orderBy_value']);
         } else {
-            $query->orderBy('users.id', 'ASC');
+            $query->orderBy('users.id', 'DESC');
         }
 
         if (isset($posted_data['paginate'])) {
@@ -112,12 +143,24 @@ class User extends Authenticatable
                 $result = $query->first();
             } else if (isset($posted_data['count'])) {
                 $result = $query->count();
-            } else if (isset($posted_data['array'])) {
-                $result = $query->get()->ToArray();
+            } else if (isset($posted_data['to_array'])) {
+                $result = $query->get()->toArray();
             } else {
                 $result = $query->get();
             }
         }
+        
+        if (isset($posted_data['to_sql'])) {
+            $result = $query->toSql();
+            echo '<pre>';
+            print_r($result);
+            exit;
+        }
+
+        if (isset($posted_data['sumBy_column'])) {
+            $result = $result->sum($posted_data['sumBy_columnName']);
+        }
+        
         return $result;
     }
 
@@ -133,7 +176,7 @@ class User extends Authenticatable
             unset($posted_data['company_documents']);
         }
         if (isset($posted_data['role'])) {
-            $data->role = $posted_data['role'];
+            $data->role_id = $posted_data['role'];
         }
         if (isset($posted_data['name'])) {
             $data->name = $posted_data['name'];
@@ -180,9 +223,18 @@ class User extends Authenticatable
         if (isset($posted_data['account_status'])) {
             $data->account_status = $posted_data['account_status'];
         }
+        if (isset($posted_data['email_token'])) {
+            $data->remember_token = $posted_data['email_token'];
+        }
 
         $data->save();
-        return $data->id;
+
+        $data = User::getUser([
+            'detail' => true,
+            'id' => $data->id,
+        ]);
+
+        return $data;
     }
 
     public function deleteUser($id=0)
